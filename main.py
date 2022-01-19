@@ -47,7 +47,7 @@ class App(tk.Frame):
 
 
         self.add_triangle_param_label = ttk.Label(self.add_triangle_frame, justify='left',
-                                               text='Set Parameters In New Triangle [e03, e30, e23, e32, A023] (Must be non-zero)')
+                                               text='Set Parameters In New Triangle [e03, e30, e23, e32, A023] (Must be positive)')
         self.add_triangle_param_label.pack(side='top', anchor='nw', padx=25, pady=10)
         self.add_triangle_param_entries = []
         for i in range(5):
@@ -178,22 +178,23 @@ class App(tk.Frame):
             e23 = float(self.add_triangle_params[2].get())
             e32 = float(self.add_triangle_params[3].get())
             A023 = float(self.add_triangle_params[4].get())
-            assert e03 != 0 and e23 != 0 and A023 != 0
+            assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0and A023 > 0
             c3 = np.matmul(self.compute_m_inverse(self.edge_selected.v0.r,self.edge_selected.v1.r,self.edge_selected.v0.c,self.edge_selected.v1.c,e03,e23),np.array([[e03],[e23],[A023]]))
             c3 = c3.T.flatten()
             r3 = self.compute_r(self.edge_selected.v0.c,self.edge_selected.v1.c,c3,e30,e32)
             self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3))
 
             self.add_triangle_error_text.set("")
-
-            self.edge_selected = self.main_surface.triangles[-1].edges[-1]
+            if self.edge_selected:
+                self.plot_data[-1][0].remove()
+            self.edge_selected = self.main_surface.triangles[-1].edges[-1-(len(self.main_surface.triangles) % 2)]
             for triangle in self.main_surface.triangles:
                 [x1, y1, z1] = triangle.edges[0].v0.c
                 [x2, y2, z2] = triangle.edges[0].v1.c
                 [x3, y3, z3] = triangle.edges[1].v1.c
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
-                self.plot_data.append(self.ax.plot(x, y))
+                self.plot_data.append(self.ax.plot(x, y,c='blue'))
             self.plot_data.append(self.ax.plot([self.edge_selected.v0.c[0], self.edge_selected.v1.c[0]],
                                                [self.edge_selected.v0.c[1], self.edge_selected.v1.c[1]], c='red'))
             self.chart_type.draw()
@@ -217,7 +218,7 @@ class App(tk.Frame):
 
     def randomise_numbers_add_triangle(self,event):
         for add_triangle_param in self.add_triangle_params:
-            add_triangle_param.set(round(-10+np.random.random()*20,1))
+            add_triangle_param.set(round(np.random.random()*10,1))
 
     def add_initial_triangle(self, event):
 
@@ -244,7 +245,7 @@ class App(tk.Frame):
                 [x3, y3, z3] = triangle.edges[1].v1.c
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
-                self.plot_data.append(self.ax.plot(x, y))
+                self.plot_data.append(self.ax.plot(x, y,c='blue'))
             self.plot_data.append(self.ax.plot([self.edge_selected.v0.c[0], self.edge_selected.v1.c[0]],
                                                [self.edge_selected.v0.c[1], self.edge_selected.v1.c[1]], c='red'))
             self.chart_type.draw()
