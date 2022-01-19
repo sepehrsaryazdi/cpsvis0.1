@@ -142,7 +142,8 @@ class App(tk.Frame):
         all_edges = []
         for triangle in self.main_surface.triangles:
             for edge in triangle.edges:
-                all_edges.append(edge)
+                if len(edge.triangles)==1:
+                    all_edges.append(edge)
         distances = []
         for edge in all_edges:
             v = np.array(edge.v1.c)-np.array(edge.v0.c)

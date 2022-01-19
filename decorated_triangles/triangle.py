@@ -21,20 +21,22 @@ class Vertex:
     def __init__(self,c,r):
         self.c = c
         self.r = r
+        self.edges = []
 
 
 class Edge:
     def __init__(self, v0,v1):
         self.v0 = v0
         self.v1 = v1
-        self.v0.edge = self
-        self.v1.edge = self
+        self.v0.edges.append(self)
+        self.v1.edges.append(self)
+        self.triangles = []
 
 class Triangle:
     def __init__(self, e0, e1, e2):
         self.edges = [e0, e1, e2]
         for edge in self.edges:
-            edge.triangle = self
+            edge.triangles.append(self)
         self.neighbours = []
     def add_neighbour(self, neighbour_triangle):
         self.neighbours.append(neighbour_triangle)
@@ -51,7 +53,7 @@ class Surface:
         else:
             new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v0, new_vertex),
                                     Edge(new_vertex, connecting_edge.v1))
-        self.triangles.append(connecting_edge.triangle)
+        self.triangles.append(connecting_edge.triangles[-1])
         new_triangle.add_neighbour(self.triangles[-1])
         self.triangles[-1].add_neighbour(new_triangle)
     # def add_vertex(self, triangle, new_vertex):
