@@ -177,7 +177,7 @@ class App(tk.Frame):
             self.add_triangle_error_text.set("")
             if self.edge_selected:
                 self.plot_data[-1][0].remove()
-            self.edge_selected = self.main_surface.triangles[-1].edges[-1-(len(self.main_surface.triangles) % 2)]
+            self.edge_selected = self.main_surface.triangles[-1].edges[-1]
             for triangle in self.main_surface.triangles:
                 [x1, y1, z1] = triangle.edges[0].v0.c
                 [x2, y2, z2] = triangle.edges[0].v1.c
