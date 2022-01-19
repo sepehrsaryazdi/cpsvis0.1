@@ -8,7 +8,7 @@ class SurfaceVisual:
         self.surface = surface
         self.fig = None
         self.ax = None
-    def show_vis(self):
+    def show_vis_3d(self):
         self.fig = plt.figure()
         self.ax = Axes3D(self.fig, auto_add_to_figure=False)
         self.fig.add_axes(self.ax)
