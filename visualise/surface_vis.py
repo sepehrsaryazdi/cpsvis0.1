@@ -28,5 +28,4 @@ class SurfaceVisual:
         self.ax.set_xlabel('x')
         self.ax.set_ylabel('y')
         self.ax.set_zlabel('z')
-        # ax.add_collection3d(Poly3DCollection(verts))
         plt.show()

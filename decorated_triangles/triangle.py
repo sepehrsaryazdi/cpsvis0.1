@@ -1,10 +1,13 @@
 import numpy as np
 
 class Decoration:
-    def __init__(self, s0, s1, s2):
+    def __init__(self, s0, s1, s2, r0, r1, r2):
         self.s0 = s0
         self.s1 = s1
         self.s2 = s2
+        self.r0 = r0
+        self.r1 = r1
+        self.r2 = r2
         assert len(s0) == 3, "s0 not a valid R^3 vector"
         assert len(s1) == 3, "s1 not a valid R^3 vector"
         assert len(s2) == 3, "s0 not a valid R^3 vector"
@@ -45,7 +48,6 @@ class Surface:
         decoration = np.array([np.transpose(decoration.s0), np.transpose(decoration.s1), np.transpose(decoration.s2)])
         distances = np.linalg.norm(np.repeat([new_vertex],3,axis=0)-decoration,axis=1)
         other_vertices = decoration[np.argsort(distances)[:2]]
-        #self.add_triangle()
         determinant = np.linalg.det([other_vertices[0],other_vertices[1],new_vertex])
         assert determinant != 0, 'New Vertex does not span a triangle.'
         if determinant > 0:

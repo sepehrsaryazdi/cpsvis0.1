@@ -7,9 +7,6 @@ my_surface.add_vertex(my_surface.triangles[-1],[2,-1,3])
 my_surface.add_vertex(my_surface.triangles[-1],[2,0,2])
 surface_vis = SurfaceVisual(my_surface)
 surface_vis.show_vis()
-time.sleep(1)
-print('did')
-surface_vis.show_vis()
 
 
 
