@@ -5,6 +5,7 @@ from visualise.surface_vis import SurfaceVisual
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from helper_functions.add_new_triangle_functions import *
 
 class App(tk.Frame):
     def __init__(self, master):
@@ -158,18 +159,6 @@ class App(tk.Frame):
         self.chart_type.draw()
 
 
-    def compute_m_inverse(self, r0, r2, c0, c2, e03, e23):
-        A = np.array([[1/e03,0,0],[0,1/e23,0],[0,0, 1/(e03*e23)]])
-        B = np.array([c2,c0,np.cross(r2, r0)]).T
-        m_inverse = np.matmul(A,B)
-        return m_inverse
-
-    def compute_r(self, c0,c2,c3,e30, e32):
-        A = np.array([c0,c2,c3])
-        r3 = np.matmul(np.linalg.inv(A),np.array([[e30],[e32],[0]]))
-        r3 = r3.T.flatten()
-        return r3
-
     def add_triangle(self, event):
         try:
             assert self.edge_selected
@@ -178,10 +167,11 @@ class App(tk.Frame):
             e23 = float(self.add_triangle_params[2].get())
             e32 = float(self.add_triangle_params[3].get())
             A023 = float(self.add_triangle_params[4].get())
-            assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0and A023 > 0
-            c3 = np.matmul(self.compute_m_inverse(self.edge_selected.v0.r,self.edge_selected.v1.r,self.edge_selected.v0.c,self.edge_selected.v1.c,e03,e23),np.array([[e03],[e23],[A023]]))
-            c3 = c3.T.flatten()
-            r3 = self.compute_r(self.edge_selected.v0.c,self.edge_selected.v1.c,c3,e30,e32)
+            assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
+            m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
+                                              self.edge_selected.v1.c, e03, e23)
+            c3 = compute_c3(m_inverse,e03, e23, A023)
+            r3 = compute_r3(self.edge_selected.v0.c,self.edge_selected.v1.c,c3,e30,e32)
             self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3))
 
             self.add_triangle_error_text.set("")
