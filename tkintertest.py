@@ -76,6 +76,16 @@ class App(tk.Frame):
 
         self.add_triangle_error_message_label.pack(side='top', anchor='nw', padx=25, pady=0)
 
+        self.generate_surface = ttk.Button(self.left_side_frame, text='Generate Hypersurface')
+        self.generate_surface.pack(side='top', anchor='nw', padx=100, pady=5)
+        self.generate_surface_error_text = tk.StringVar()
+        self.generate_surface_error_text.set("")
+        self.generate_surface_error_message_label = tk.Label(self.left_side_frame, justify='left',
+                                                         textvariable=self.generate_surface_error_text,
+                                                         fg='red')
+
+        self.generate_surface_error_message_label.pack(side='top', anchor='nw', padx=25, pady=0)
+
 
         self.left_side_frame.pack(side='left',anchor='nw')
         # Create the application variable.
@@ -120,6 +130,8 @@ class App(tk.Frame):
                                    self.randomise_numbers_add_triangle)
         self.add_triangle_button.bind('<ButtonPress>',
                                       self.add_triangle)
+        self.generate_surface.bind('<ButtonPress>',
+                                      self.generate_surface_visual)
 
 
     def add_triangle(self, event):
@@ -172,25 +184,14 @@ class App(tk.Frame):
 
 
 
-    # def generate_surface(self, event):
-    #
-    #     try:
-    #         t = float(self.triangle_parameter.get())
-    #         e01 = float(self.half_edge_params[0].get())
-    #         e10 = float(self.half_edge_params[1].get())
-    #         e02 = float(self.half_edge_params[2].get())
-    #         e20 = float(self.half_edge_params[3].get())
-    #         e12 = float(self.half_edge_params[4].get())
-    #         e21 = float(self.half_edge_params[5].get())
-    #         assert e01 > 0 and e10 > 0 and e02 > 0 and e20 > 0 and e12 > 0 and e21 > 0
-    #
-    #         self.error_text.set("")
-    #         main_surface = Surface(2, 1, Triangle(Decoration([1,0,0], [0,t,0], [0,0, 1],
-    #                                                      [0, e01/t, e02], [e10, 0, e12], [e20, e21/t, 0])))
-    #         surface_vis = SurfaceVisual(main_surface)
-    #         surface_vis.show_vis()
-    #     except:
-    #         self.error_text.set("One or more variables are not well-defined.")
+    def generate_surface_visual(self, event):
+        try:
+            self.generate_surface_error_text.set("")
+            surface_vis = SurfaceVisual(self.main_surface)
+            surface_vis.show_vis_3d()
+
+        except:
+            self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface.")
 
 root = tk.Tk()
 root.title('Convex Projective Surface Visualisation Tool')
