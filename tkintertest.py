@@ -2,18 +2,22 @@ import tkinter as tk
 from tkinter import ttk
 from decorated_triangles.triangle import *
 from visualise.surface_vis import SurfaceVisual
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class App(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.pack(anchor='nw')
 
-        self.create_surface_frame = ttk.Frame()
-        self.triangle_parameter_label = ttk.Label(self.create_surface_frame,justify='left', text='Set Triangle Parameter (Must be non-zero)')
+        self.left_side_frame = ttk.Frame()
+
+        self.create_surface_frame = ttk.Frame(self.left_side_frame)
+        self.triangle_parameter_label = ttk.Label(self.create_surface_frame,justify='left', text='Set Initial Triangle Parameter (Must be non-zero)')
         self.triangle_parameter_label.pack(side='top', anchor='nw',padx=25, pady=10)
         self.entry_parameter = ttk.Entry(self.create_surface_frame,justify='left')
         self.entry_parameter.pack(side='top', anchor='nw', padx=25, pady=5)
-        self.half_edge_param_label = ttk.Label(self.create_surface_frame,justify='left', text='Set Half-Edge eij Parameters [e01,e10, e02, e20, e12, e21] (Must be positive)')
+        self.half_edge_param_label = ttk.Label(self.create_surface_frame,justify='left', text='Set Initial Half-Edge eij Parameters [e01,e10, e02, e20, e12, e21] (Must be positive)')
         self.half_edge_param_label.pack(side='top', anchor='nw', padx=25, pady=10)
         self.half_edge_param_entries = []
         for i in range(6):
@@ -23,7 +27,7 @@ class App(tk.Frame):
 
         self.create_surface_frame.pack(side='top', anchor='nw')
 
-        self.surface_buttons_frame = ttk.Frame()
+        self.surface_buttons_frame = ttk.Frame(self.left_side_frame)
         self.randomise_button = ttk.Button(self.surface_buttons_frame,text='Randomise Numbers')
         self.randomise_button.pack(side='left',anchor='nw', padx=25, pady=25)
 
@@ -33,9 +37,10 @@ class App(tk.Frame):
 
         self.error_text = tk.StringVar()
         self.error_text.set("")
-        self.error_message_label = tk.Label(justify='left',textvariable=self.error_text, fg='red')
+        self.error_message_label = tk.Label(self.left_side_frame,justify='left',textvariable=self.error_text, fg='red')
 
         self.error_message_label.pack(side='top',anchor='nw', padx=25, pady=0)
+        self.left_side_frame.pack(side='left',anchor='nw')
         # Create the application variable.
         self.triangle_parameter = tk.StringVar()
         self.half_edge_params = []
@@ -47,6 +52,12 @@ class App(tk.Frame):
         self.triangle_parameter.set("1")
         # Tell the entry widget to watch this variable.
         self.entry_parameter["textvariable"] = self.triangle_parameter
+
+        self.figure = plt.Figure(figsize=(6, 5), dpi=100)
+        self.ax = self.figure.add_subplot(111)
+        chart_type = FigureCanvasTkAgg(self.figure, root)
+        chart_type.get_tk_widget().pack()
+        self.ax.set_title('Projected Combinatorial Map (A-coordinates)')
 
         # Define a callback for when the user hits return.
         # It prints the current value of the variable.
