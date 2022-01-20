@@ -1,11 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
-from decorated_triangles.triangle import *
+from triangle_class.decorated_triangle import *
 from visualise.surface_vis import SurfaceVisual
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from helper_functions.add_new_triangle_functions import *
+from tkinter import filedialog
+import pandas as pd
+import sys
+import os
 
 class App(tk.Frame):
     def __init__(self, master):
@@ -15,7 +19,7 @@ class App(tk.Frame):
         self.left_side_frame = ttk.Frame()
 
         self.create_surface_frame = ttk.Frame(self.left_side_frame)
-        self.triangle_parameter_label = ttk.Label(self.create_surface_frame,justify='left', text='Set Initial Triangle Parameter (Must be non-zero)')
+        self.triangle_parameter_label = ttk.Label(self.create_surface_frame,justify='left', text='Set Initial Triangle Parameter (Must be positive)')
         self.triangle_parameter_label.pack(side='top', anchor='nw',padx=25, pady=10)
         self.entry_parameter = ttk.Entry(self.create_surface_frame,justify='left')
         self.entry_parameter.pack(side='top', anchor='nw', padx=25, pady=5)
@@ -125,7 +129,7 @@ class App(tk.Frame):
         self.chart_type.get_tk_widget().pack()
         self.cursor = Cursor(self.ax, horizOn=True, vertOn=True, color='red', linewidth=1,
                              useblit=True)
-        self.ax.set_title('Projected Combinatorial Map (A-coordinates)')
+        self.ax.set_title('Projected Combinatorial Map')
 
         # Define a callback for when the user hits return.
         # It prints the current value of the variable.
@@ -239,9 +243,9 @@ class App(tk.Frame):
     def randomise_numbers_initial(self,event):
         for half_edge_param in self.half_edge_params:
             half_edge_param.set(round(abs(np.random.random()*10),1))
-        param = round(-10+np.random.random()*20,1)
+        param = round(abs(np.random.random()*10),1)
         while param == 0:
-            param = round(-10+np.random.random()*20,1)
+            param = round(abs(np.random.random()*10),1)
         self.triangle_parameter.set(param)
 
     def randomise_numbers_add_triangle(self,event):
@@ -250,8 +254,11 @@ class App(tk.Frame):
 
     def add_initial_triangle(self, event):
 
+
         self.ax.clear()
-        self.ax.set_title('Projected Combinatorial Map (A-coordinates)')
+        self.ax.set_axis_off()
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_title('Projected Combinatorial Map')
         self.figure.canvas.mpl_connect('button_press_event', self.onclick)
         try:
             t = float(self.triangle_parameter.get())
@@ -261,7 +268,7 @@ class App(tk.Frame):
             e20 = float(self.half_edge_params[3].get())
             e12 = float(self.half_edge_params[4].get())
             e21 = float(self.half_edge_params[5].get())
-            assert e01 > 0 and e10 > 0 and e02 > 0 and e20 > 0 and e12 > 0 and e21 > 0
+            assert t > 0 and e01 > 0 and e10 > 0 and e02 > 0 and e20 > 0 and e12 > 0 and e21 > 0
 
             self.error_text.set("")
             self.main_surface = Surface([1,0,0], [0,t,0], [0,0, 1],
@@ -295,9 +302,94 @@ class App(tk.Frame):
         except:
             self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface.")
 
+def convert_surface_to_gluing_table():
+    #print(app.main_surface)
+    pass
+
+def convert_gluing_table_to_surface(filename):
+    t = 1
+    e01 = 1
+    e02 = 1
+    e10 = 1
+    e12 = 1
+    e20 = 1
+    e21 = 1
+
+    data = pd.read_table(filename)
+    print(data)
+
+
+
+    pass
+
+def import_file():
+    filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
+    convert_gluing_table_to_surface(filename)
+    pass
+
+def export_file():
+    try:
+        app.main_surface
+    except:
+        win = tk.Toplevel()
+        win.wm_title("Surface Invalid")
+        l = tk.Label(win, text="Please ensure you have a valid surface before exporting.")
+        l.pack(padx=20, pady=10)
+        win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        cancel = ttk.Button(win, text="Close", command=win.destroy)
+        cancel.pack(side='right', padx=25, pady=5)
+        return
+
+    current_dir = os.getcwd()
+    dir_name = filedialog.askdirectory()  # asks user to choose a directory
+    if not dir_name:
+        return
+    os.chdir(dir_name)  # changes your current directory
+    gluing_data = convert_surface_to_gluing_table()
+
+    os.chdir(current_dir)
+
+def exit_file():
+    exit()
+
+def restart_popup():
+    win = tk.Toplevel()
+    win.wm_title("Restart Program")
+    l = tk.Label(win, text="Are you sure you want to restart the program? Any unsaved data will be lost.")
+    l.pack(padx=20,pady=10)
+    win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    cancel = ttk.Button(win, text="Cancel", command=win.destroy)
+    cancel.pack(side='right', padx=25, pady=5)
+    restart = ttk.Button(win,text="Restart", command=restart_program)
+    restart.pack(side='right',padx=10,pady=5)
+
+def exit_popup():
+    win = tk.Toplevel()
+    win.wm_title("Exit Program")
+    l = tk.Label(win, text="Are you sure you want to exit the program? Any unsaved data will be lost.")
+    l.pack(padx=20, pady=10)
+    win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    cancel = ttk.Button(win, text="Cancel", command=win.destroy)
+    cancel.pack(side='right', padx=25, pady=5)
+    restart = ttk.Button(win, text="Exit", command=exit_file)
+    restart.pack(side='right', padx=10, pady=5)
+
+def restart_program():
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
+
 root = tk.Tk()
 root.title('Convex Projective Surface Visualisation Tool')
 root.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
 root.geometry("1000x520")
+menubar = tk.Menu(root)
 app = App(root)
+filemenu = tk.Menu(menubar, tearoff=0)
+filemenu.add_command(label="Import Gluing Table (CSV)", command =import_file )
+filemenu.add_command(label="Export Gluing Table (CSV)", command =export_file )
+filemenu.add_command(label="Restart Program", command=restart_popup)
+filemenu.add_command(label="Exit", command=exit_popup)
+menubar.add_cascade(label="File", menu=filemenu)
+root.configure(menu=menubar)
 app.mainloop()
