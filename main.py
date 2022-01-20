@@ -219,9 +219,9 @@ class App(tk.Frame):
                 self.plot_data[-1][0].remove()
             self.edge_selected = self.main_surface.triangles[-1].edges[-2]
             for triangle in self.main_surface.triangles:
-                [x1, y1, z1] = triangle.edges[0].v0.c
-                [x2, y2, z2] = triangle.edges[0].v1.c
-                [x3, y3, z3] = triangle.edges[1].v1.c
+                [x1, y1, z1] = triangle.vertices[0].c
+                [x2, y2, z2] = triangle.vertices[1].c
+                [x3, y3, z3] = triangle.vertices[2].c
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))
@@ -268,9 +268,9 @@ class App(tk.Frame):
                                                              [0, e01/t, e02], [e10, 0, e12], [e20, e21/t, 0])
             self.edge_selected = self.main_surface.triangles[-1].edges[-1]
             for triangle in self.main_surface.triangles:
-                [x1, y1, z1] = triangle.edges[0].v0.c
-                [x2, y2, z2] = triangle.edges[0].v1.c
-                [x3, y3, z3] = triangle.edges[1].v1.c
+                [x1, y1, z1] = triangle.vertices[0].c
+                [x2, y2, z2] = triangle.vertices[1].c
+                [x3, y3, z3] = triangle.vertices[2].c
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))

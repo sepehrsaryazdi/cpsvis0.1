@@ -14,9 +14,9 @@ class SurfaceVisual:
         self.fig.add_axes(self.ax)
         verts = []
         for triangle in self.surface.triangles:
-            [x1,y1,z1] = triangle.edges[0].v0.c
-            [x2,y2,z2] = triangle.edges[0].v1.c
-            [x3, y3, z3] = triangle.edges[1].v1.c
+            [x1,y1,z1] = triangle.vertices[0].c
+            [x2,y2,z2] = triangle.vertices[1].c
+            [x3, y3, z3] = triangle.vertices[2].c
             x = [x1, x2, x3]
             y = [y1, y2, y3]
             z = [z1, z2, z3]
