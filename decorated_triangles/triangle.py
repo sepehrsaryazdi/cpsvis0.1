@@ -35,8 +35,14 @@ class Edge:
 class Triangle:
     def __init__(self, e0, e1, e2):
         self.edges = [e0, e1, e2]
+        self.vertices = []
         for edge in self.edges:
             edge.triangles.append(self)
+        for edge in self.edges:
+            if edge.v0 not in self.vertices:
+                self.vertices.append(edge.v0)
+            if edge.v1 not in self.vertices:
+                self.vertices.append(edge.v1)
         self.neighbours = []
     def add_neighbour(self, neighbour_triangle):
         self.neighbours.append(neighbour_triangle)
@@ -48,14 +54,24 @@ class Surface:
         initial_triangle = Triangle(edges[0],edges[1],edges[2])
         self.triangles = [initial_triangle]
     def add_triangle(self, connecting_edge, new_vertex):
-        if np.linalg.det(np.array([connecting_edge.v0.c,connecting_edge.v1.c,new_vertex.c])) > 0:
-            new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v1,new_vertex), Edge(new_vertex,connecting_edge.v0))
-        else:
-            new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v0, new_vertex),
-                                    Edge(new_vertex, connecting_edge.v1))
+        #if np.linalg.det(np.array([connecting_edge.v0.c,connecting_edge.v1.c,new_vertex.c])) > 0:
+        new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v1,new_vertex), Edge(new_vertex,connecting_edge.v0))
+        #else:
+        #    new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v0, new_vertex),
+        #                            Edge(new_vertex, connecting_edge.v1))
         self.triangles.append(connecting_edge.triangles[-1])
         new_triangle.add_neighbour(self.triangles[-1])
         self.triangles[-1].add_neighbour(new_triangle)
+
+    def normalise_vertices(self):
+        all_vertices = []
+        for triangle in self.triangles:
+            for vertex in triangle.vertices:
+                if vertex not in all_vertices:
+                    all_vertices.append(vertex)
+        for vertex in all_vertices:
+            vertex.c = vertex.c/np.linalg.norm(vertex.c)
+
     # def add_vertex(self, triangle, new_vertex):
     #     decoration = triangle.decoration
     #     decoration = np.array([np.transpose(decoration.s0), np.transpose(decoration.s1), np.transpose(decoration.s2)])

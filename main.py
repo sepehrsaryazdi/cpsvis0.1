@@ -77,15 +77,21 @@ class App(tk.Frame):
 
         self.add_triangle_error_message_label.pack(side='top', anchor='nw', padx=25, pady=0)
 
-        self.generate_surface = ttk.Button(self.left_side_frame, text='Generate Hypersurface')
-        self.generate_surface.pack(side='top', anchor='nw', padx=100, pady=5)
+        self.plot_buttons_frame = ttk.Frame(self.left_side_frame)
+
+        self.normalise_decorations = ttk.Button(self.plot_buttons_frame, text='Normalise Decorations')
+        self.normalise_decorations.pack(side='left', anchor='nw', padx=25, pady=0)
+
+        self.generate_surface = ttk.Button(self.plot_buttons_frame, text='Generate Hypersurface')
+        self.generate_surface.pack(side='left', anchor='nw', padx=25, pady=0)
+        self.plot_buttons_frame.pack(side='top',anchor='nw')
         self.generate_surface_error_text = tk.StringVar()
         self.generate_surface_error_text.set("")
         self.generate_surface_error_message_label = tk.Label(self.left_side_frame, justify='left',
                                                          textvariable=self.generate_surface_error_text,
                                                          fg='red')
 
-        self.generate_surface_error_message_label.pack(side='top', anchor='nw', padx=25, pady=0)
+        self.generate_surface_error_message_label.pack(side='top', anchor='nw', padx=25, pady=5)
 
 
         self.left_side_frame.pack(side='left',anchor='nw')
@@ -133,7 +139,30 @@ class App(tk.Frame):
                                       self.add_triangle)
         self.generate_surface.bind('<ButtonPress>',
                                       self.generate_surface_visual)
+        self.normalise_decorations.bind('<ButtonPress>',
+                                   self.normalise_decorations_function)
 
+
+    def normalise_decorations_function(self, event):
+
+        try:
+            self.ax.set_axis_off()
+            self.ax = self.figure.add_subplot(111)
+            self.edge_selected = self.main_surface.triangles[-1].edges[-2]
+            self.main_surface.normalise_vertices()
+            for triangle in self.main_surface.triangles:
+                [x1, y1, z1] = triangle.edges[0].v0.c
+                [x2, y2, z2] = triangle.edges[0].v1.c
+                [x3, y3, z3] = triangle.edges[1].v1.c
+                x = [x1, x2, x3, x1]
+                y = [y1, y2, y3, y1]
+                self.plot_data.append(self.ax.plot(x, y, c='blue'))
+            self.plot_data.append(self.ax.plot([self.edge_selected.v0.c[0], self.edge_selected.v1.c[0]],
+                                                   [self.edge_selected.v0.c[1], self.edge_selected.v1.c[1]], c='red'))
+            self.chart_type.draw()
+            self.generate_surface_error_text.set("")
+        except:
+            self.generate_surface_error_text.set("Please add an initial triangle before normalising decorations.")
 
 
 
@@ -159,6 +188,13 @@ class App(tk.Frame):
 
         self.chart_type.draw()
 
+    def correct_edge_orientation(self, edge):
+        [v0,v1,v2] = edge.triangles[0].vertices
+        if np.linalg.det(np.array([v0.c,v1.c,v2.c])) < 0:
+            [v0, v1, v2] = [v1, v0, v2]
+        vertices = np.array([v0, v1, v2, v0])
+        if vertices[np.argwhere(edge.v0 == vertices)[0,0]+1] != edge.v1:
+            [edge.v0,edge.v1] = [edge.v1, edge.v0]
 
     def add_triangle(self, event):
         try:
@@ -169,16 +205,19 @@ class App(tk.Frame):
             e32 = float(self.add_triangle_params[3].get())
             A023 = float(self.add_triangle_params[4].get())
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
+
+            self.correct_edge_orientation(self.edge_selected)
             m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
                                               self.edge_selected.v1.c, e03, e23)
             c3 = compute_c3(m_inverse,e03, e23, A023)
-            r3 = compute_r3(self.edge_selected.v0.c,self.edge_selected.v1.c,c3,e30,e32)
+            #assert(np.linalg.det(np.array([self.edge_selected.v0.c,self.edge_selected.v1.c,c3]))<0)
+            r3 = compute_r3(self.edge_selected.v0.c, self.edge_selected.v1.c, c3, e30, e32)
             self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3))
 
             self.add_triangle_error_text.set("")
             if self.edge_selected:
                 self.plot_data[-1][0].remove()
-            self.edge_selected = self.main_surface.triangles[-1].edges[-1]
+            self.edge_selected = self.main_surface.triangles[-1].edges[-2]
             for triangle in self.main_surface.triangles:
                 [x1, y1, z1] = triangle.edges[0].v0.c
                 [x2, y2, z2] = triangle.edges[0].v1.c
@@ -196,8 +235,6 @@ class App(tk.Frame):
             except:
                 self.add_triangle_error_text.set("Please add an initial triangle first.")
 
-
-        pass
 
     def randomise_numbers_initial(self,event):
         for half_edge_param in self.half_edge_params:
