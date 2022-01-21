@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from triangle_class.abstract_triangle import AbstractSurface
 from triangle_class.decorated_triangle import *
 from visualise.surface_vis import SurfaceVisual
 import matplotlib.pyplot as plt
@@ -307,23 +308,47 @@ def convert_surface_to_gluing_table():
     pass
 
 def convert_gluing_table_to_surface(filename):
-    t = 1
-    e01 = 1
-    e02 = 1
-    e10 = 1
-    e12 = 1
-    e20 = 1
-    e21 = 1
-
-    data = pd.read_table(filename)
-    print(data)
-
-
+    gluing_table = pd.read_table(filename)
+    columns = gluing_table.columns.tolist()
+    columns = columns[0].rsplit(',')
+    edges = columns[1:]
+    gluing_table = np.array(gluing_table.values.tolist())
+    abstract_surface = AbstractSurface()
+    new_gluing_table = []
+    for triangle in gluing_table:
+        new_gluing_table.append(triangle[0].rsplit(','))
+        abstract_surface.add_triangle()
+    gluing_table = np.array(new_gluing_table)
+    for triangle_row in gluing_table:
+        triangle = abstract_surface.triangles[int(triangle_row[0])]
+        triangle_row = triangle_row[1:]
+        for edge_index in range(len(edges)):
+            current_edge = edges[edge_index].rsplit(' ')[1]
+            for edge in triangle.edges:
+                if current_edge == edge.index:
+                    current_edge = edge
+                    break
+            try:
+                [other_triangle_index, other_edge_index] = triangle_row[edge_index].rsplit(' ')
+            except:
+                continue
+            other_edge_index = other_edge_index[1:-1]
+            other_triangle = abstract_surface.triangles[int(other_triangle_index)]
+            if int(other_edge_index[0]) < int(other_edge_index[1]):
+                for other_edge in other_triangle.edges:
+                    if other_edge.index == other_edge_index:
+                        abstract_surface.glue_edges(current_edge, other_edge, current_edge.v0, other_edge.v0)
+            else:
+                for other_edge in other_triangle.edges:
+                    if other_edge.index == other_edge_index[-1]:
+                        abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v0)
 
     pass
 
 def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
+    if not filename:
+        return
     convert_gluing_table_to_surface(filename)
     pass
 
