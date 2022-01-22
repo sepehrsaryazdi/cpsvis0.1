@@ -215,7 +215,6 @@ class App(tk.Frame):
             m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
                                               self.edge_selected.v1.c, e03, e23)
             c3 = compute_c3(m_inverse,e03, e23, A023)
-            #assert(np.linalg.det(np.array([self.edge_selected.v0.c,self.edge_selected.v1.c,c3]))<0)
             r3 = compute_r3(self.edge_selected.v0.c, self.edge_selected.v1.c, c3, e30, e32)
             self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3))
 
@@ -324,6 +323,7 @@ def convert_gluing_table_to_surface(filename):
         triangle_row = triangle_row[1:]
         for edge_index in range(len(edges)):
             current_edge = edges[edge_index].rsplit(' ')[1]
+
             for edge in triangle.edges:
                 if current_edge == edge.index:
                     current_edge = edge
@@ -334,14 +334,103 @@ def convert_gluing_table_to_surface(filename):
                 continue
             other_edge_index = other_edge_index[1:-1]
             other_triangle = abstract_surface.triangles[int(other_triangle_index)]
+
             if int(other_edge_index[0]) < int(other_edge_index[1]):
                 for other_edge in other_triangle.edges:
                     if other_edge.index == other_edge_index:
                         abstract_surface.glue_edges(current_edge, other_edge, current_edge.v0, other_edge.v0)
             else:
                 for other_edge in other_triangle.edges:
-                    if other_edge.index == other_edge_index[-1]:
-                        abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v0)
+                    if other_edge.index == other_edge_index[::-1]:
+                        abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v1)
+
+    return abstract_surface
+
+
+def generate_developing_map(abstract_surface):
+    pass
+
+def triangle_order_generator(edge_list, prev_state, n):
+    if len(edge_list) == n:
+
+        return edge_list
+    current_edge_on_previous_triangle = edge_list[-1]
+    current_edge_on_new_triangle = current_edge_on_previous_triangle.edge_glued[2]
+    new_triangle = current_edge_on_new_triangle.triangle
+    flipped = 0
+    if current_edge_on_previous_triangle.edge_glued[1] != current_edge_on_new_triangle.v0:
+        flipped = 1
+    for edge_index in range(3):
+        if new_triangle.edges[edge_index] == current_edge_on_new_triangle:
+            current_edge_on_new_triangle = edge_index
+            break
+    new_prev_state = 'top'
+    if prev_state == 'top':
+        next_edge_on_new_triangle = (current_edge_on_new_triangle + ((-1)**flipped)*1) % 3
+        if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
+            new_prev_state = 'bottom'
+    else:
+        next_edge_on_new_triangle = (current_edge_on_new_triangle - ((-1) ** flipped) * 1) % 3
+        if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
+            new_prev_state = 'bottom'
+
+    next_edge_on_new_triangle = new_triangle.edges[next_edge_on_new_triangle]
+    edge_list.append(next_edge_on_new_triangle)
+    return triangle_order_generator(edge_list, new_prev_state, n)
+
+def generate_combinatorial_map(abstract_surface,ax):
+    punctured_triangles = []
+    for triangle in abstract_surface.triangles:
+        for edge in triangle.edges:
+            if not edge.edge_glued:
+                punctured_triangles.append(triangle)
+                break
+    number_of_outer_edges = len(abstract_surface.triangles)+2
+    if len(punctured_triangles):
+        first_triangle = punctured_triangles[0]
+    else:
+        first_triangle = abstract_surface.triangles[0]
+    first_edge_index = 0
+    for edge_index in range(3):
+        if not first_triangle.edges[edge_index].edge_glued:
+            first_edge_index = (edge_index - 1) % 3
+            break
+    edge_list = [first_triangle.edges[first_edge_index]]
+    edge_list = triangle_order_generator(edge_list, 'top', len(abstract_surface.triangles))
+    t = 1
+    e01 = 1
+    e02 = 1
+    e10 = 1
+    e12 = 1
+    e20 = 1
+    e21 = 1
+    main_surface = Surface([1,0,0], [0,t,0], [0,0, 1],
+                                                             [0, e01/t, e02], [e10, 0, e12], [e20, e21/t, 0])
+    main_surface.triangles[0].index = 0
+    current_edge_real_surface = main_surface.triangles[0].edges[0]
+    current_real_triangle = main_surface.triangles[0]
+    print([edge.triangle.index for edge in edge_list])
+    current_abstract_triangle = edge_list[1].triangle
+    current_edge_abstract_surface = edge_list[0]
+    for edge in edge_list[1:]:
+        current_edge_abstract_index = 0
+        next_edge_is_anticlockwise = False
+        for temp_index in range(3):
+            if current_abstract_triangle.edges[temp_index] == current_edge_abstract_surface:
+                current_edge_abstract_index = temp_index
+                break
+        if current_abstract_triangle.edges[(current_edge_abstract_index + 1)%3] == edge:
+            next_edge_is_anticlockwise = True
+        print(next_edge_is_anticlockwise)
+
+
+
+
+
+
+
+    ax.scatter([1, 1], [2, 2])
+
 
     pass
 
@@ -349,8 +438,30 @@ def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
     if not filename:
         return
-    convert_gluing_table_to_surface(filename)
-    pass
+    abstract_surface = convert_gluing_table_to_surface(filename)
+    win = tk.Toplevel()
+    win.wm_title("Uploaded Surface")
+    l = tk.Label(win, text="The uploaded gluing table is visualised as a combinatorial map below. Continue generating developing map?")
+    l.pack(padx=20, pady=10)
+    win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    figure = plt.Figure(figsize=(6, 5), dpi=100)
+    ax = figure.add_subplot(111)
+    chart_type = FigureCanvasTkAgg(figure, win)
+    chart_type.get_tk_widget().pack()
+    ax.set_title('Combinatorial Map')
+    generate_combinatorial_map(abstract_surface,ax)
+    ax.set_axis_off()
+    chart_type.draw()
+
+
+
+
+
+
+    cancel = ttk.Button(win, text="Cancel", command=win.destroy)
+    cancel.pack(side='right', padx=25, pady=5)
+    continue_button= ttk.Button(win, text="Continue", command=lambda : (generate_developing_map(abstract_surface), win.destroy()) )
+    continue_button.pack(side='right', padx=10, pady=5)
 
 def export_file():
     try:
