@@ -2,7 +2,7 @@ import numpy as np
 
 def compute_m_inverse(r0, r2, c0, c2, e03, e23):
     A = np.array([[1 / e03, 0, 0], [0, 1 / e23, 0], [0, 0, 1 / (e03 * e23)]])
-    B = np.array([c2, c0, -np.cross(r2, r0)]).T
+    B = np.array([c2, c0, np.cross(r2, r0)]).T
     m_inverse = np.matmul(A, B)
     return m_inverse
 

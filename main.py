@@ -231,12 +231,12 @@ class App(tk.Frame):
             A023 = float(self.add_triangle_params[4].get())
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
-            self.correct_edge_orientation(self.edge_selected)
-            #print(self.edge_selected.v0.r, self.edge_selected.v1.r)
-            #print(self.edge_selected.v0.c, self.edge_selected.v1.c)
+            #self.correct_edge_orientation(self.edge_selected)
+            print(self.edge_selected.v0.r, self.edge_selected.v1.r)
+            print(self.edge_selected.v0.c, self.edge_selected.v1.c)
             m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
                                               self.edge_selected.v1.c, e03, e23)
-            #print(np.linalg.det(m_inverse))
+            print(np.linalg.det(m_inverse))
             c3 = compute_c3(m_inverse,e03, e23, A023)
             r3 = compute_r3(self.edge_selected.v0.c, self.edge_selected.v1.c, c3, e30, e32)
             print(r3, c3)
@@ -425,7 +425,7 @@ def triangle_order_generator(edge_list, prev_state, n):
     edge_list.append(next_edge_on_new_triangle)
     return triangle_order_generator(edge_list, new_prev_state, n)
 
-def generate_combinatorial_map(abstract_surface,ax):
+def generate_real_surface_map(abstract_surface,ax):
     punctured_triangles = []
     for triangle in abstract_surface.triangles:
         for edge in triangle.edges:
@@ -484,14 +484,28 @@ def generate_combinatorial_map(abstract_surface,ax):
         current_edge_real_surface = current_real_triangle.edges[((-1)**next_edge_is_anticlockwise) % 3]
         current_abstract_triangle = edge.edge_glued[2].triangle
         current_edge_abstract_surface = edge.edge_glued[2]
-    main_surface.normalise_vertices()
+    #main_surface.normalise_vertices()
+
+    vertex_points = []
+    r=2
+    thetas = np.linspace(0,2*np.pi, len(main_surface.triangles)+2)
+    for theta in thetas:
+        vertex_points.append(np.array([r*np.cos(theta),r*np.sin(theta)]))
+
+    main_surface.triangles[0].vertices[0].c = vertex_points.pop()
+    main_surface.triangles[0].vertices[2].c = vertex_points.pop()
+    for triangle in main_surface.triangles[1:]:
+        triangle.vertices[1].c = vertex_points.pop()
+    main_surface.triangles[-1].vertices[2].c = vertex_points.pop()
+
+
     for triangle in main_surface.triangles:
-        [x1, y1, z1] = triangle.vertices[0].c
-        [x2, y2, z2] = triangle.vertices[1].c
-        [x3, y3, z3] = triangle.vertices[2].c
-        [x1,y1] = clover_position([[x1],[y1],[z1]])
-        [x2, y2] = clover_position([[x2],[y2],[z2]])
-        [x3, y3] = clover_position([[x3],[y3],[z3]])
+        [x1, y1] = triangle.vertices[0].c
+        [x2, y2] = triangle.vertices[1].c
+        [x3, y3] = triangle.vertices[2].c
+        #[x1,y1] = clover_position([[x1],[y1],[z1]])
+        #[x2, y2] = clover_position([[x2],[y2],[z2]])
+        #[x3, y3] = clover_position([[x3],[y3],[z3]])
         x = [x1, x2, x3, x1]
         y = [y1, y2, y3, y1]
         ax.plot(x, y, c='blue')
@@ -514,7 +528,9 @@ def import_file():
     chart_type = FigureCanvasTkAgg(figure, win)
     chart_type.get_tk_widget().pack()
     ax.set_title('Combinatorial Map')
-    main_surface = generate_combinatorial_map(abstract_surface,ax)
+
+
+    main_surface = generate_real_surface_map(abstract_surface,ax)
     ax.set_axis_off()
     chart_type.draw()
 
