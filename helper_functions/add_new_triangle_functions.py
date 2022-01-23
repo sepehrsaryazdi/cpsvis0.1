@@ -10,6 +10,7 @@ def compute_m_inverse(r0, r2, c0, c2, e03, e23):
 def compute_c3(m_inverse, e03, e23, A023):
     c3 = np.matmul(m_inverse, np.array([[e03], [e23], [A023]]))
     c3 = c3.T.flatten()
+
     return c3
 
 

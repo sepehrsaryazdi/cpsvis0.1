@@ -12,6 +12,8 @@ import pandas as pd
 import sys
 import os
 
+
+
 class App(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
@@ -128,9 +130,8 @@ class App(tk.Frame):
         self.ax = self.figure.add_subplot(111)
         self.chart_type = FigureCanvasTkAgg(self.figure, root)
         self.chart_type.get_tk_widget().pack()
-        self.cursor = Cursor(self.ax, horizOn=True, vertOn=True, color='red', linewidth=1,
-                             useblit=True)
-        self.ax.set_title('Projected Combinatorial Map')
+        self.ax.set_title('Cloverleaf Position')
+        self.ax.set_axis_off()
 
         # Define a callback for when the user hits return.
         # It prints the current value of the variable.
@@ -151,19 +152,30 @@ class App(tk.Frame):
     def normalise_decorations_function(self, event):
 
         try:
+            self.ax.clear()
             self.ax.set_axis_off()
             self.ax = self.figure.add_subplot(111)
+            self.ax.set_title('Cloverleaf Position')
+            self.ax.set_axis_off()
             self.edge_selected = self.main_surface.triangles[-1].edges[-2]
             self.main_surface.normalise_vertices()
             for triangle in self.main_surface.triangles:
                 [x1, y1, z1] = triangle.vertices[0].c
                 [x2, y2, z2] = triangle.vertices[1].c
                 [x3, y3, z3] = triangle.vertices[2].c
+                [x1, y1] = clover_position([[x1], [y1], [z1]])
+                [x2, y2] = clover_position([[x2], [y2], [z2]])
+                [x3, y3] = clover_position([[x3], [y3], [z3]])
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
+
                 self.plot_data.append(self.ax.plot(x, y, c='blue'))
-            self.plot_data.append(self.ax.plot([self.edge_selected.v0.c[0], self.edge_selected.v1.c[0]],
-                                                   [self.edge_selected.v0.c[1], self.edge_selected.v1.c[1]], c='red'))
+            v0 = self.edge_selected.v0.c
+            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]])
+            v1 = self.edge_selected.v1.c
+            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]])
+            self.plot_data.append(self.ax.plot([v0[0], v1[0]],
+                                                   [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
             self.generate_surface_error_text.set("")
         except:
@@ -173,6 +185,8 @@ class App(tk.Frame):
 
     def onclick(self,event):
         coord = np.array([event.xdata,event.ydata])
+        if not coord[0] or not coord[1]:
+            return
         all_edges = []
         for triangle in self.main_surface.triangles:
             for edge in triangle.edges:
@@ -180,16 +194,22 @@ class App(tk.Frame):
                     all_edges.append(edge)
         distances = []
         for edge in all_edges:
-            v = np.array(edge.v1.c)-np.array(edge.v0.c)
-            v = v[:2]
-            x = coord - np.array(edge.v0.c)[:2]
+            v0 = edge.v0.c
+            v0 = np.array(clover_position([[v0[0]], [v0[1]], [v0[2]]]))
+            v1 = edge.v1.c
+            v1 = np.array(clover_position([[v1[0]], [v1[1]], [v1[2]]]))
+            v = v1-v0
+            x = coord - v0
             distances.append(np.linalg.norm(x - abs(np.dot(x,v))/(np.linalg.norm(v)**2) * v))
         if self.edge_selected:
             self.plot_data[-1][0].remove()
         self.edge_selected = all_edges[np.argmin(distances)]
-
-        self.plot_data.append(self.ax.plot([self.edge_selected.v0.c[0], self.edge_selected.v1.c[0]],
-                     [self.edge_selected.v0.c[1], self.edge_selected.v1.c[1]],c='red'))
+        v0 = self.edge_selected.v0.c
+        v0 = clover_position([[v0[0]],[v0[1]],[v0[2]]])
+        v1 = self.edge_selected.v1.c
+        v1 = clover_position([[v1[0]],[v1[1]],[v1[2]]])
+        self.plot_data.append(self.ax.plot([v0[0], v1[0]],
+                     [v0[1], v1[1]],c='red'))
 
         self.chart_type.draw()
 
@@ -212,10 +232,14 @@ class App(tk.Frame):
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
             self.correct_edge_orientation(self.edge_selected)
+            #print(self.edge_selected.v0.r, self.edge_selected.v1.r)
+            #print(self.edge_selected.v0.c, self.edge_selected.v1.c)
             m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
                                               self.edge_selected.v1.c, e03, e23)
+            #print(np.linalg.det(m_inverse))
             c3 = compute_c3(m_inverse,e03, e23, A023)
             r3 = compute_r3(self.edge_selected.v0.c, self.edge_selected.v1.c, c3, e30, e32)
+            print(r3, c3)
             self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3))
 
             self.add_triangle_error_text.set("")
@@ -226,11 +250,18 @@ class App(tk.Frame):
                 [x1, y1, z1] = triangle.vertices[0].c
                 [x2, y2, z2] = triangle.vertices[1].c
                 [x3, y3, z3] = triangle.vertices[2].c
+                [x1, y1] = clover_position([[x1], [y1], [z1]])
+                [x2, y2] = clover_position([[x2], [y2], [z2]])
+                [x3, y3] = clover_position([[x3], [y3], [z3]])
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))
-            self.plot_data.append(self.ax.plot([self.edge_selected.v0.c[0], self.edge_selected.v1.c[0]],
-                                               [self.edge_selected.v0.c[1], self.edge_selected.v1.c[1]], c='red'))
+            v0 = self.edge_selected.v0.c
+            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]])
+            v1 = self.edge_selected.v1.c
+            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]])
+            self.plot_data.append(self.ax.plot([v0[0], v1[0]],
+                                               [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
         except:
             try:
@@ -258,7 +289,8 @@ class App(tk.Frame):
         self.ax.clear()
         self.ax.set_axis_off()
         self.ax = self.figure.add_subplot(111)
-        self.ax.set_title('Projected Combinatorial Map')
+        self.ax.set_title('Cloverleaf Position')
+        self.ax.set_axis_off()
         self.figure.canvas.mpl_connect('button_press_event', self.onclick)
         try:
             t = float(self.triangle_parameter.get())
@@ -278,11 +310,19 @@ class App(tk.Frame):
                 [x1, y1, z1] = triangle.vertices[0].c
                 [x2, y2, z2] = triangle.vertices[1].c
                 [x3, y3, z3] = triangle.vertices[2].c
+                [x1, y1] = clover_position([[x1], [y1], [z1]])
+                [x2, y2] = clover_position([[x2], [y2], [z2]])
+                [x3, y3] = clover_position([[x3], [y3], [z3]])
+
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))
-            self.plot_data.append(self.ax.plot([self.edge_selected.v0.c[0], self.edge_selected.v1.c[0]],
-                                               [self.edge_selected.v0.c[1], self.edge_selected.v1.c[1]], c='red'))
+            v0 = self.edge_selected.v0.c
+            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]])
+            v1 = self.edge_selected.v1.c
+            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]])
+            self.plot_data.append(self.ax.plot([v0[0], v1[0]],
+                                               [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
 
         except:
@@ -346,6 +386,13 @@ def convert_gluing_table_to_surface(filename):
 
     return abstract_surface
 
+def clover_position(x):
+    x = np.array(x)
+    T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
+    v = 1/3*np.array([[1],[1],[1]])
+    [x,y,z] = np.matmul(T_inverse,x-v)
+    return [-x[0],y[0]]
+
 
 def generate_developing_map(abstract_surface):
     pass
@@ -404,15 +451,28 @@ def generate_combinatorial_map(abstract_surface,ax):
     e12 = 1
     e20 = 1
     e21 = 1
+    e03 = 1
+    e30 = 1
+    e23 = 1
+    e32 = 1
+    A023 = 1
     main_surface = Surface([1,0,0], [0,t,0], [0,0, 1],
                                                              [0, e01/t, e02], [e10, 0, e12], [e20, e21/t, 0])
-    main_surface.triangles[0].index = 0
     current_edge_real_surface = main_surface.triangles[0].edges[0]
     current_real_triangle = main_surface.triangles[0]
-    print([edge.triangle.index for edge in edge_list])
     current_abstract_triangle = edge_list[1].triangle
-    current_edge_abstract_surface = edge_list[0]
+    current_edge_abstract_surface = edge_list[0].edge_glued[2]
+    main_surface.triangles[0].index = edge_list[0].triangle.index
     for edge in edge_list[1:]:
+        app.correct_edge_orientation(current_edge_real_surface)
+        m_inverse = compute_m_inverse(current_edge_real_surface.v0.r, current_edge_real_surface.v1.r, current_edge_real_surface.v0.c,
+                                      current_edge_real_surface.v1.c, e03, e23)
+        c3 = compute_c3(m_inverse, e03, e23, A023)
+        r3 = compute_r3(current_edge_real_surface.v0.c, current_edge_real_surface.v1.c, c3, e30, e32)
+        main_surface.add_triangle(current_edge_real_surface, Vertex(c3, r3))
+        current_real_triangle = main_surface.triangles[-1]
+        current_real_triangle.index = current_abstract_triangle.index
+
         current_edge_abstract_index = 0
         next_edge_is_anticlockwise = False
         for temp_index in range(3):
@@ -421,18 +481,23 @@ def generate_combinatorial_map(abstract_surface,ax):
                 break
         if current_abstract_triangle.edges[(current_edge_abstract_index + 1)%3] == edge:
             next_edge_is_anticlockwise = True
-        print(next_edge_is_anticlockwise)
+        current_edge_real_surface = current_real_triangle.edges[((-1)**next_edge_is_anticlockwise) % 3]
+        current_abstract_triangle = edge.edge_glued[2].triangle
+        current_edge_abstract_surface = edge.edge_glued[2]
+    main_surface.normalise_vertices()
+    for triangle in main_surface.triangles:
+        [x1, y1, z1] = triangle.vertices[0].c
+        [x2, y2, z2] = triangle.vertices[1].c
+        [x3, y3, z3] = triangle.vertices[2].c
+        [x1,y1] = clover_position([[x1],[y1],[z1]])
+        [x2, y2] = clover_position([[x2],[y2],[z2]])
+        [x3, y3] = clover_position([[x3],[y3],[z3]])
+        x = [x1, x2, x3, x1]
+        y = [y1, y2, y3, y1]
+        ax.plot(x, y, c='blue')
+        ax.annotate(triangle.index,[np.mean(x),np.mean(y)])
 
-
-
-
-
-
-
-    ax.scatter([1, 1], [2, 2])
-
-
-    pass
+    return main_surface
 
 def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
@@ -449,11 +514,9 @@ def import_file():
     chart_type = FigureCanvasTkAgg(figure, win)
     chart_type.get_tk_widget().pack()
     ax.set_title('Combinatorial Map')
-    generate_combinatorial_map(abstract_surface,ax)
+    main_surface = generate_combinatorial_map(abstract_surface,ax)
     ax.set_axis_off()
     chart_type.draw()
-
-
 
 
 
