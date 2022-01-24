@@ -163,17 +163,17 @@ class App(tk.Frame):
                 [x1, y1, z1] = triangle.vertices[0].c
                 [x2, y2, z2] = triangle.vertices[1].c
                 [x3, y3, z3] = triangle.vertices[2].c
-                [x1, y1] = clover_position([[x1], [y1], [z1]])
-                [x2, y2] = clover_position([[x2], [y2], [z2]])
-                [x3, y3] = clover_position([[x3], [y3], [z3]])
+                [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
+                [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
+                [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
 
                 self.plot_data.append(self.ax.plot(x, y, c='blue'))
             v0 = self.edge_selected.v0.c
-            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]])
+            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
             v1 = self.edge_selected.v1.c
-            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]])
+            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
             self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                                    [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
@@ -195,9 +195,9 @@ class App(tk.Frame):
         distances = []
         for edge in all_edges:
             v0 = edge.v0.c
-            v0 = np.array(clover_position([[v0[0]], [v0[1]], [v0[2]]]))
+            v0 = np.array(clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t))
             v1 = edge.v1.c
-            v1 = np.array(clover_position([[v1[0]], [v1[1]], [v1[2]]]))
+            v1 = np.array(clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t))
             v = v1-v0
             x = coord - v0
             distances.append(np.linalg.norm(x - abs(np.dot(x,v))/(np.linalg.norm(v)**2) * v))
@@ -205,9 +205,9 @@ class App(tk.Frame):
             self.plot_data[-1][0].remove()
         self.edge_selected = all_edges[np.argmin(distances)]
         v0 = self.edge_selected.v0.c
-        v0 = clover_position([[v0[0]],[v0[1]],[v0[2]]])
+        v0 = clover_position([[v0[0]],[v0[1]],[v0[2]]], self.t)
         v1 = self.edge_selected.v1.c
-        v1 = clover_position([[v1[0]],[v1[1]],[v1[2]]])
+        v1 = clover_position([[v1[0]],[v1[1]],[v1[2]]], self.t)
         self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                      [v0[1], v1[1]],c='red'))
 
@@ -215,10 +215,10 @@ class App(tk.Frame):
 
     def correct_edge_orientation(self, edge):
         [v0,v1,v2] = edge.triangles[0].vertices
-        if np.linalg.det(np.array([v0.c,v1.c,v2.c])) < 0:
-            [v0, v1, v2] = [v1, v0, v2]
+        # if np.linalg.det(np.array([v0.c,v1.c,v2.c])) < 0:
+        #     [v0, v1, v2] = [v1, v0, v2]
         vertices = np.array([v0, v1, v2, v0])
-        if vertices[np.argwhere(edge.v0 == vertices)[0,0]+1] != edge.v1:
+        if vertices[np.argwhere(edge.v0 == vertices)[0,0]+1] == edge.v1:
             [edge.v0,edge.v1] = [edge.v1, edge.v0]
 
     def add_triangle(self, event):
@@ -231,7 +231,7 @@ class App(tk.Frame):
             A023 = float(self.add_triangle_params[4].get())
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
-            #self.correct_edge_orientation(self.edge_selected)
+            self.correct_edge_orientation(self.edge_selected)
             print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
             print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
             m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
@@ -250,16 +250,19 @@ class App(tk.Frame):
                 [x1, y1, z1] = triangle.vertices[0].c
                 [x2, y2, z2] = triangle.vertices[1].c
                 [x3, y3, z3] = triangle.vertices[2].c
-                [x1, y1] = clover_position([[x1], [y1], [z1]])
-                [x2, y2] = clover_position([[x2], [y2], [z2]])
-                [x3, y3] = clover_position([[x3], [y3], [z3]])
+                [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
+                [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
+                [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))
+
+            
+
             v0 = self.edge_selected.v0.c
-            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]])
+            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
             v1 = self.edge_selected.v1.c
-            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]])
+            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
             self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                                [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
@@ -294,6 +297,7 @@ class App(tk.Frame):
         self.figure.canvas.mpl_connect('button_press_event', self.onclick)
         try:
             t = float(self.triangle_parameter.get())
+            self.t = t
             e01 = float(self.half_edge_params[0].get())
             e10 = float(self.half_edge_params[1].get())
             e02 = float(self.half_edge_params[2].get())
@@ -310,17 +314,18 @@ class App(tk.Frame):
                 [x1, y1, z1] = triangle.vertices[0].c
                 [x2, y2, z2] = triangle.vertices[1].c
                 [x3, y3, z3] = triangle.vertices[2].c
-                [x1, y1] = clover_position([[x1], [y1], [z1]])
-                [x2, y2] = clover_position([[x2], [y2], [z2]])
-                [x3, y3] = clover_position([[x3], [y3], [z3]])
+                [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
+                [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
+                [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
 
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
+
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))
             v0 = self.edge_selected.v0.c
-            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]])
+            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
             v1 = self.edge_selected.v1.c
-            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]])
+            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
             self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                                [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
@@ -385,16 +390,26 @@ def convert_gluing_table_to_surface(filename):
                         abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v1)
 
     return abstract_surface
+#
+# def clover_position(x):
+#     x = np.array(x)
+#     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
+#     v = 1 / 3 * np.array([[1], [1], [1]])
+#     #x = np.matmul(P,x)
+#     T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
+#
+#     [x,y,z] = np.matmul(T_inverse,x-v)
+#     return [-x[0],y[0]]
 
-def clover_position(x):
-    x = np.array(x)
+def clover_position(x,t):
     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
-    v = 1 / 3 * np.array([[1], [1], [1]])
-    #x = np.matmul(P,x)
-    T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
-
-    [x,y,z] = np.matmul(T_inverse,x-v)
-    return [-x[0],y[0]]
+    #v = 1 / 3 * np.array([[1], [1], [1]])
+    #x = np.matmul(P,x-v)+v
+    cube_root1 = np.array([1,0])
+    cube_root2 = np.array([np.cos(2*np.pi/3), np.sin(2*np.pi/3)])
+    cube_root3 = np.array([np.cos(-2*np.pi/3), np.sin(-2*np.pi/3)])
+    [x,y] = x[0]*cube_root1 + x[1]*cube_root2/t + x[2]*cube_root3
+    return [x,y]
 
 
 def generate_developing_map(abstract_surface):
@@ -402,7 +417,6 @@ def generate_developing_map(abstract_surface):
 
 def triangle_order_generator(edge_list, prev_state, n, top_bottom_list):
     if len(edge_list) == n:
-
         return (edge_list,top_bottom_list)
     current_edge_on_previous_triangle = edge_list[-1]
     current_edge_on_new_triangle = current_edge_on_previous_triangle.edge_glued[2]
@@ -556,9 +570,9 @@ def generate_real_surface_map(abstract_surface,ax):
         #     [x3, y3] = triangle.vertices[2].c
         # except:
         #     print(triangle.index)
-        [x1,y1] = clover_position([[x1],[y1],[z1]])
-        [x2, y2] = clover_position([[x2],[y2],[z2]])
-        [x3, y3] = clover_position([[x3],[y3],[z3]])
+        [x1,y1] = clover_position([[x1],[y1],[z1]], t)
+        [x2, y2] = clover_position([[x2],[y2],[z2]], t)
+        [x3, y3] = clover_position([[x3],[y3],[z3]], t)
         x = [x1, x2, x3, x1]
         y = [y1, y2, y3, y1]
         ax.plot(x, y)
@@ -713,7 +727,7 @@ def import_file():
     abstract_surface = convert_gluing_table_to_surface(filename)
     win = tk.Toplevel()
     win.wm_title("Uploaded Surface")
-    l = tk.Label(win, text="The uploaded gluing table is visualised as a combinatorial map below. Continue generating developing map?")
+    l = tk.Label(win, text="The uploaded gluing table is visualised as a combinatorial map below. Continue importing?")
     l.pack(padx=20, pady=10)
     win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
     figure = plt.Figure(figsize=(6, 5), dpi=100)

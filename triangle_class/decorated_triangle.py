@@ -30,6 +30,8 @@ class Edge:
         self.v1 = v1
         self.v0.edges.append(self)
         self.v1.edges.append(self)
+        self.ev0v1 = np.dot(self.v0.r,self.v1.c)
+        self.ev1v0 = np.dot(self.v1.r, self.v0.c)
         self.triangles = []
 
 class Triangle:
@@ -43,6 +45,11 @@ class Triangle:
                 self.vertices.append(edge.v0)
             if edge.v1 not in self.vertices:
                 self.vertices.append(edge.v1)
+        [v0, v1, v2] = self.vertices
+        if np.linalg.det([v0.c,v1.c,v2.c]) < 0:
+            self.vertices = [v0, v1, v2]
+        self.t = np.dot(v0.r, v1.c)*np.dot(v1.r, v2.c)*np.dot(v2.r, v0.c)/(np.dot(v1.r, v0.c)*np.dot(v2.r, v1.c)*np.dot(v0.r, v2.c))
+        #print(self.t)
         self.neighbours = []
     def add_neighbour(self, neighbour_triangle):
         self.neighbours.append(neighbour_triangle)
