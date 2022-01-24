@@ -232,14 +232,14 @@ class App(tk.Frame):
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
             #self.correct_edge_orientation(self.edge_selected)
-            print(self.edge_selected.v0.r, self.edge_selected.v1.r)
-            print(self.edge_selected.v0.c, self.edge_selected.v1.c)
+            print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
+            print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
             m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
                                               self.edge_selected.v1.c, e03, e23)
             print(np.linalg.det(m_inverse))
             c3 = compute_c3(m_inverse,e03, e23, A023)
             r3 = compute_r3(self.edge_selected.v0.c, self.edge_selected.v1.c, c3, e30, e32)
-            print(r3, c3)
+            print(f'r3: {r3}', f'c3: {c3}')
             self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3))
 
             self.add_triangle_error_text.set("")
@@ -388,8 +388,11 @@ def convert_gluing_table_to_surface(filename):
 
 def clover_position(x):
     x = np.array(x)
+    #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
+    v = 1 / 3 * np.array([[1], [1], [1]])
+    #x = np.matmul(P,x)
     T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
-    v = 1/3*np.array([[1],[1],[1]])
+
     [x,y,z] = np.matmul(T_inverse,x-v)
     return [-x[0],y[0]]
 
@@ -397,10 +400,10 @@ def clover_position(x):
 def generate_developing_map(abstract_surface):
     pass
 
-def triangle_order_generator(edge_list, prev_state, n):
+def triangle_order_generator(edge_list, prev_state, n, top_bottom_list):
     if len(edge_list) == n:
 
-        return edge_list
+        return (edge_list,top_bottom_list)
     current_edge_on_previous_triangle = edge_list[-1]
     current_edge_on_new_triangle = current_edge_on_previous_triangle.edge_glued[2]
     new_triangle = current_edge_on_new_triangle.triangle
@@ -421,9 +424,11 @@ def triangle_order_generator(edge_list, prev_state, n):
         if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
             new_prev_state = 'bottom'
 
+    top_bottom_list.append(new_prev_state)
+
     next_edge_on_new_triangle = new_triangle.edges[next_edge_on_new_triangle]
     edge_list.append(next_edge_on_new_triangle)
-    return triangle_order_generator(edge_list, new_prev_state, n)
+    return triangle_order_generator(edge_list, new_prev_state, n, top_bottom_list)
 
 def generate_real_surface_map(abstract_surface,ax):
     punctured_triangles = []
@@ -443,7 +448,7 @@ def generate_real_surface_map(abstract_surface,ax):
             first_edge_index = (edge_index - 1) % 3
             break
     edge_list = [first_triangle.edges[first_edge_index]]
-    edge_list = triangle_order_generator(edge_list, 'top', len(abstract_surface.triangles))
+    edge_list, top_bottom_list = triangle_order_generator(edge_list, 'top', len(abstract_surface.triangles), ['top'])
     t = 1
     e01 = 1
     e02 = 1
@@ -486,32 +491,220 @@ def generate_real_surface_map(abstract_surface,ax):
         current_edge_abstract_surface = edge.edge_glued[2]
     #main_surface.normalise_vertices()
 
-    vertex_points = []
-    r=2
-    thetas = np.linspace(0,2*np.pi, len(main_surface.triangles)+2)
-    for theta in thetas:
-        vertex_points.append(np.array([r*np.cos(theta),r*np.sin(theta)]))
+    # print(top_bottom_list)
+    # print([edge.triangle.index for edge in edge_list])
+    # vertex_points = []
+    # r=2
+    # thetas = np.linspace(0,2*np.pi, len(main_surface.triangles)+2)
+    # for theta in thetas:
+    #     vertex_points.append(np.array([r*np.cos(theta),r*np.sin(theta)]))
+    #
+    # first_connecting_edge = main_surface.triangles[0].edges[0]
+    # for edge in main_surface.triangles[0].edges:
+    #     if len(edge.triangles)==2:
+    #         first_connecting_edge = edge
+    # for vertex in main_surface.triangles[0].vertices:
+    #     if vertex != first_connecting_edge.v0 and vertex != first_connecting_edge.v1:
+    #         vertex.c = vertex_points[0]
+    #         for other_vertex_index in range(3):
+    #             if main_surface.triangles[0].vertices[other_vertex_index] == vertex:
+    #                 other_vertex_index = (other_vertex_index -1)%3
+    #                 main_surface.triangles[0].vertices[other_vertex_index].c = vertex_points[-1]
+    #
+    #
+    # vertex_points_used = [vertex_points[-1],vertex_points[0]]
+    #
+    #
+    # triangle_index = 1
+    #
+    #
+    #
+    # connecting_edges = []
+    # for triangle in main_surface.triangles[1:]:
+    #     for edge in triangle.edges:
+    #         if edge not in connecting_edges and len(edge.triangles) == 2:
+    #             if top_bottom_list[triangle_index] == 'top':
+    #                 vertex_point_to_use = vertex_points[(-1)**triangle_index*triangle_index]
+    #                 edge.v1.c = vertex_point_to_use
+    #                 vertex_points_used.append(vertex_point_to_use)
+    #             else:
+    #                 vertex_point_to_use = vertex_points[-(-1) ** triangle_index * triangle_index]
+    #                 edge.v0.c = vertex_point_to_use
+    #                 vertex_points_used.append(vertex_point_to_use)
+    #             connecting_edges.append(edge)
+    #
+    #     triangle_index+=1
+    #
+    #
+    # for triangle in main_surface.triangles:
+    #     for edge in triangle.edges:
+    #         if len(edge.v0.c) == 3:
+    #             print(triangle.index)
+    #             for v in vertex_points_used:
+    #                 for other_v_index in range(len(vertex_points)):
+    #                     if np.all(v!=vertex_points[other_v_index]):
+    #                         edge.v0.c = v
 
-    main_surface.triangles[0].vertices[0].c = vertex_points.pop()
-    main_surface.triangles[0].vertices[2].c = vertex_points.pop()
-    for triangle in main_surface.triangles[1:]:
-        triangle.vertices[1].c = vertex_points.pop()
-    main_surface.triangles[-1].vertices[2].c = vertex_points.pop()
+
 
 
     for triangle in main_surface.triangles:
-        [x1, y1] = triangle.vertices[0].c
-        [x2, y2] = triangle.vertices[1].c
-        [x3, y3] = triangle.vertices[2].c
-        #[x1,y1] = clover_position([[x1],[y1],[z1]])
-        #[x2, y2] = clover_position([[x2],[y2],[z2]])
-        #[x3, y3] = clover_position([[x3],[y3],[z3]])
+        [x1, y1, z1] = triangle.vertices[0].c
+        [x2, y2, z2] = triangle.vertices[1].c
+        [x3, y3, z3] = triangle.vertices[2].c
+        # try:
+        #     [x3, y3] = triangle.vertices[2].c
+        # except:
+        #     print(triangle.index)
+        [x1,y1] = clover_position([[x1],[y1],[z1]])
+        [x2, y2] = clover_position([[x2],[y2],[z2]])
+        [x3, y3] = clover_position([[x3],[y3],[z3]])
         x = [x1, x2, x3, x1]
         y = [y1, y2, y3, y1]
-        ax.plot(x, y, c='blue')
-        ax.annotate(triangle.index,[np.mean(x),np.mean(y)])
+        ax.plot(x, y)
+        ax.annotate(triangle.index,[np.mean(x[:-1]),np.mean(y[:-1])])
 
     return main_surface
+
+def generate_combinatorial_map(abstract_surface, ax):
+    punctured_triangles = []
+    for triangle in abstract_surface.triangles:
+        for edge in triangle.edges:
+            if not edge.edge_glued:
+                punctured_triangles.append(triangle)
+                break
+    number_of_outer_edges = len(abstract_surface.triangles) + 2
+    if len(punctured_triangles):
+        first_triangle = punctured_triangles[0]
+    else:
+        first_triangle = abstract_surface.triangles[0]
+    first_edge_index = 0
+    for edge_index in range(3):
+        if not first_triangle.edges[edge_index].edge_glued:
+            first_edge_index = (edge_index - 1) % 3
+            break
+    edge_list = [first_triangle.edges[first_edge_index]]
+    edge_list, top_bottom_list = triangle_order_generator(edge_list, 'top', len(abstract_surface.triangles), ['top'])
+
+    triangle_indices = [edge.triangle.index for edge in edge_list]
+    print(top_bottom_list)
+
+    vertex_points = []
+    r=10
+    thetas = np.linspace(0.5*np.pi,2*np.pi, len(edge_list)+2)
+    for theta in thetas:
+        vertex_points.append(np.array([-r*np.cos(theta),r*np.sin(theta)]))
+
+    abstract_plotting_surface = AbstractSurface()
+    for triangle_index in triangle_indices:
+        abstract_plotting_surface.add_triangle()
+        abstract_plotting_surface.triangles[-1].index = triangle_index
+
+    for index in range(len(abstract_plotting_surface.triangles[:-1])):
+        triangle_plotting_index = abstract_plotting_surface.triangles[index].index
+        next_triangle_plotting_index = abstract_plotting_surface.triangles[index+1].index
+        edge_connection_index = '01'
+        other_edge_index = '01'
+        flipped = 0
+        for edge in abstract_surface.triangles[triangle_plotting_index].edges:
+            try:
+                if edge.edge_glued[2].triangle == abstract_surface.triangles[next_triangle_plotting_index]:
+                    edge_connection_index = edge.index
+                    other_edge_index = edge.edge_glued[2].index
+                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+            except:
+                pass
+        edge_to_glue = abstract_plotting_surface.triangles[index].edges[0]
+        other_edge_to_glue = abstract_surface.triangles[next_triangle_plotting_index].edges[0]
+        for edge in abstract_plotting_surface.triangles[index].edges:
+            if edge.index == edge_connection_index:
+                edge_to_glue = edge
+        for edge in abstract_plotting_surface.triangles[index+1].edges:
+            if edge.index == other_edge_index:
+                other_edge_to_glue = edge
+        if not flipped:
+            abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v0)
+        else:
+            abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v1)
+
+    print([triangle.index for triangle in abstract_plotting_surface.triangles])
+    non_glued_vertex = 0
+
+    # for triangle in abstract_plotting_surface.triangles:
+    #
+    #     for edge in triangle.edges:
+    #         print('triangle', triangle.index, 'edge:', edge.index, edge.edge_glued)
+
+
+    for vertex in abstract_plotting_surface.triangles[0].vertices:
+        belongs_to_glued_edge = False
+        for edge in vertex.edges:
+            if edge.edge_glued:
+                belongs_to_glued_edge = True
+        if not belongs_to_glued_edge:
+            #print([None != edge.edge_glued for edge in vertex.edges])
+            abstract_plotting_surface.give_vertex_coordinates(vertex, vertex_points[0])
+            abstract_plotting_surface.give_vertex_coordinates(vertex.edges[0].triangle.vertices[(vertex.index-1) % 3], vertex_points[-1])
+
+    used_vertex_points = [vertex_points[0], vertex_points[-1]]
+
+    for triangle_index in range(len(abstract_plotting_surface.triangles)):
+        triangle = abstract_plotting_surface.triangles[triangle_index]
+        for edge in triangle.edges:
+            if edge.edge_glued:
+                try:
+                    edge.was_connected
+                except:
+                    next_vertex = edge.v0
+                    for other_edge in edge.v0.edges:
+                        try:
+                            other_edge.was_connected
+                            next_vertex = edge.v1
+                        except:
+                            pass
+                    if top_bottom_list[triangle_index] == 'top':
+                        next_vertex_point = vertex_points[triangle_index+1]
+                    else:
+                         next_vertex_point = vertex_points[-triangle_index -2]
+                    abstract_plotting_surface.give_vertex_coordinates(next_vertex, next_vertex_point)
+                    used_vertex_points.append(next_vertex_point)
+
+                    edge.was_connected = True
+                    edge.edge_glued[2].was_connected = True
+
+    last_vertex = abstract_plotting_surface.triangles[-1].vertices[0]
+    for vertex in abstract_plotting_surface.triangles[-1].vertices:
+        try:
+            vertex.coord
+        except:
+            last_vertex = vertex
+
+    for other_coord_index in range(len(vertex_points)):
+        was_used = False
+        for coord in used_vertex_points:
+            if coord[0] == vertex_points[other_coord_index][0] and coord[1] == vertex_points[other_coord_index][1]:
+                was_used = True
+                break
+        if not was_used:
+            last_vertex.coord = vertex_points[other_coord_index]
+
+
+    for triangle in abstract_plotting_surface.triangles:
+        for vertex in triangle.vertices:
+                try:
+                    print('triangle: ', triangle.index,'vertex: ', vertex.index, 'coords: ',vertex.coord)
+                except:
+                    print('triangle: ', triangle.index, 'vertex: ', vertex.index, 'coords: ', 'None')
+
+    for triangle in abstract_plotting_surface.triangles:
+        [x1, y1] = triangle.vertices[0].coord
+        [x2, y2] = triangle.vertices[1].coord
+        [x3, y3] = triangle.vertices[2].coord
+        x = [x1, x2, x3, x1]
+        y = [y1, y2, y3, y1]
+        ax.plot(x, y)
+        ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
+
 
 def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
@@ -529,8 +722,8 @@ def import_file():
     chart_type.get_tk_widget().pack()
     ax.set_title('Combinatorial Map')
 
-
-    main_surface = generate_real_surface_map(abstract_surface,ax)
+    generate_combinatorial_map(abstract_surface, ax)
+    #main_surface = generate_real_surface_map(abstract_surface,ax)
     ax.set_axis_off()
     chart_type.draw()
 

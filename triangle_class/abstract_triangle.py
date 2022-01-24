@@ -37,5 +37,28 @@ class AbstractSurface:
             edge.edge_glued = [initial_edge_vertex, initial_other_edge_vertex, other_edge]
             other_edge.edge_glued = [initial_other_edge_vertex, initial_edge_vertex, edge]
 
+    def give_vertex_coordinates(self, vertex, coord):
+        try:
+            vertex.coord
+        except:
+            vertex.coord = coord
+
+            for edge in vertex.edges:
+                if edge.edge_glued:
+                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                    vertex_is_at_end_of_edge = (edge.v1 == vertex)
+                    if not flipped:
+                        if vertex_is_at_end_of_edge:
+                            other_vertex = edge.edge_glued[2].v1
+                        else:
+                            other_vertex = edge.edge_glued[2].v0
+                    else:
+                        if vertex_is_at_end_of_edge:
+                            other_vertex = edge.edge_glued[2].v0
+                        else:
+                            other_vertex = edge.edge_glued[2].v1
+                    self.give_vertex_coordinates(other_vertex, coord)
+                    #other_vertex.coord = coord
+
 
 
