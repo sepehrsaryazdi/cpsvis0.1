@@ -232,14 +232,14 @@ class App(tk.Frame):
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
             self.correct_edge_orientation(self.edge_selected)
-            print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
-            print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
+            # print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
+            # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
             m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
                                               self.edge_selected.v1.c, e03, e23)
-            print(np.linalg.det(m_inverse))
+            # print(np.linalg.det(m_inverse))
             c3 = compute_c3(m_inverse,e03, e23, A023)
             r3 = compute_r3(self.edge_selected.v0.c, self.edge_selected.v1.c, c3, e30, e32)
-            print(f'r3: {r3}', f'c3: {c3}')
+            # print(f'r3: {r3}', f'c3: {c3}')
             self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3))
 
             self.add_triangle_error_text.set("")
@@ -256,8 +256,6 @@ class App(tk.Frame):
                 x = [x1, x2, x3, x1]
                 y = [y1, y2, y3, y1]
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))
-
-            
 
             v0 = self.edge_selected.v0.c
             v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
@@ -322,6 +320,18 @@ class App(tk.Frame):
                 y = [y1, y2, y3, y1]
 
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))
+            # first_line0 = np.array([[0], [0], [1]]) - 3 * np.array([[0], [1], [0]])
+            # first_line1 = np.array([[0], [0], [1]]) + 3 * np.array([[0], [1], [0]])
+            # second_line0 = np.array([[1], [0], [0]]) - 3 * np.array([[0], [0], [1]])
+            # second_line1 = np.array([[1], [0], [0]]) + 3 * np.array([[0], [0], [1]])
+            # third_line0 = np.array([[0], [1], [0]]) - 3 * np.array([[1], [0], [0]])
+            # third_line1 = np.array([[0], [1], [0]]) + 3 * np.array([[1], [0], [0]])
+            # for l in [[first_line0, first_line1], [second_line0, second_line1], [third_line0, third_line1]]:
+            #     [x1, y1] = clover_position(l[0], self.t)
+            #     [x2, y2] = clover_position(l[1], self.t)
+            #     x = [x1, x2]
+            #     y = [y1, y2]
+            #     self.plot_data.append(self.ax.plot(x, y, c='blue'))
             v0 = self.edge_selected.v0.c
             v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
             v1 = self.edge_selected.v1.c
@@ -391,25 +401,26 @@ def convert_gluing_table_to_surface(filename):
 
     return abstract_surface
 #
-# def clover_position(x):
-#     x = np.array(x)
-#     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
-#     v = 1 / 3 * np.array([[1], [1], [1]])
-#     #x = np.matmul(P,x)
-#     T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
-#
-#     [x,y,z] = np.matmul(T_inverse,x-v)
-#     return [-x[0],y[0]]
-
-def clover_position(x,t):
+def clover_position(x, t):
+    x = np.array(x)
+    x = x/np.linalg.norm(x)
     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
-    #v = 1 / 3 * np.array([[1], [1], [1]])
-    #x = np.matmul(P,x-v)+v
-    cube_root1 = np.array([1,0])
-    cube_root2 = np.array([np.cos(2*np.pi/3), np.sin(2*np.pi/3)])
-    cube_root3 = np.array([np.cos(-2*np.pi/3), np.sin(-2*np.pi/3)])
-    [x,y] = x[0]*cube_root1 + x[1]*cube_root2/t + x[2]*cube_root3
-    return [x,y]
+    v = 1 / 3 * np.array([[1], [1], [1]])
+    #x = np.matmul(P,x)
+    T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
+
+    [x,y,z] = np.matmul(T_inverse,x-v)
+    return [x[0],y[0]]
+#
+# def clover_position(x,t):
+#     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
+#     #v = 1 / 3 * np.array([[1], [1], [1]])
+#     #x = np.matmul(P,x-v)+v
+#     cube_root1 = np.array([1,0])
+#     cube_root2 = np.array([np.cos(2*np.pi/3), np.sin(2*np.pi/3)])
+#     cube_root3 = np.array([np.cos(-2*np.pi/3), np.sin(-2*np.pi/3)])
+#     [x,y] = x[0]*cube_root1 + x[1]*cube_root2/t + x[2]*cube_root3
+#     return [x,y]
 
 
 def generate_developing_map(abstract_surface):
