@@ -160,9 +160,9 @@ class App(tk.Frame):
             self.edge_selected = self.main_surface.triangles[-1].edges[-2]
             self.main_surface.normalise_vertices()
             for triangle in self.main_surface.triangles:
-                [x1, y1, z1] = triangle.vertices[0].c
-                [x2, y2, z2] = triangle.vertices[1].c
-                [x3, y3, z3] = triangle.vertices[2].c
+                [x1, y1, z1] = triangle.vertices[0].c_clover
+                [x2, y2, z2] = triangle.vertices[1].c_clover
+                [x3, y3, z3] = triangle.vertices[2].c_clover
                 [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
                 [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
                 [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
@@ -170,9 +170,9 @@ class App(tk.Frame):
                 y = [y1, y2, y3, y1]
 
                 self.plot_data.append(self.ax.plot(x, y, c='blue'))
-            v0 = self.edge_selected.v0.c
+            v0 = self.edge_selected.v0.c_clover
             v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
-            v1 = self.edge_selected.v1.c
+            v1 = self.edge_selected.v1.c_clover
             v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
             self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                                    [v0[1], v1[1]], c='red'))
@@ -181,7 +181,11 @@ class App(tk.Frame):
         except:
             self.generate_surface_error_text.set("Please add an initial triangle before normalising decorations.")
 
-
+    def string_fraction_to_float(self, string):
+        if '/' in string:
+            string = string.rsplit('/')
+            return float(string[0])/float(string[1])
+        return float(string)
 
     def onclick(self,event):
         coord = np.array([event.xdata,event.ydata])
@@ -194,9 +198,9 @@ class App(tk.Frame):
                     all_edges.append(edge)
         distances = []
         for edge in all_edges:
-            v0 = edge.v0.c
+            v0 = edge.v0.c_clover
             v0 = np.array(clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t))
-            v1 = edge.v1.c
+            v1 = edge.v1.c_clover
             v1 = np.array(clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t))
             v = v1-v0
             x = coord - v0
@@ -204,9 +208,9 @@ class App(tk.Frame):
         if self.edge_selected:
             self.plot_data[-1][0].remove()
         self.edge_selected = all_edges[np.argmin(distances)]
-        v0 = self.edge_selected.v0.c
+        v0 = self.edge_selected.v0.c_clover
         v0 = clover_position([[v0[0]],[v0[1]],[v0[2]]], self.t)
-        v1 = self.edge_selected.v1.c
+        v1 = self.edge_selected.v1.c_clover
         v1 = clover_position([[v1[0]],[v1[1]],[v1[2]]], self.t)
         self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                      [v0[1], v1[1]],c='red'))
@@ -224,11 +228,11 @@ class App(tk.Frame):
     def add_triangle(self, event):
         try:
             assert self.edge_selected
-            e03 = float(self.add_triangle_params[0].get())
-            e30 = float(self.add_triangle_params[1].get())
-            e23 = float(self.add_triangle_params[2].get())
-            e32 = float(self.add_triangle_params[3].get())
-            A023 = float(self.add_triangle_params[4].get())
+            e03 = self.string_fraction_to_float(self.add_triangle_params[0].get())
+            e30 = self.string_fraction_to_float(self.add_triangle_params[1].get())
+            e23 = self.string_fraction_to_float(self.add_triangle_params[2].get())
+            e32 = self.string_fraction_to_float(self.add_triangle_params[3].get())
+            A023 = self.string_fraction_to_float(self.add_triangle_params[4].get())
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
             self.correct_edge_orientation(self.edge_selected)
@@ -239,17 +243,30 @@ class App(tk.Frame):
             # print(np.linalg.det(m_inverse))
             c3 = compute_c3(m_inverse,e03, e23, A023)
             r3 = compute_r3(self.edge_selected.v0.c, self.edge_selected.v1.c, c3, e30, e32)
-            # print(f'r3: {r3}', f'c3: {c3}')
-            self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3))
+
+            m_inverse_clover = compute_m_inverse(self.edge_selected.v0.r_clover, self.edge_selected.v1.r_clover, self.edge_selected.v0.c_clover,
+                                          self.edge_selected.v1.c_clover, e03, e23)
+            # print(np.linalg.det(m_inverse))
+            c3_clover = compute_c3(m_inverse_clover, e03, e23, A023)
+            r3_clover = compute_r3(self.edge_selected.v0.c_clover, self.edge_selected.v1.c_clover, c3_clover, e30, e32)
+            print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
+            print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
+            print(f'm_inverse: {m_inverse}')
+            print(f'r3: {r3}', f'c3: {c3}')
+            print(f'r0_clover: {self.edge_selected.v0.r_clover}', f'r2_clover: {self.edge_selected.v1.r_clover}')
+            print(f'c0_clover: {self.edge_selected.v0.c_clover}', f'c2_clover: {self.edge_selected.v1.c_clover}')
+            print(f'm_inverse: {m_inverse_clover}')
+            print(f'r3_clover: {r3_clover}', f'c3_clover: {c3_clover}')
+            self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3, c3_clover, r3_clover))
 
             self.add_triangle_error_text.set("")
             if self.edge_selected:
                 self.plot_data[-1][0].remove()
             self.edge_selected = self.main_surface.triangles[-1].edges[-2]
             for triangle in self.main_surface.triangles:
-                [x1, y1, z1] = triangle.vertices[0].c
-                [x2, y2, z2] = triangle.vertices[1].c
-                [x3, y3, z3] = triangle.vertices[2].c
+                [x1, y1, z1] = triangle.vertices[0].c_clover
+                [x2, y2, z2] = triangle.vertices[1].c_clover
+                [x3, y3, z3] = triangle.vertices[2].c_clover
                 [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
                 [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
                 [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
@@ -257,13 +274,14 @@ class App(tk.Frame):
                 y = [y1, y2, y3, y1]
                 self.plot_data.append(self.ax.plot(x, y,c='blue'))
 
-            v0 = self.edge_selected.v0.c
+            v0 = self.edge_selected.v0.c_clover
             v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
-            v1 = self.edge_selected.v1.c
+            v1 = self.edge_selected.v1.c_clover
             v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
             self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                                [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
+            #self.generate_surface_visual(None)
         except:
             try:
                 self.main_surface
@@ -294,24 +312,37 @@ class App(tk.Frame):
         self.ax.set_axis_off()
         self.figure.canvas.mpl_connect('button_press_event', self.onclick)
         try:
-            t = float(self.triangle_parameter.get())
+            t = self.string_fraction_to_float(self.triangle_parameter.get())
             self.t = t
-            e01 = float(self.half_edge_params[0].get())
-            e10 = float(self.half_edge_params[1].get())
-            e02 = float(self.half_edge_params[2].get())
-            e20 = float(self.half_edge_params[3].get())
-            e12 = float(self.half_edge_params[4].get())
-            e21 = float(self.half_edge_params[5].get())
+            e01 = self.string_fraction_to_float(self.half_edge_params[0].get())
+            e10 = self.string_fraction_to_float(self.half_edge_params[1].get())
+            e02 = self.string_fraction_to_float(self.half_edge_params[2].get())
+            e20 = self.string_fraction_to_float(self.half_edge_params[3].get())
+            e12 = self.string_fraction_to_float(self.half_edge_params[4].get())
+            e21 = self.string_fraction_to_float(self.half_edge_params[5].get())
             assert t > 0 and e01 > 0 and e10 > 0 and e02 > 0 and e20 > 0 and e12 > 0 and e21 > 0
 
+            c0 = [1,0,0]
+            c1 = [0,t,0]
+            c2 = [0,0,1]
+            r0 = [0, e01 / t, e02]
+            r1= [e10, 0, e12]
+            r2= [e20, e21 / t, 0]
+            c0_clover = [1,0,0]
+            c1_clover = [0,1,0]
+            c2_clover = [0,0,1]
+            x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
+            cube_root_x_coord_t = np.power(x_coord_t, 1)
+            r0_clover = [0, cube_root_x_coord_t, 1]
+            r1_clover = [1, 0, cube_root_x_coord_t]
+            r2_clover = [cube_root_x_coord_t, 1, 0]
             self.error_text.set("")
-            self.main_surface = Surface([1,0,0], [0,t,0], [0,0, 1],
-                                                             [0, e01/t, e02], [e10, 0, e12], [e20, e21/t, 0])
+            self.main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover, r2_clover)
             self.edge_selected = self.main_surface.triangles[-1].edges[-1]
             for triangle in self.main_surface.triangles:
-                [x1, y1, z1] = triangle.vertices[0].c
-                [x2, y2, z2] = triangle.vertices[1].c
-                [x3, y3, z3] = triangle.vertices[2].c
+                [x1, y1, z1] = triangle.vertices[0].c_clover
+                [x2, y2, z2] = triangle.vertices[1].c_clover
+                [x3, y3, z3] = triangle.vertices[2].c_clover
                 [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
                 [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
                 [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
@@ -332,9 +363,9 @@ class App(tk.Frame):
             #     x = [x1, x2]
             #     y = [y1, y2]
             #     self.plot_data.append(self.ax.plot(x, y, c='blue'))
-            v0 = self.edge_selected.v0.c
+            v0 = self.edge_selected.v0.c_clover
             v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
-            v1 = self.edge_selected.v1.c
+            v1 = self.edge_selected.v1.c_clover
             v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
             self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                                [v0[1], v1[1]], c='red'))
@@ -403,7 +434,7 @@ def convert_gluing_table_to_surface(filename):
 #
 def clover_position(x, t):
     x = np.array(x)
-    x = x/np.linalg.norm(x)
+    x = x/(sum(sum(x)))
     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
     v = 1 / 3 * np.array([[1], [1], [1]])
     #x = np.matmul(P,x)
@@ -424,6 +455,10 @@ def clover_position(x, t):
 
 
 def generate_developing_map(abstract_surface):
+
+
+
+
     pass
 
 def triangle_order_generator(edge_list, prev_state, n, top_bottom_list):
@@ -591,6 +626,84 @@ def generate_real_surface_map(abstract_surface,ax):
 
     return main_surface
 
+def get_dual_vertex(vertex, edge):
+    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+    vertex_is_at_end_of_edge = (edge.v1 == vertex)
+    if not flipped:
+        if vertex_is_at_end_of_edge:
+            other_vertex = edge.edge_glued[2].v1
+        else:
+            other_vertex = edge.edge_glued[2].v0
+    else:
+        if vertex_is_at_end_of_edge:
+            other_vertex = edge.edge_glued[2].v0
+        else:
+            other_vertex = edge.edge_glued[2].v1
+    return other_vertex
+
+
+
+def vertex_traversal(vertex, vertex_points, abstract_plotting_surface):
+
+    try:
+        abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
+    except:
+        return abstract_plotting_surface
+
+    belongs_to_two_glued_edges = False
+    count = 0
+    for edge in vertex.edges:
+        if edge.edge_glued:
+            count+=1
+    if count == 2:
+        belongs_to_two_glued_edges = True
+
+    triangle_belongs_to = vertex.edges[0].triangle
+
+    if not belongs_to_two_glued_edges:
+        try:
+
+            triangle_belongs_to.vertices[(vertex.index-1)%3].coord
+            vertex = triangle_belongs_to.vertices[(vertex.index+1)%3]
+        except:
+            try:
+                print(vertex.index, vertex.edges[0].triangle.index)
+                triangle_belongs_to.vertices[(vertex.index + 1) % 3].coord
+                edge = vertex.edges[0]
+                other_vertex = get_dual_vertex(vertex, edge)
+                try:
+                    other_vertex.coord
+                    edge = vertex.edges[1]
+                    vertex = get_dual_vertex(vertex, edge)
+                except:
+                    vertex = triangle_belongs_to.vertices[(vertex.index + 1) % 3]
+            except:
+                vertex = triangle_belongs_to.vertices[(vertex.index - 1) % 3]
+
+    else:
+        finished = False
+        while not finished:
+            edge = vertex.edges[0]
+            other_vertex = get_dual_vertex(vertex, edge)
+            try:
+                other_vertex.coord
+                edge = vertex.edges[1]
+                other_vertex = get_dual_vertex(vertex, edge)
+            except:
+                vertex = other_vertex
+            count = 0
+            for edge in vertex.edges:
+                if edge.edge_glued:
+                    count+=1
+            if count < 2:
+                finished = True
+    return vertex_traversal(vertex, vertex_points, abstract_plotting_surface)
+
+
+
+
+
+
 def generate_combinatorial_map(abstract_surface, ax):
     punctured_triangles = []
     for triangle in abstract_surface.triangles:
@@ -612,7 +725,6 @@ def generate_combinatorial_map(abstract_surface, ax):
     edge_list, top_bottom_list = triangle_order_generator(edge_list, 'top', len(abstract_surface.triangles), ['top'])
 
     triangle_indices = [edge.triangle.index for edge in edge_list]
-    print(top_bottom_list)
 
     vertex_points = []
     r=10
@@ -652,83 +764,85 @@ def generate_combinatorial_map(abstract_surface, ax):
         else:
             abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v1)
 
-    print([triangle.index for triangle in abstract_plotting_surface.triangles])
-    non_glued_vertex = 0
 
+
+    abstract_plotting_surface = vertex_traversal(abstract_plotting_surface.triangles[0].vertices[0], vertex_points, abstract_plotting_surface)
+
+    print([triangle.index for triangle in abstract_plotting_surface.triangles])
     # for triangle in abstract_plotting_surface.triangles:
     #
     #     for edge in triangle.edges:
     #         print('triangle', triangle.index, 'edge:', edge.index, edge.edge_glued)
 
 
-    for vertex in abstract_plotting_surface.triangles[0].vertices:
-        belongs_to_glued_edge = False
-        for edge in vertex.edges:
-            if edge.edge_glued:
-                belongs_to_glued_edge = True
-        if not belongs_to_glued_edge:
-            #print([None != edge.edge_glued for edge in vertex.edges])
-            abstract_plotting_surface.give_vertex_coordinates(vertex, vertex_points[0])
-            abstract_plotting_surface.give_vertex_coordinates(vertex.edges[0].triangle.vertices[(vertex.index-1) % 3], vertex_points[-1])
-
-    used_vertex_points = [vertex_points[0], vertex_points[-1]]
-
-    for triangle_index in range(len(abstract_plotting_surface.triangles)):
-        triangle = abstract_plotting_surface.triangles[triangle_index]
-        for edge in triangle.edges:
-            if edge.edge_glued:
-                try:
-                    edge.was_connected
-                except:
-                    next_vertex = edge.v0
-                    for other_edge in edge.v0.edges:
-                        try:
-                            other_edge.was_connected
-                            next_vertex = edge.v1
-                        except:
-                            pass
-                    if top_bottom_list[triangle_index] == 'top':
-                        next_vertex_point = vertex_points[triangle_index+1]
-                    else:
-                         next_vertex_point = vertex_points[-triangle_index -2]
-                    abstract_plotting_surface.give_vertex_coordinates(next_vertex, next_vertex_point)
-                    used_vertex_points.append(next_vertex_point)
-
-                    edge.was_connected = True
-                    edge.edge_glued[2].was_connected = True
-
-    last_vertex = abstract_plotting_surface.triangles[-1].vertices[0]
-    for vertex in abstract_plotting_surface.triangles[-1].vertices:
-        try:
-            vertex.coord
-        except:
-            last_vertex = vertex
-
-    for other_coord_index in range(len(vertex_points)):
-        was_used = False
-        for coord in used_vertex_points:
-            if coord[0] == vertex_points[other_coord_index][0] and coord[1] == vertex_points[other_coord_index][1]:
-                was_used = True
-                break
-        if not was_used:
-            last_vertex.coord = vertex_points[other_coord_index]
-
-
+    # for vertex in abstract_plotting_surface.triangles[0].vertices:
+    #     belongs_to_glued_edge = False
+    #     for edge in vertex.edges:
+    #         if edge.edge_glued:
+    #             belongs_to_glued_edge = True
+    #     if not belongs_to_glued_edge:
+    #         #print([None != edge.edge_glued for edge in vertex.edges])
+    #         abstract_plotting_surface.give_vertex_coordinates(vertex, vertex_points[0])
+    #         abstract_plotting_surface.give_vertex_coordinates(vertex.edges[0].triangle.vertices[(vertex.index-1) % 3], vertex_points[-1])
+    #
+    # used_vertex_points = [vertex_points[0], vertex_points[-1]]
+    #
+    # for triangle_index in range(len(abstract_plotting_surface.triangles)):
+    #     triangle = abstract_plotting_surface.triangles[triangle_index]
+    #     for edge in triangle.edges:
+    #         if edge.edge_glued:
+    #             try:
+    #                 edge.was_connected
+    #             except:
+    #                 next_vertex = edge.v0
+    #                 for other_edge in edge.v0.edges:
+    #                     try:
+    #                         other_edge.was_connected
+    #                         next_vertex = edge.v1
+    #                     except:
+    #                         pass
+    #                 if top_bottom_list[triangle_index] == 'top':
+    #                     next_vertex_point = vertex_points[triangle_index+1]
+    #                 else:
+    #                      next_vertex_point = vertex_points[-triangle_index -2]
+    #                 abstract_plotting_surface.give_vertex_coordinates(next_vertex, next_vertex_point)
+    #                 used_vertex_points.append(next_vertex_point)
+    #
+    #                 edge.was_connected = True
+    #                 edge.edge_glued[2].was_connected = True
+    #
+    # last_vertex = abstract_plotting_surface.triangles[-1].vertices[0]
+    # for vertex in abstract_plotting_surface.triangles[-1].vertices:
+    #     try:
+    #         vertex.coord
+    #     except:
+    #         last_vertex = vertex
+    #
+    # for other_coord_index in range(len(vertex_points)):
+    #     was_used = False
+    #     for coord in used_vertex_points:
+    #         if coord[0] == vertex_points[other_coord_index][0] and coord[1] == vertex_points[other_coord_index][1]:
+    #             was_used = True
+    #             break
+    #     if not was_used:
+    #         last_vertex.coord = vertex_points[other_coord_index]
+    #
+    #
     for triangle in abstract_plotting_surface.triangles:
         for vertex in triangle.vertices:
                 try:
                     print('triangle: ', triangle.index,'vertex: ', vertex.index, 'coords: ',vertex.coord)
                 except:
                     print('triangle: ', triangle.index, 'vertex: ', vertex.index, 'coords: ', 'None')
-
-    for triangle in abstract_plotting_surface.triangles:
-        [x1, y1] = triangle.vertices[0].coord
-        [x2, y2] = triangle.vertices[1].coord
-        [x3, y3] = triangle.vertices[2].coord
-        x = [x1, x2, x3, x1]
-        y = [y1, y2, y3, y1]
-        ax.plot(x, y)
-        ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
+    #
+    # for triangle in abstract_plotting_surface.triangles:
+    #     [x1, y1] = triangle.vertices[0].coord
+    #     [x2, y2] = triangle.vertices[1].coord
+    #     [x3, y3] = triangle.vertices[2].coord
+    #     x = [x1, x2, x3, x1]
+    #     y = [y1, y2, y3, y1]
+    #     ax.plot(x, y)
+    #     ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
 
 
 def import_file():

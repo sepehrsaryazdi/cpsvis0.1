@@ -18,9 +18,11 @@ import numpy as np
 #         self.s2 = self.s2/np.linalg.norm(self.s2)
 
 class Vertex:
-    def __init__(self,c,r):
+    def __init__(self,c,r, c_clover, r_clover):
         self.c = c
         self.r = r
+        self.c_clover = c_clover
+        self.r_clover = r_clover
         self.edges = []
 
 
@@ -48,15 +50,15 @@ class Triangle:
         [v0, v1, v2] = self.vertices
         if np.linalg.det([v0.c,v1.c,v2.c]) < 0:
             self.vertices = [v0, v1, v2]
-        self.t = np.dot(v0.r, v1.c)*np.dot(v1.r, v2.c)*np.dot(v2.r, v0.c)/(np.dot(v1.r, v0.c)*np.dot(v2.r, v1.c)*np.dot(v0.r, v2.c))
+        self.t = np.dot(v0.r_clover, v1.c_clover)*np.dot(v1.r_clover, v2.c_clover)*np.dot(v2.r_clover, v0.c_clover)/(np.dot(v1.r_clover, v0.c_clover)*np.dot(v2.r_clover, v1.c_clover)*np.dot(v0.r_clover, v2.c_clover))
         #print(self.t)
         self.neighbours = []
     def add_neighbour(self, neighbour_triangle):
         self.neighbours.append(neighbour_triangle)
 
 class Surface:
-    def __init__(self, c0, c1, c2, r0, r1, r2):
-        vertices = [Vertex(c0,r0), Vertex(c1,r1), Vertex(c2,r2)]
+    def __init__(self, c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover, r2_clover):
+        vertices = [Vertex(c0,r0, c0_clover, r0_clover), Vertex(c1,r1, c1_clover, r1_clover), Vertex(c2,r2, c2_clover, r2_clover)]
         edges = [Edge(vertices[0],vertices[1]),Edge(vertices[1],vertices[2]),Edge(vertices[2],vertices[0])]
         initial_triangle = Triangle(edges[0],edges[1],edges[2])
         self.triangles = [initial_triangle]
@@ -78,6 +80,7 @@ class Surface:
                     all_vertices.append(vertex)
         for vertex in all_vertices:
             vertex.c = vertex.c/np.linalg.norm(vertex.c)
+            vertex.c_clover = vertex.c_clover / np.linalg.norm(vertex.c_clover)
 
     # def add_vertex(self, triangle, new_vertex):
     #     decoration = triangle.decoration

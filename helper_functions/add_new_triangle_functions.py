@@ -19,3 +19,6 @@ def compute_r3(c0, c2, c3, e30, e32):
     r3 = np.matmul(np.linalg.inv(A), np.array([[e30], [e32], [0]]))
     r3 = r3.T.flatten()
     return r3
+
+def compute_t(e01, e12, e20, e10, e21, e02):
+    return e01*e12*e20/(e10*e21*e02)
