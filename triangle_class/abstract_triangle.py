@@ -16,6 +16,7 @@ class Vertex:
     def __init__(self, index):
         self.index = index
         self.edges = []
+        self.coord = []
 
 class Triangle:
     def __init__(self, index):
@@ -34,13 +35,15 @@ class AbstractSurface:
 
     def glue_edges(self, edge, other_edge, initial_edge_vertex, initial_other_edge_vertex):
         if not edge.edge_glued:
+            flipped = (initial_other_edge_vertex != other_edge.v0)
             edge.edge_glued = [initial_edge_vertex, initial_other_edge_vertex, other_edge]
-            other_edge.edge_glued = [initial_other_edge_vertex, initial_edge_vertex, edge]
+            if flipped:
+                other_edge.edge_glued = [other_edge.v0, edge.v1, edge]
+            else:
+                other_edge.edge_glued = [other_edge.v0, edge.v0, edge]
 
     def give_vertex_coordinates(self, vertex, coord):
-        try:
-            vertex.coord
-        except:
+        if not len(vertex.coord):
             vertex.coord = coord
 
             for edge in vertex.edges:
