@@ -152,6 +152,7 @@ class App(tk.Frame):
         self.t = t
         self.ax.clear()
         self.ax.set_axis_off()
+        self.ax.remove()
         self.ax = self.figure.add_subplot(111)
         self.ax.set_title('Cloverleaf Position')
         self.ax.set_axis_off()
@@ -183,6 +184,7 @@ class App(tk.Frame):
         try:
             self.ax.clear()
             self.ax.set_axis_off()
+            self.ax.remove()
             self.ax = self.figure.add_subplot(111)
             self.ax.set_title('Cloverleaf Position')
             self.ax.set_axis_off()
@@ -917,14 +919,6 @@ def give_edge_identification_color_and_arrow(abstract_plotting_surface, abstract
         for edge in triangle.edges:
             edges.append(edge)
 
-    # for triangle in abstract_plotting_surface.triangles:
-    #     for edge in triangle.edges:
-    #         try:
-    #             if edge.edge_glued[2] not in edges:
-    #                 edges.append(edge)
-    #         except:
-    #             edges.append(edge)
-
     colors = colors_(2*len(edges)+1)
     arrow_strokes = 1
     for edge in edges:
@@ -982,7 +976,83 @@ def glue_plotting_surface_edges(abstract_plotting_surface, abstract_surface):
 
     return abstract_plotting_surface
 
-def generate_combinatorial_map(abstract_surface, ax):
+def select_triangle_combinatorial_map(event, abstract_plotting_surface, plot_combinatorial_map):
+    coord = np.array([event.xdata, event.ydata])
+    centres = []
+    for triangle in abstract_plotting_surface.triangles:
+        [x1, y1] = triangle.vertices[0].coord
+        [x2, y2] = triangle.vertices[1].coord
+        [x3, y3] = triangle.vertices[2].coord
+        x = [x1, x2, x3]
+        y = [y1, y2, y3]
+        centres.append([np.mean(x), np.mean(y)])
+
+    centres = np.array(centres)
+    distances = np.linalg.norm(np.repeat(np.array([coord]), len(centres), axis=0) - centres, axis=1)
+    selected_triangle = abstract_plotting_surface.triangles[np.argmin(distances)]
+    for triangle in abstract_plotting_surface.triangles:
+        triangle.selected = False
+    selected_triangle.selected = True
+
+    plot_combinatorial_map(abstract_plotting_surface)
+
+
+
+
+
+
+
+def plot_combinatorial_map(abstract_plotting_surface, ax, figure, chart_type):
+    ax.clear()
+    ax.remove()
+    ax.set_axis_off()
+
+    ax = figure.add_subplot(111)
+    ax.set_title('Combinatorial Map')
+    ax.set_axis_off()
+    figure.canvas.mpl_connect('button_press_event', lambda event : select_triangle_combinatorial_map(event, abstract_plotting_surface, lambda abstract_plotting_surface : plot_combinatorial_map(abstract_plotting_surface, ax=ax, figure=figure, chart_type=chart_type)))
+    plotted_edges = []
+    for triangle in abstract_plotting_surface.triangles:
+        for edge in triangle.edges:
+            [x1, y1] = edge.v0.coord
+            [x2, y2] = edge.v1.coord
+            x = [x1, x2]
+            y = [y1, y2]
+            ax.plot(x, y, c=edge.color)
+            plotted_edges.append(edge)
+            if edge.arrow_strokes > 0:
+                try:
+                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                    for i in range(edge.arrow_strokes):
+                        if flipped and edge.edge_glued[2] in plotted_edges:
+                            [x1, y1] = edge.v1.coord
+                            [x2, y2] = edge.v0.coord
+                        ax.arrow(x1, y1, (i + 4) * (x2 - x1) / (edge.arrow_strokes + 7),
+                                 (i + 4) * (y2 - y1) / (edge.arrow_strokes + 7), head_width=0.3, color=edge.color)
+                except:
+                    pass
+
+    for triangle in abstract_plotting_surface.triangles:
+        [x1, y1] = triangle.vertices[0].coord
+        [x2, y2] = triangle.vertices[1].coord
+        [x3, y3] = triangle.vertices[2].coord
+        x = [x1, x2, x3, x1]
+        y = [y1, y2, y3, y1]
+        if triangle.selected:
+            ax.fill(x,y, "b", alpha=0.2)
+        ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
+        coord0 = np.array([x1, y1])
+        coord1 = np.array([x2, y2])
+        coord2 = np.array([x3, y3])
+        ax.annotate(0, 9 * coord0 / 10 + 1 / 10 * (coord1 + coord2), color='grey')
+        ax.annotate(1, 9 * coord1 / 10 + 1 / 10 * (coord0 + coord2), color='grey')
+        ax.annotate(2, 9 * coord2 / 10 + 1 / 10 * (coord1 + coord0), color='grey')
+
+    chart_type.draw()
+
+
+
+def generate_combinatorial_map(abstract_surface, ax, figure, chart_type):
     punctured_triangles = []
     for triangle in abstract_surface.triangles:
         for edge in triangle.edges:
@@ -1005,10 +1075,11 @@ def generate_combinatorial_map(abstract_surface, ax):
 
 
     vertex_points = []
-    r=10
-    thetas = np.linspace(1/(len(edge_list))*np.pi,2*np.pi, len(edge_list)+2)
+    a = 10
+    b = 10
+    thetas = np.linspace(2/(len(edge_list))*np.pi,2*np.pi+1/(len(edge_list))*np.pi, len(edge_list)+2)
     for theta in thetas:
-        vertex_points.append(np.array([-r*np.cos(theta),r*np.sin(theta)]))
+        vertex_points.append(np.array([a*np.cos(theta),-b*np.sin(theta)]))
 
     abstract_plotting_surface = AbstractSurface()
     for triangle_index in triangle_indices:
@@ -1017,7 +1088,7 @@ def generate_combinatorial_map(abstract_surface, ax):
 
     abstract_plotting_surface = glue_plotting_surface_edges(abstract_plotting_surface, abstract_surface)
 
-    print([triangle.index for triangle in abstract_plotting_surface.triangles])
+    #print([triangle.index for triangle in abstract_plotting_surface.triangles])
 
     abstract_plotting_surface = vertex_traversal(abstract_plotting_surface.triangles[0].vertices[0], vertex_points, abstract_plotting_surface)
     abstract_plotting_surface = give_edge_identification_color_and_arrow(abstract_plotting_surface, abstract_surface)
@@ -1031,43 +1102,7 @@ def generate_combinatorial_map(abstract_surface, ax):
     #     ax.plot(x, y)
     #     ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
 
-    plotted_edges = []
-    for triangle in abstract_plotting_surface.triangles:
-        for edge in triangle.edges:
-            [x1,y1] = edge.v0.coord
-            [x2, y2] = edge.v1.coord
-            x = [x1,x2]
-            y = [y1,y2]
-            ax.plot(x,y, c=edge.color)
-            plotted_edges.append(edge)
-            if edge.arrow_strokes > 0:
-                try:
-                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-                    for i in range(edge.arrow_strokes):
-                        if flipped and edge.edge_glued[2] in plotted_edges:
-                            [x1, y1] = edge.v1.coord
-                            [x2, y2] = edge.v0.coord
-                        ax.arrow(x1,y1,(i+4)*(x2-x1)/(edge.arrow_strokes+7), (i+4)*(y2-y1)/(edge.arrow_strokes+7), head_width=0.5, color=edge.color)
-                except:
-                    pass
-
-
-    for triangle in abstract_plotting_surface.triangles:
-        [x1, y1] = triangle.vertices[0].coord
-        [x2, y2] = triangle.vertices[1].coord
-        [x3, y3] = triangle.vertices[2].coord
-        x = [x1, x2, x3, x1]
-        y = [y1, y2, y3, y1]
-        ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
-        coord0 = np.array([x1,y1])
-        coord1 = np.array([x2,y2])
-        coord2 = np.array([x3,y3])
-        ax.annotate(0, 9*coord0/10 + 1/10*(coord1+coord2), color='grey')
-        ax.annotate(1, 9*coord1/10 + 1/10*(coord0+coord2),  color='grey')
-        ax.annotate(2, 9*coord2/10 + 1/10*(coord1+coord0),  color='grey')
-
-
-
+    plot_combinatorial_map(abstract_plotting_surface, ax, figure, chart_type)
 
 
 
@@ -1079,16 +1114,16 @@ def import_file():
     abstract_surface = convert_gluing_table_to_surface(filename)
     win = tk.Toplevel()
     win.wm_title("Uploaded Surface")
-    l = tk.Label(win, text="The uploaded gluing table is visualised as a combinatorial map below. Continue importing?")
+    l = tk.Label(win, text="The uploaded gluing table is visualised as a combinatorial map below. You can change any edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
     l.pack(padx=20, pady=10)
     win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-    figure = plt.Figure(figsize=(6, 5), dpi=100)
+    figure = plt.Figure(figsize=(7, 5), dpi=100)
     ax = figure.add_subplot(111)
     chart_type = FigureCanvasTkAgg(figure, win)
     chart_type.get_tk_widget().pack()
     ax.set_title('Combinatorial Map')
 
-    generate_combinatorial_map(abstract_surface, ax)
+    generate_combinatorial_map(abstract_surface, ax, figure, chart_type)
 
     ax.set_axis_off()
     chart_type.draw()

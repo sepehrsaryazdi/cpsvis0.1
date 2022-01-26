@@ -25,6 +25,7 @@ class Triangle:
         self.edges = [Edge(self.vertices[0],self.vertices[1]),Edge(self.vertices[1],self.vertices[2]),Edge(self.vertices[0],self.vertices[2])]
         for edge in self.edges:
             edge.triangle = self
+        self.selected = False
 
 class AbstractSurface:
     def __init__(self):
