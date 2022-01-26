@@ -13,6 +13,27 @@ import sys
 import os
 
 
+def clover_position(x, t):
+    x = np.array(x)
+    x = x/(sum(sum(x)))
+    #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
+    v = 1 / 3 * np.array([[1], [1], [1]])
+    #x = np.matmul(P,x)
+    T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
+
+    [x,y,z] = np.matmul(T_inverse,x-v)
+    return [x[0],y[0]]
+
+
+# def clover_position(x,t):
+#     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
+#     #v = 1 / 3 * np.array([[1], [1], [1]])
+#     #x = np.matmul(P,x-v)+v
+#     cube_root1 = np.array([1,0])
+#     cube_root2 = np.array([np.cos(2*np.pi/3), np.sin(2*np.pi/3)])
+#     cube_root3 = np.array([np.cos(-2*np.pi/3), np.sin(-2*np.pi/3)])
+#     [x,y] = x[0]*cube_root1 + x[1]*cube_root2/t + x[2]*cube_root3
+#     return [x,y]
 
 class App(tk.Frame):
     def __init__(self, master):
@@ -414,538 +435,524 @@ class App(tk.Frame):
         except:
             self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface.")
 
-def convert_surface_to_gluing_table():
-    #print(app.main_surface)
-    pass
+class CombinatorialImport:
+    def __init__(self, tk, filename):
+        self.tk = tk
+        self.convert_gluing_table_to_surface(filename)
+        self.win = self.tk.Toplevel()
+        self.win.wm_title("Uploaded Surface")
+        self.l = tk.Label(self.win,
+                     text="The uploaded gluing table is visualised as a combinatorial map below. You can change any edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
+        self.l.pack(padx=20, pady=10)
+        self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        self.figure = plt.Figure(figsize=(7, 5), dpi=100)
+        self.ax = self.figure.add_subplot(111)
+        self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
+        self.chart_type.get_tk_widget().pack()
+        self.ax.set_title('Combinatorial Map')
 
-def convert_gluing_table_to_surface(filename):
-    gluing_table = pd.read_table(filename)
-    columns = gluing_table.columns.tolist()
-    columns = columns[0].rsplit(',')
-    edges = columns[1:]
-    gluing_table = np.array(gluing_table.values.tolist())
-    abstract_surface = AbstractSurface()
-    new_gluing_table = []
-    for triangle in gluing_table:
-        new_gluing_table.append(triangle[0].rsplit(','))
-        abstract_surface.add_triangle()
-    gluing_table = np.array(new_gluing_table)
-    for triangle_row in gluing_table:
-        triangle = abstract_surface.triangles[int(triangle_row[0])]
-        triangle_row = triangle_row[1:]
-        for edge_index in range(len(edges)):
-            current_edge = edges[edge_index].rsplit(' ')[1]
+        self.generate_combinatorial_map()
 
-            for edge in triangle.edges:
-                if current_edge == edge.index:
-                    current_edge = edge
-                    break
-            try:
-                [other_triangle_index, other_edge_index] = triangle_row[edge_index].rsplit(' ')
-            except:
-                continue
-            other_edge_index = other_edge_index[1:-1]
-            other_triangle = abstract_surface.triangles[int(other_triangle_index)]
+        self.ax.set_axis_off()
+        self.chart_type.draw()
 
-            if int(other_edge_index[0]) < int(other_edge_index[1]):
-                for other_edge in other_triangle.edges:
-                    if other_edge.index == other_edge_index:
-                        abstract_surface.glue_edges(current_edge, other_edge, current_edge.v0, other_edge.v0)
+        self.cancel = ttk.Button(self.win, text="Cancel", command=self.win.destroy)
+        self.cancel.pack(side='right', padx=25, pady=5)
+        self.continue_button = ttk.Button(self.win, text="Continue",
+                                     command=lambda: (self.generate_developing_map(), self.win.destroy()))
+        self.continue_button.pack(side='right', padx=10, pady=5)
+
+
+
+
+
+
+    def convert_gluing_table_to_surface(self,filename):
+        gluing_table = pd.read_table(filename)
+        columns = gluing_table.columns.tolist()
+        columns = columns[0].rsplit(',')
+        edges = columns[1:]
+        gluing_table = np.array(gluing_table.values.tolist())
+        self.abstract_surface = AbstractSurface()
+        new_gluing_table = []
+        for triangle in gluing_table:
+            new_gluing_table.append(triangle[0].rsplit(','))
+            self.abstract_surface.add_triangle()
+        gluing_table = np.array(new_gluing_table)
+        for triangle_row in gluing_table:
+            triangle = self.abstract_surface.triangles[int(triangle_row[0])]
+            triangle_row = triangle_row[1:]
+            for edge_index in range(len(edges)):
+                current_edge = edges[edge_index].rsplit(' ')[1]
+
+                for edge in triangle.edges:
+                    if current_edge == edge.index:
+                        current_edge = edge
+                        break
+                try:
+                    [other_triangle_index, other_edge_index] = triangle_row[edge_index].rsplit(' ')
+                except:
+                    continue
+                other_edge_index = other_edge_index[1:-1]
+                other_triangle = self.abstract_surface.triangles[int(other_triangle_index)]
+
+                if int(other_edge_index[0]) < int(other_edge_index[1]):
+                    for other_edge in other_triangle.edges:
+                        if other_edge.index == other_edge_index:
+                            self.abstract_surface.glue_edges(current_edge, other_edge, current_edge.v0, other_edge.v0)
+                else:
+                    for other_edge in other_triangle.edges:
+                        if other_edge.index == other_edge_index[::-1]:
+                            self.abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v1)
+
+    def generate_developing_map(self,):
+        self.main_surface = self.generate_real_surface_map()
+        app.main_surface = self.main_surface
+        app.plot_fresh(self.main_surface.triangles[0].t)
+
+    def triangle_order_generator(self,edge_list, prev_state, n, top_bottom_list):
+        if len(edge_list) == n:
+            return (edge_list,top_bottom_list)
+        current_edge_on_previous_triangle = edge_list[-1]
+        current_edge_on_new_triangle = current_edge_on_previous_triangle.edge_glued[2]
+        new_triangle = current_edge_on_new_triangle.triangle
+        flipped = 0
+        if current_edge_on_previous_triangle.edge_glued[1] != current_edge_on_new_triangle.v0:
+            flipped = 1
+        for edge_index in range(3):
+            if new_triangle.edges[edge_index] == current_edge_on_new_triangle:
+                current_edge_on_new_triangle = edge_index
+                break
+        new_prev_state = 'top'
+        if prev_state == 'top':
+            next_edge_on_new_triangle = (current_edge_on_new_triangle + ((-1)**flipped)*1) % 3
+            if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
+                new_prev_state = 'bottom'
+        else:
+            next_edge_on_new_triangle = (current_edge_on_new_triangle - ((-1) ** flipped) * 1) % 3
+            if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
+                new_prev_state = 'bottom'
+
+        top_bottom_list.append(new_prev_state)
+
+        next_edge_on_new_triangle = new_triangle.edges[next_edge_on_new_triangle]
+        edge_list.append(next_edge_on_new_triangle)
+        return self.triangle_order_generator(edge_list, new_prev_state, n, top_bottom_list)
+
+    def generate_new_triangle(self,current_edge, current_abstract_edge, distance_from_initial_triangle, e03, e30, e23, e32, A023, max_distance):
+
+
+        if distance_from_initial_triangle > max_distance:
+            return
+
+        app.correct_edge_orientation(current_edge)
+
+        # m_inverse = compute_m_inverse(current_edge.v0.r, current_edge.v1.r, current_edge.v0.c,
+        #                                       current_edge.v1.c, e03, e23)
+        # c3 = compute_c3(m_inverse, e03, e23, A023)
+        # r3 = compute_r3(current_edge.v0.c, current_edge.v1.c, c3, e30, e32)
+
+        r3, c3 = compute_all_until_r3c3(current_edge.v0.r, current_edge.v1.r, current_edge.v0.c,
+                                              current_edge.v1.c, e03, e23,  e30, e32, A023)
+
+        # m_inverse_clover = compute_m_inverse(current_edge.v0.r_clover, current_edge.v1.r_clover,
+        #                                       current_edge.v0.c_clover,
+        #                                       current_edge.v1.c_clover, e03, e23)
+        # c3_clover = compute_c3(m_inverse_clover, e03, e23, A023)
+        # r3_clover = compute_r3(current_edge.v0.c_clover, current_edge.v1.c_clover, c3_clover, e30, e32)
+
+        r3_clover, c3_clover = compute_all_until_r3c3(current_edge.v0.r_clover, current_edge.v1.r_clover, current_edge.v0.c_clover,
+                                              current_edge.v1.c_clover, e03, e23,  e30, e32, A023)
+
+        # print('r0: ', current_edge.v0.r_clover, 'r2:', current_edge.v1.r_clover)
+        # print('c0: ', current_edge.v0.c_clover, 'c2: ', current_edge.v1.c_clover)
+        # print('r3: ', r3_clover, 'c3: ', c3_clover)
+
+        new_triangle = self.main_surface.add_triangle(current_edge, Vertex(c3, r3, c3_clover, r3_clover))
+
+        abstract_triangle = current_abstract_edge.edge_glued[2].triangle
+
+        new_triangle.index = abstract_triangle.index
+
+        abstract_triangle = current_abstract_edge.edge_glued[2].triangle
+
+        flipped = (current_abstract_edge.edge_glued[1] != current_abstract_edge.edge_glued[2].v0)
+
+        edge_index = 0
+        for edge_index in range(3):
+            if abstract_triangle.edges[edge_index] == current_abstract_edge:
+                edge_index = current_abstract_edge.index
+
+        next_surface_index = 0
+        for next_surface_edge in new_triangle.edges[1:]:
+            if flipped:
+                next_abstract_edge = abstract_triangle.edges[(edge_index-(next_surface_index+1))%3]
             else:
-                for other_edge in other_triangle.edges:
-                    if other_edge.index == other_edge_index[::-1]:
-                        abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v1)
+                next_abstract_edge =  abstract_triangle.edges[(edge_index + (next_surface_index + 1)) % 3]
 
-    return abstract_surface
-#
-def clover_position(x, t):
-    x = np.array(x)
-    x = x/(sum(sum(x)))
-    #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
-    v = 1 / 3 * np.array([[1], [1], [1]])
-    #x = np.matmul(P,x)
-    T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
-
-    [x,y,z] = np.matmul(T_inverse,x-v)
-    return [x[0],y[0]]
-#
-# def clover_position(x,t):
-#     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
-#     #v = 1 / 3 * np.array([[1], [1], [1]])
-#     #x = np.matmul(P,x-v)+v
-#     cube_root1 = np.array([1,0])
-#     cube_root2 = np.array([np.cos(2*np.pi/3), np.sin(2*np.pi/3)])
-#     cube_root3 = np.array([np.cos(-2*np.pi/3), np.sin(-2*np.pi/3)])
-#     [x,y] = x[0]*cube_root1 + x[1]*cube_root2/t + x[2]*cube_root3
-#     return [x,y]
-
-
-def generate_developing_map(abstract_surface):
-    main_surface = generate_real_surface_map(abstract_surface)
-    app.main_surface = main_surface
-    app.plot_fresh(main_surface.triangles[0].t)
-
-
-
-    pass
-
-def triangle_order_generator(edge_list, prev_state, n, top_bottom_list):
-    if len(edge_list) == n:
-        return (edge_list,top_bottom_list)
-    current_edge_on_previous_triangle = edge_list[-1]
-    current_edge_on_new_triangle = current_edge_on_previous_triangle.edge_glued[2]
-    new_triangle = current_edge_on_new_triangle.triangle
-    flipped = 0
-    if current_edge_on_previous_triangle.edge_glued[1] != current_edge_on_new_triangle.v0:
-        flipped = 1
-    for edge_index in range(3):
-        if new_triangle.edges[edge_index] == current_edge_on_new_triangle:
-            current_edge_on_new_triangle = edge_index
-            break
-    new_prev_state = 'top'
-    if prev_state == 'top':
-        next_edge_on_new_triangle = (current_edge_on_new_triangle + ((-1)**flipped)*1) % 3
-        if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
-            new_prev_state = 'bottom'
-    else:
-        next_edge_on_new_triangle = (current_edge_on_new_triangle - ((-1) ** flipped) * 1) % 3
-        if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
-            new_prev_state = 'bottom'
-
-    top_bottom_list.append(new_prev_state)
-
-    next_edge_on_new_triangle = new_triangle.edges[next_edge_on_new_triangle]
-    edge_list.append(next_edge_on_new_triangle)
-    return triangle_order_generator(edge_list, new_prev_state, n, top_bottom_list)
-
-def generate_new_triangle(current_edge, current_abstract_edge, main_surface, distance_from_initial_triangle, e03, e30, e23, e32, A023, max_distance):
-
-
-    if distance_from_initial_triangle > max_distance:
+            next_surface_index += 1
+            self.generate_new_triangle(next_surface_edge, next_abstract_edge,
+                                  distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
         return
 
-    app.correct_edge_orientation(current_edge)
+    def generate_real_surface_map(self):
+        initial_triangle_index = 0
+        max_distance = 5
 
-    # m_inverse = compute_m_inverse(current_edge.v0.r, current_edge.v1.r, current_edge.v0.c,
-    #                                       current_edge.v1.c, e03, e23)
-    # c3 = compute_c3(m_inverse, e03, e23, A023)
-    # r3 = compute_r3(current_edge.v0.c, current_edge.v1.c, c3, e30, e32)
+        initial_abstract_triangle = self.abstract_surface.triangles[0]
+        for triangle in self.abstract_surface.triangles:
+            if triangle.index == initial_triangle_index:
+                initial_abstract_triangle = triangle
 
-    r3, c3 = compute_all_until_r3c3(current_edge.v0.r, current_edge.v1.r, current_edge.v0.c,
-                                          current_edge.v1.c, e03, e23,  e30, e32, A023)
+        t = 1
+        e01 = 1
+        e02 = 1
+        e10 = 1
+        e12 = 1
+        e20 = 1
+        e21 = 1
+        e03 = 1
+        e30 = 1
+        e23 = 1
+        e32 = 1
+        A023 = 1
+        c0 = [1,0,0]
+        c1 = [0,t,0]
+        c2 = [0,0,1]
+        r0 = [0, e01/t, e02]
+        r1 = [e10, 0, e12]
+        r2= [e20, e21/t, 0]
+        c0_clover = [1,0,0]
+        c1_clover = [0,1,0]
+        c2_clover = [0,0,1]
+        x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
+        cube_root_x_coord_t = np.power(x_coord_t, 1)
+        r0_clover = [0, cube_root_x_coord_t, 1]
+        r1_clover = [1, 0, cube_root_x_coord_t]
+        r2_clover = [cube_root_x_coord_t, 1, 0]
 
-    # m_inverse_clover = compute_m_inverse(current_edge.v0.r_clover, current_edge.v1.r_clover,
-    #                                       current_edge.v0.c_clover,
-    #                                       current_edge.v1.c_clover, e03, e23)
-    # c3_clover = compute_c3(m_inverse_clover, e03, e23, A023)
-    # r3_clover = compute_r3(current_edge.v0.c_clover, current_edge.v1.c_clover, c3_clover, e30, e32)
+        main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover ,c2_clover,r0_clover, r1_clover, r2_clover)
 
-    r3_clover, c3_clover = compute_all_until_r3c3(current_edge.v0.r_clover, current_edge.v1.r_clover, current_edge.v0.c_clover,
-                                          current_edge.v1.c_clover, e03, e23,  e30, e32, A023)
+        main_surface.triangles[0].index = initial_abstract_triangle.index
 
-    # print('r0: ', current_edge.v0.r_clover, 'r2:', current_edge.v1.r_clover)
-    # print('c0: ', current_edge.v0.c_clover, 'c2: ', current_edge.v1.c_clover)
-    # print('r3: ', r3_clover, 'c3: ', c3_clover)
 
-    new_triangle = main_surface.add_triangle(current_edge, Vertex(c3, r3, c3_clover, r3_clover))
 
-    abstract_triangle = current_abstract_edge.edge_glued[2].triangle
+        for edge_index in range(3):
+            self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index],  initial_abstract_triangle.edges[edge_index], 0, e03, e30, e23, e32, A023, max_distance)
 
-    new_triangle.index = abstract_triangle.index
+        #print(main_surface.triangles)
 
-    abstract_triangle = current_abstract_edge.edge_glued[2].triangle
 
-    flipped = (current_abstract_edge.edge_glued[1] != current_abstract_edge.edge_glued[2].v0)
-
-    edge_index = 0
-    for edge_index in range(3):
-        if abstract_triangle.edges[edge_index] == current_abstract_edge:
-            edge_index = current_abstract_edge.index
-
-    next_surface_index = 0
-    for next_surface_edge in new_triangle.edges[1:]:
-        if flipped:
-            next_abstract_edge = abstract_triangle.edges[(edge_index-(next_surface_index+1))%3]
+    def get_dual_vertex(self,vertex, edge):
+        flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+        #print(edge.edge_glued[1].index, edge.edge_glued[2].v0.index)
+        vertex_is_at_end_of_edge = (edge.v1 == vertex)
+        #print('vertex_is_at_end_of_edge',vertex_is_at_end_of_edge)
+        if not flipped:
+            if vertex_is_at_end_of_edge:
+                other_vertex = edge.edge_glued[2].v1
+            else:
+                other_vertex = edge.edge_glued[2].v0
         else:
-            next_abstract_edge =  abstract_triangle.edges[(edge_index + (next_surface_index + 1)) % 3]
-
-        next_surface_index += 1
-        generate_new_triangle(next_surface_edge, next_abstract_edge, main_surface,
-                              distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
-
-
-
-    return
-
-def generate_real_surface_map(abstract_surface):
-    initial_triangle_index = 0
-    max_distance = 5
-
-    initial_abstract_triangle = abstract_surface.triangles[0]
-    for triangle in abstract_surface.triangles:
-        if triangle.index == initial_triangle_index:
-            initial_abstract_triangle = triangle
-
-    t = 1
-    e01 = 1
-    e02 = 1
-    e10 = 1
-    e12 = 1
-    e20 = 1
-    e21 = 1
-    e03 = 1
-    e30 = 1
-    e23 = 1
-    e32 = 1
-    A023 = 1
-    c0 = [1,0,0]
-    c1 = [0,t,0]
-    c2 = [0,0,1]
-    r0 = [0, e01/t, e02]
-    r1 = [e10, 0, e12]
-    r2= [e20, e21/t, 0]
-    c0_clover = [1,0,0]
-    c1_clover = [0,1,0]
-    c2_clover = [0,0,1]
-    x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
-    cube_root_x_coord_t = np.power(x_coord_t, 1)
-    r0_clover = [0, cube_root_x_coord_t, 1]
-    r1_clover = [1, 0, cube_root_x_coord_t]
-    r2_clover = [cube_root_x_coord_t, 1, 0]
-
-    main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover ,c2_clover,r0_clover, r1_clover, r2_clover)
-
-    main_surface.triangles[0].index = initial_abstract_triangle.index
+            if vertex_is_at_end_of_edge:
+                other_vertex = edge.edge_glued[2].v0
+            else:
+                other_vertex = edge.edge_glued[2].v1
+        return other_vertex
 
 
 
-    for edge_index in range(3):
-        generate_new_triangle(main_surface.triangles[0].edges[edge_index],  initial_abstract_triangle.edges[edge_index], main_surface, 0, e03, e30, e23, e32, A023, max_distance)
-
-    #print(main_surface.triangles)
-    return main_surface
-
-
-def get_dual_vertex(vertex, edge):
-    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-    #print(edge.edge_glued[1].index, edge.edge_glued[2].v0.index)
-    vertex_is_at_end_of_edge = (edge.v1 == vertex)
-    #print('vertex_is_at_end_of_edge',vertex_is_at_end_of_edge)
-    if not flipped:
-        if vertex_is_at_end_of_edge:
-            other_vertex = edge.edge_glued[2].v1
-        else:
-            other_vertex = edge.edge_glued[2].v0
-    else:
-        if vertex_is_at_end_of_edge:
-            other_vertex = edge.edge_glued[2].v0
-        else:
-            other_vertex = edge.edge_glued[2].v1
-    return other_vertex
+    def find_last_vertex(self,vertex, glued_edge_belonging_to):
+        count = 2
+        while count == 2:
+            vertex = self.get_dual_vertex(vertex, glued_edge_belonging_to)
+            for edge in vertex.edges:
+                if edge != glued_edge_belonging_to and edge.edge_glued:
+                    glued_edge_belonging_to = edge
+                    break
+            count = 0
+            for edge in vertex.edges:
+                if edge.edge_glued:
+                    count += 1
+        return vertex, glued_edge_belonging_to
 
 
+    def vertex_traversal(self,vertex, vertex_points):
 
-def find_last_vertex(vertex, glued_edge_belonging_to):
-    count = 2
-    while count == 2:
-        vertex = get_dual_vertex(vertex, glued_edge_belonging_to)
-        for edge in vertex.edges:
-            if edge != glued_edge_belonging_to and edge.edge_glued:
-                glued_edge_belonging_to = edge
-                break
+        try:
+            self.abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
+        except:
+            return
+
         count = 0
         for edge in vertex.edges:
             if edge.edge_glued:
-                count += 1
-    return vertex, glued_edge_belonging_to
+                count+=1
 
+        triangle_belongs_to = vertex.edges[0].triangle
+        if count == 0:
+            for other_vertex_index in [(vertex.index-1)%3,(vertex.index+1)%3]:
+                coord = triangle_belongs_to.vertices[other_vertex_index].coord
+                if not len(coord):
+                    vertex = triangle_belongs_to.vertices[other_vertex_index]
+                    break
+        elif count == 1:
 
-
-
-
-
-
-
-
-def vertex_traversal(vertex, vertex_points, abstract_plotting_surface):
-
-    try:
-        abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
-    except:
-        return abstract_plotting_surface
-
-    count = 0
-    for edge in vertex.edges:
-        if edge.edge_glued:
-            count+=1
-
-    triangle_belongs_to = vertex.edges[0].triangle
-    if count == 0:
-        for other_vertex_index in [(vertex.index-1)%3,(vertex.index+1)%3]:
-            coord = triangle_belongs_to.vertices[other_vertex_index].coord
-            if not len(coord):
-                vertex = triangle_belongs_to.vertices[other_vertex_index]
-                break
-    elif count == 1:
-
-        other_vertex_to_consider = None
-        non_glued_edge = None
-        for edge in vertex.edges:
-            if not edge.edge_glued:
-                non_glued_edge = edge
-        for other_vertex in [non_glued_edge.v0, non_glued_edge.v1]:
-            if other_vertex != vertex:
-                other_vertex_to_consider = other_vertex
-        if not len(other_vertex_to_consider.coord):
-            vertex = other_vertex_to_consider
-        else:
-            glued_edge_belonging_to = None
+            other_vertex_to_consider = None
+            non_glued_edge = None
             for edge in vertex.edges:
-                if edge.edge_glued:
-                    glued_edge_belonging_to = edge
-            other_vertex_to_consider = get_dual_vertex(vertex, glued_edge_belonging_to)
-            other_count = 0
-            for edge in other_vertex_to_consider.edges:
-                if edge.edge_glued:
-                    other_count+=1
-
-            if other_count == 1:
-                for other_other_vertex_index in [(other_vertex_to_consider.index - 1) % 3, (other_vertex_to_consider.index + 1) % 3]:
-                    coord = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index].coord
-                    if not len(coord):
-                        vertex = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index]
-                        break
+                if not edge.edge_glued:
+                    non_glued_edge = edge
+            for other_vertex in [non_glued_edge.v0, non_glued_edge.v1]:
+                if other_vertex != vertex:
+                    other_vertex_to_consider = other_vertex
+            if not len(other_vertex_to_consider.coord):
+                vertex = other_vertex_to_consider
             else:
-                other_vertex_to_consider, glued_edge_belonging_to = find_last_vertex(vertex, glued_edge_belonging_to)
-                for other_other_vertex_index in [(other_vertex_to_consider.index - 1) % 3, (other_vertex_to_consider.index + 1) % 3]:
-                    coord = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index].coord
-                    if not len(coord):
-                        vertex = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index]
-                        break
-    return vertex_traversal(vertex, vertex_points, abstract_plotting_surface)
+                glued_edge_belonging_to = None
+                for edge in vertex.edges:
+                    if edge.edge_glued:
+                        glued_edge_belonging_to = edge
+                other_vertex_to_consider = self.get_dual_vertex(vertex, glued_edge_belonging_to)
+                other_count = 0
+                for edge in other_vertex_to_consider.edges:
+                    if edge.edge_glued:
+                        other_count+=1
 
-
-def give_edge_identification_color_and_arrow(abstract_plotting_surface, abstract_surface):
-
-    number_of_unique_colours = int(3*len(abstract_plotting_surface.triangles)/2)
-    colors_ = lambda n: list(map(lambda i: "#" + "%06x" % np.random.randint(0, 0xFFFFFF), range(n)))
-
-
-    edges = []
-    for plotting_triangle in abstract_plotting_surface.triangles:
-        abstract_triangle = abstract_surface.triangles[plotting_triangle.index]
-        for abstract_edge in abstract_triangle.edges:
-            try:
-                abstract_edge.edge_glued[2]
-                flipped = (abstract_edge.edge_glued[1] != abstract_edge.edge_glued[2].v0)
-                edge_to_glue = None
-                for edge in plotting_triangle.edges:
-                    if edge.index == abstract_edge.index:
-                        edge_to_glue = edge
-
-                abstract_other_edge = abstract_edge.edge_glued[2]
-                other_edge_to_glue = None
-                for other_triangle in abstract_plotting_surface.triangles:
-                    for edge in other_triangle.edges:
-                        if edge.index == abstract_other_edge.index and other_triangle.index == abstract_other_edge.triangle.index:
-                            other_edge_to_glue = edge
-                if not flipped:
-                    abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0,
-                                                         other_edge_to_glue.v0)
+                if other_count == 1:
+                    for other_other_vertex_index in [(other_vertex_to_consider.index - 1) % 3, (other_vertex_to_consider.index + 1) % 3]:
+                        coord = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index].coord
+                        if not len(coord):
+                            vertex = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index]
+                            break
                 else:
-                    abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0,
-                                                         other_edge_to_glue.v1)
-            except:
-                pass
-
-    for triangle in abstract_plotting_surface.triangles:
-        for edge in triangle.edges:
-            edges.append(edge)
-
-    colors = colors_(2*len(edges)+1)
-    arrow_strokes = 1
-    for edge in edges:
-        new_color = colors.pop()
-        edge.color = new_color
-        edge.arrow_strokes = arrow_strokes
-        try:
-            edge.edge_glued[2].color = new_color
-            edge.edge_glued[2].arrow_strokes = arrow_strokes
-            arrow_strokes += 1
-        except:
-            edge.color = colors.pop()
-            edge.arrow_strokes = 0
-    min_stroke = len(edges)+1
-    for edge in edges:
-        if edge.arrow_strokes > 0:
-            min_stroke = min(min_stroke, edge.arrow_strokes)
-    for edge in edges:
-        if edge.arrow_strokes > 0:
-            edge.arrow_strokes = edge.arrow_strokes - min_stroke + 1
+                    other_vertex_to_consider, glued_edge_belonging_to = self.find_last_vertex(vertex, glued_edge_belonging_to)
+                    for other_other_vertex_index in [(other_vertex_to_consider.index - 1) % 3, (other_vertex_to_consider.index + 1) % 3]:
+                        coord = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index].coord
+                        if not len(coord):
+                            vertex = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index]
+                            break
+        return self.vertex_traversal(vertex, vertex_points)
 
 
-    return abstract_plotting_surface
+    def give_edge_identification_color_and_arrow(self):
 
-def glue_plotting_surface_edges(abstract_plotting_surface, abstract_surface):
-    for index in range(len(abstract_plotting_surface.triangles[:-1])):
-        triangle_plotting_index = abstract_plotting_surface.triangles[index].index
-        next_triangle_plotting_index = abstract_plotting_surface.triangles[index+1].index
-        edge_connection_index = '01'
-        other_edge_index = '01'
-        flipped = 0
-        for edge in abstract_surface.triangles[triangle_plotting_index].edges:
-            try:
-                if edge.edge_glued[2].triangle == abstract_surface.triangles[next_triangle_plotting_index]:
-                    edge_connection_index = edge.index
-                    other_edge_index = edge.edge_glued[2].index
-                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-            except:
-                pass
-        edge_to_glue = abstract_plotting_surface.triangles[index].edges[0]
-        other_edge_to_glue = abstract_surface.triangles[next_triangle_plotting_index].edges[0]
-        for edge in abstract_plotting_surface.triangles[index].edges:
-            if edge.index == edge_connection_index:
-                edge_to_glue = edge
-        for edge in abstract_plotting_surface.triangles[index+1].edges:
-            if edge.index == other_edge_index:
-                other_edge_to_glue = edge
-        if not flipped:
-            abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v0)
-        else:
-            abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v1)
+        number_of_unique_colours = int(3*len(self.abstract_plotting_surface.triangles)/2)
+        colors_ = lambda n: list(map(lambda i: "#" + "%06x" % np.random.randint(0, 0xFFFFFF), range(n)))
 
 
-
-
-    return abstract_plotting_surface
-
-def select_triangle_combinatorial_map(event, abstract_plotting_surface, plot_combinatorial_map):
-    coord = np.array([event.xdata, event.ydata])
-    centres = []
-    for triangle in abstract_plotting_surface.triangles:
-        [x1, y1] = triangle.vertices[0].coord
-        [x2, y2] = triangle.vertices[1].coord
-        [x3, y3] = triangle.vertices[2].coord
-        x = [x1, x2, x3]
-        y = [y1, y2, y3]
-        centres.append([np.mean(x), np.mean(y)])
-
-    centres = np.array(centres)
-    distances = np.linalg.norm(np.repeat(np.array([coord]), len(centres), axis=0) - centres, axis=1)
-    selected_triangle = abstract_plotting_surface.triangles[np.argmin(distances)]
-    for triangle in abstract_plotting_surface.triangles:
-        triangle.selected = False
-    selected_triangle.selected = True
-
-    plot_combinatorial_map(abstract_plotting_surface)
-
-
-
-
-
-
-
-def plot_combinatorial_map(abstract_plotting_surface, ax, figure, chart_type):
-    ax.clear()
-    ax.remove()
-    ax.set_axis_off()
-
-    ax = figure.add_subplot(111)
-    ax.set_title('Combinatorial Map')
-    ax.set_axis_off()
-    figure.canvas.mpl_connect('button_press_event', lambda event : select_triangle_combinatorial_map(event, abstract_plotting_surface, lambda abstract_plotting_surface : plot_combinatorial_map(abstract_plotting_surface, ax=ax, figure=figure, chart_type=chart_type)))
-    plotted_edges = []
-    for triangle in abstract_plotting_surface.triangles:
-        for edge in triangle.edges:
-            [x1, y1] = edge.v0.coord
-            [x2, y2] = edge.v1.coord
-            x = [x1, x2]
-            y = [y1, y2]
-            ax.plot(x, y, c=edge.color)
-            plotted_edges.append(edge)
-            if edge.arrow_strokes > 0:
+        edges = []
+        for plotting_triangle in self.abstract_plotting_surface.triangles:
+            abstract_triangle = self.abstract_surface.triangles[plotting_triangle.index]
+            for abstract_edge in abstract_triangle.edges:
                 try:
-                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-                    for i in range(edge.arrow_strokes):
-                        if flipped and edge.edge_glued[2] in plotted_edges:
-                            [x1, y1] = edge.v1.coord
-                            [x2, y2] = edge.v0.coord
-                        ax.arrow(x1, y1, (i + 4) * (x2 - x1) / (edge.arrow_strokes + 7),
-                                 (i + 4) * (y2 - y1) / (edge.arrow_strokes + 7), head_width=0.3, color=edge.color)
+                    abstract_edge.edge_glued[2]
+                    flipped = (abstract_edge.edge_glued[1] != abstract_edge.edge_glued[2].v0)
+                    edge_to_glue = None
+                    for edge in plotting_triangle.edges:
+                        if edge.index == abstract_edge.index:
+                            edge_to_glue = edge
+
+                    abstract_other_edge = abstract_edge.edge_glued[2]
+                    other_edge_to_glue = None
+                    for other_triangle in self.abstract_plotting_surface.triangles:
+                        for edge in other_triangle.edges:
+                            if edge.index == abstract_other_edge.index and other_triangle.index == abstract_other_edge.triangle.index:
+                                other_edge_to_glue = edge
+                    if not flipped:
+                        self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0,
+                                                             other_edge_to_glue.v0)
+                    else:
+                        self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0,
+                                                             other_edge_to_glue.v1)
                 except:
                     pass
 
-    for triangle in abstract_plotting_surface.triangles:
-        [x1, y1] = triangle.vertices[0].coord
-        [x2, y2] = triangle.vertices[1].coord
-        [x3, y3] = triangle.vertices[2].coord
-        x = [x1, x2, x3, x1]
-        y = [y1, y2, y3, y1]
-        if triangle.selected:
-            ax.fill(x,y, "b", alpha=0.2)
-        ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
-        coord0 = np.array([x1, y1])
-        coord1 = np.array([x2, y2])
-        coord2 = np.array([x3, y3])
-        ax.annotate(0, 9 * coord0 / 10 + 1 / 10 * (coord1 + coord2), color='grey')
-        ax.annotate(1, 9 * coord1 / 10 + 1 / 10 * (coord0 + coord2), color='grey')
-        ax.annotate(2, 9 * coord2 / 10 + 1 / 10 * (coord1 + coord0), color='grey')
+        for triangle in self.abstract_plotting_surface.triangles:
+            for edge in triangle.edges:
+                edges.append(edge)
 
-    chart_type.draw()
+        colors = colors_(2*len(edges)+1)
+        arrow_strokes = 1
+        for edge in edges:
+            new_color = colors.pop()
+            edge.color = new_color
+            edge.arrow_strokes = arrow_strokes
+            try:
+                edge.edge_glued[2].color = new_color
+                edge.edge_glued[2].arrow_strokes = arrow_strokes
+                arrow_strokes += 1
+            except:
+                edge.color = colors.pop()
+                edge.arrow_strokes = 0
+        min_stroke = len(edges)+1
+        for edge in edges:
+            if edge.arrow_strokes > 0:
+                min_stroke = min(min_stroke, edge.arrow_strokes)
+        for edge in edges:
+            if edge.arrow_strokes > 0:
+                edge.arrow_strokes = edge.arrow_strokes - min_stroke + 1
+
+
+    def glue_plotting_surface_edges(self):
+        for index in range(len(self.abstract_plotting_surface.triangles[:-1])):
+            triangle_plotting_index = self.abstract_plotting_surface.triangles[index].index
+            next_triangle_plotting_index = self.abstract_plotting_surface.triangles[index+1].index
+            edge_connection_index = '01'
+            other_edge_index = '01'
+            flipped = 0
+            for edge in self.abstract_surface.triangles[triangle_plotting_index].edges:
+                try:
+                    if edge.edge_glued[2].triangle == self.abstract_surface.triangles[next_triangle_plotting_index]:
+                        edge_connection_index = edge.index
+                        other_edge_index = edge.edge_glued[2].index
+                        flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                except:
+                    pass
+            edge_to_glue = self.abstract_plotting_surface.triangles[index].edges[0]
+            other_edge_to_glue = self.abstract_surface.triangles[next_triangle_plotting_index].edges[0]
+            for edge in self.abstract_plotting_surface.triangles[index].edges:
+                if edge.index == edge_connection_index:
+                    edge_to_glue = edge
+            for edge in self.abstract_plotting_surface.triangles[index+1].edges:
+                if edge.index == other_edge_index:
+                    other_edge_to_glue = edge
+            if not flipped:
+                self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v0)
+            else:
+                self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v1)
 
 
 
-def generate_combinatorial_map(abstract_surface, ax, figure, chart_type):
-    punctured_triangles = []
-    for triangle in abstract_surface.triangles:
-        for edge in triangle.edges:
-            if not edge.edge_glued:
-                punctured_triangles.append(triangle)
+    def select_triangle_combinatorial_map(self,event):
+        coord = np.array([event.xdata, event.ydata])
+        if not coord[0] or not coord[1]:
+            return
+        centres = []
+        for triangle in self.abstract_plotting_surface.triangles:
+            [x1, y1] = triangle.vertices[0].coord
+            [x2, y2] = triangle.vertices[1].coord
+            [x3, y3] = triangle.vertices[2].coord
+            x = [x1, x2, x3]
+            y = [y1, y2, y3]
+            centres.append([np.mean(x), np.mean(y)])
+
+        centres = np.array(centres)
+        distances = np.linalg.norm(np.repeat(np.array([coord]), len(centres), axis=0) - centres, axis=1)
+        selected_triangle = self.abstract_plotting_surface.triangles[np.argmin(distances)]
+        for triangle in self.abstract_plotting_surface.triangles:
+            triangle.selected = False
+        selected_triangle.selected = True
+
+        self.plot_combinatorial_map()
+
+
+
+
+
+
+
+    def plot_combinatorial_map(self):
+        self.ax.clear()
+        self.ax.remove()
+        self.ax.set_axis_off()
+
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_title('Combinatorial Map')
+        self.ax.set_axis_off()
+        self.figure.canvas.mpl_connect('button_press_event',self.select_triangle_combinatorial_map)
+        plotted_edges = []
+        for triangle in self.abstract_plotting_surface.triangles:
+            for edge in triangle.edges:
+                [x1, y1] = edge.v0.coord
+                [x2, y2] = edge.v1.coord
+                x = [x1, x2]
+                y = [y1, y2]
+                self.ax.plot(x, y, c=edge.color)
+                plotted_edges.append(edge)
+                if edge.arrow_strokes > 0:
+                    try:
+                        flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                        for i in range(edge.arrow_strokes):
+                            if flipped and edge.edge_glued[2] in plotted_edges:
+                                [x1, y1] = edge.v1.coord
+                                [x2, y2] = edge.v0.coord
+                            self.ax.arrow(x1, y1, (i + 4) * (x2 - x1) / (edge.arrow_strokes + 7),
+                                     (i + 4) * (y2 - y1) / (edge.arrow_strokes + 7), head_width=0.3, color=edge.color)
+                    except:
+                        pass
+
+        for triangle in self.abstract_plotting_surface.triangles:
+            [x1, y1] = triangle.vertices[0].coord
+            [x2, y2] = triangle.vertices[1].coord
+            [x3, y3] = triangle.vertices[2].coord
+            x = [x1, x2, x3, x1]
+            y = [y1, y2, y3, y1]
+            if triangle.selected:
+                self.ax.fill(x,y, "b", alpha=0.2)
+            self.ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
+            coord0 = np.array([x1, y1])
+            coord1 = np.array([x2, y2])
+            coord2 = np.array([x3, y3])
+            self.ax.annotate(0, 9 * coord0 / 10 + 1 / 10 * (coord1 + coord2), color='grey')
+            self.ax.annotate(1, 9 * coord1 / 10 + 1 / 10 * (coord0 + coord2), color='grey')
+            self.ax.annotate(2, 9 * coord2 / 10 + 1 / 10 * (coord1 + coord0), color='grey')
+
+        self.chart_type.draw()
+
+
+
+    def generate_combinatorial_map(self):
+        punctured_triangles = []
+        for triangle in self.abstract_surface.triangles:
+            for edge in triangle.edges:
+                if not edge.edge_glued:
+                    punctured_triangles.append(triangle)
+                    break
+        if len(punctured_triangles):
+            first_triangle = punctured_triangles[0]
+        else:
+            first_triangle = self.abstract_surface.triangles[0]
+        first_edge_index = 0
+        for edge_index in range(3):
+            if not first_triangle.edges[edge_index].edge_glued:
+                first_edge_index = (edge_index - 1) % 3
                 break
-    if len(punctured_triangles):
-        first_triangle = punctured_triangles[0]
-    else:
-        first_triangle = abstract_surface.triangles[0]
-    first_edge_index = 0
-    for edge_index in range(3):
-        if not first_triangle.edges[edge_index].edge_glued:
-            first_edge_index = (edge_index - 1) % 3
-            break
-    edge_list = [first_triangle.edges[first_edge_index]]
-    edge_list, top_bottom_list = triangle_order_generator(edge_list, 'top', len(abstract_surface.triangles), ['top'])
+        edge_list = [first_triangle.edges[first_edge_index]]
+        edge_list, top_bottom_list = self.triangle_order_generator(edge_list, 'top', len(self.abstract_surface.triangles), ['top'])
 
-    triangle_indices = [edge.triangle.index for edge in edge_list]
+        triangle_indices = [edge.triangle.index for edge in edge_list]
 
 
-    vertex_points = []
-    a = 10
-    b = 10
-    thetas = np.linspace(2/(len(edge_list))*np.pi,2*np.pi+1/(len(edge_list))*np.pi, len(edge_list)+2)
-    for theta in thetas:
-        vertex_points.append(np.array([a*np.cos(theta),-b*np.sin(theta)]))
+        vertex_points = []
+        a = 10
+        b = 10
+        thetas = np.linspace(2/(len(edge_list))*np.pi,2*np.pi+1/(len(edge_list))*np.pi, len(edge_list)+2)
+        for theta in thetas:
+            vertex_points.append(np.array([a*np.cos(theta),-b*np.sin(theta)]))
 
-    abstract_plotting_surface = AbstractSurface()
-    for triangle_index in triangle_indices:
-        abstract_plotting_surface.add_triangle()
-        abstract_plotting_surface.triangles[-1].index = triangle_index
+        self.abstract_plotting_surface = AbstractSurface()
+        for triangle_index in triangle_indices:
+            self.abstract_plotting_surface.add_triangle()
+            self.abstract_plotting_surface.triangles[-1].index = triangle_index
 
-    abstract_plotting_surface = glue_plotting_surface_edges(abstract_plotting_surface, abstract_surface)
+        self.glue_plotting_surface_edges()
 
-    #print([triangle.index for triangle in abstract_plotting_surface.triangles])
+        #print([triangle.index for triangle in abstract_plotting_surface.triangles])
 
-    abstract_plotting_surface = vertex_traversal(abstract_plotting_surface.triangles[0].vertices[0], vertex_points, abstract_plotting_surface)
-    abstract_plotting_surface = give_edge_identification_color_and_arrow(abstract_plotting_surface, abstract_surface)
+        self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
+        self.give_edge_identification_color_and_arrow()
 
-    # for triangle in abstract_plotting_surface.triangles:
-    #     [x1, y1] = triangle.vertices[0].coord
-    #     [x2, y2] = triangle.vertices[1].coord
-    #     [x3, y3] = triangle.vertices[2].coord
-    #     x = [x1, x2, x3, x1]
-    #     y = [y1, y2, y3, y1]
-    #     ax.plot(x, y)
-    #     ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
+        # for triangle in abstract_plotting_surface.triangles:
+        #     [x1, y1] = triangle.vertices[0].coord
+        #     [x2, y2] = triangle.vertices[1].coord
+        #     [x3, y3] = triangle.vertices[2].coord
+        #     x = [x1, x2, x3, x1]
+        #     y = [y1, y2, y3, y1]
+        #     ax.plot(x, y)
+        #     ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
 
-    plot_combinatorial_map(abstract_plotting_surface, ax, figure, chart_type)
+        self.plot_combinatorial_map()
 
 
 
@@ -954,27 +961,11 @@ def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
     if not filename:
         return
-    abstract_surface = convert_gluing_table_to_surface(filename)
-    win = tk.Toplevel()
-    win.wm_title("Uploaded Surface")
-    l = tk.Label(win, text="The uploaded gluing table is visualised as a combinatorial map below. You can change any edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
-    l.pack(padx=20, pady=10)
-    win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-    figure = plt.Figure(figsize=(7, 5), dpi=100)
-    ax = figure.add_subplot(111)
-    chart_type = FigureCanvasTkAgg(figure, win)
-    chart_type.get_tk_widget().pack()
-    ax.set_title('Combinatorial Map')
+    combinatorial_plot_window = CombinatorialImport(tk, filename)
 
-    generate_combinatorial_map(abstract_surface, ax, figure, chart_type)
-
-    ax.set_axis_off()
-    chart_type.draw()
-
-    cancel = ttk.Button(win, text="Cancel", command=win.destroy)
-    cancel.pack(side='right', padx=25, pady=5)
-    continue_button= ttk.Button(win, text="Continue", command=lambda : (generate_developing_map(abstract_surface), win.destroy()) )
-    continue_button.pack(side='right', padx=10, pady=5)
+def convert_surface_to_gluing_table(self):
+    #print(app.main_surface)
+    pass
 
 def export_file():
     try:
