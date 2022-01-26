@@ -885,8 +885,8 @@ def give_edge_identification_color_and_arrow(abstract_plotting_surface, abstract
     number_of_unique_colours = int(3*len(abstract_plotting_surface.triangles)/2)
     colors_ = lambda n: list(map(lambda i: "#" + "%06x" % np.random.randint(0, 0xFFFFFF), range(n)))
 
-    edges = []
 
+    edges = []
     for plotting_triangle in abstract_plotting_surface.triangles:
         abstract_triangle = abstract_surface.triangles[plotting_triangle.index]
         for abstract_edge in abstract_triangle.edges:
@@ -897,11 +897,12 @@ def give_edge_identification_color_and_arrow(abstract_plotting_surface, abstract
                 for edge in plotting_triangle.edges:
                     if edge.index == abstract_edge.index:
                         edge_to_glue = edge
+
                 abstract_other_edge = abstract_edge.edge_glued[2]
                 other_edge_to_glue = None
                 for other_triangle in abstract_plotting_surface.triangles:
                     for edge in other_triangle.edges:
-                        if edge.index == abstract_other_edge.index:
+                        if edge.index == abstract_other_edge.index and other_triangle.index == abstract_other_edge.triangle.index:
                             other_edge_to_glue = edge
                 if not flipped:
                     abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0,
@@ -944,6 +945,7 @@ def give_edge_identification_color_and_arrow(abstract_plotting_surface, abstract
     for edge in edges:
         if edge.arrow_strokes > 0:
             edge.arrow_strokes = edge.arrow_strokes - min_stroke + 1
+
 
     return abstract_plotting_surface
 
