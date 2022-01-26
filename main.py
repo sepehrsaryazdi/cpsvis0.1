@@ -1006,7 +1006,7 @@ def generate_combinatorial_map(abstract_surface, ax):
 
     vertex_points = []
     r=10
-    thetas = np.linspace(0.5*np.pi,2*np.pi, len(edge_list)+2)
+    thetas = np.linspace(1/(len(edge_list))*np.pi,2*np.pi, len(edge_list)+2)
     for theta in thetas:
         vertex_points.append(np.array([-r*np.cos(theta),r*np.sin(theta)]))
 
