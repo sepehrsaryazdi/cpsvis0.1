@@ -851,7 +851,7 @@ def generate_combinatorial_map(abstract_surface, ax):
     r=10
     thetas = np.linspace(0.5*np.pi,2*np.pi, len(edge_list)+2)
     for theta in thetas:
-        vertex_points.append(np.array([r*np.cos(theta),r*np.sin(theta)]))
+        vertex_points.append(np.array([-r*np.cos(theta),r*np.sin(theta)]))
 
     abstract_plotting_surface = AbstractSurface()
     for triangle_index in triangle_indices:
