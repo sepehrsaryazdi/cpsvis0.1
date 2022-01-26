@@ -22,3 +22,9 @@ def compute_r3(c0, c2, c3, e30, e32):
 
 def compute_t(e01, e12, e20, e10, e21, e02):
     return e01*e12*e20/(e10*e21*e02)
+
+def compute_all_until_r3c3(r0, r2, c0, c2, e03, e23, e30, e32, A023):
+    m_inverse = compute_m_inverse(r0, r2, c0, c2, e03, e23)
+    c3 = compute_c3(m_inverse, e03, e23, A023)
+    r3 = compute_r3(c0, c2, c3, e30, e32)
+    return (r3, c3)

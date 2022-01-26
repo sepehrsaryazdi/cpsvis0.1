@@ -148,6 +148,35 @@ class App(tk.Frame):
         self.normalise_decorations.bind('<ButtonPress>',
                                    self.normalise_decorations_function)
 
+    def plot_fresh(self, t):
+        self.t = t
+        self.ax.clear()
+        self.ax.set_axis_off()
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_title('Cloverleaf Position')
+        self.ax.set_axis_off()
+        self.figure.canvas.mpl_connect('button_press_event', self.onclick)
+        self.edge_selected = self.main_surface.triangles[-1].edges[-2]
+        for triangle in self.main_surface.triangles:
+            [x1, y1, z1] = triangle.vertices[0].c_clover
+            [x2, y2, z2] = triangle.vertices[1].c_clover
+            [x3, y3, z3] = triangle.vertices[2].c_clover
+            [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
+            [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
+            [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
+            x = [x1, x2, x3, x1]
+            y = [y1, y2, y3, y1]
+
+            self.plot_data.append(self.ax.plot(x, y, c='blue'))
+        v0 = self.edge_selected.v0.c_clover
+        v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
+        v1 = self.edge_selected.v1.c_clover
+        v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
+        self.plot_data.append(self.ax.plot([v0[0], v1[0]],
+                                           [v0[1], v1[1]], c='red'))
+        self.chart_type.draw()
+        self.generate_surface_error_text.set("")
+
 
     def normalise_decorations_function(self, event):
 
@@ -238,25 +267,20 @@ class App(tk.Frame):
             self.correct_edge_orientation(self.edge_selected)
             # print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
             # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
-            m_inverse = compute_m_inverse(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
-                                              self.edge_selected.v1.c, e03, e23)
-            # print(np.linalg.det(m_inverse))
-            c3 = compute_c3(m_inverse,e03, e23, A023)
-            r3 = compute_r3(self.edge_selected.v0.c, self.edge_selected.v1.c, c3, e30, e32)
 
-            m_inverse_clover = compute_m_inverse(self.edge_selected.v0.r_clover, self.edge_selected.v1.r_clover, self.edge_selected.v0.c_clover,
-                                          self.edge_selected.v1.c_clover, e03, e23)
-            # print(np.linalg.det(m_inverse))
-            c3_clover = compute_c3(m_inverse_clover, e03, e23, A023)
-            r3_clover = compute_r3(self.edge_selected.v0.c_clover, self.edge_selected.v1.c_clover, c3_clover, e30, e32)
+            r3, c3 = compute_all_until_r3c3(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
+                                              self.edge_selected.v1.c, e03, e23, e30, e32, A023)
+
+            r3_clover, c3_clover = compute_all_until_r3c3(self.edge_selected.v0.r_clover, self.edge_selected.v1.r_clover, self.edge_selected.v0.c_clover,
+                                              self.edge_selected.v1.c_clover, e03, e23, e30, e32, A023)
             # print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
             # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
             # print(f'm_inverse: {m_inverse}')
             # print(f'r3: {r3}', f'c3: {c3}')
-            # print(f'r0_clover: {self.edge_selected.v0.r_clover}', f'r2_clover: {self.edge_selected.v1.r_clover}')
-            # print(f'c0_clover: {self.edge_selected.v0.c_clover}', f'c2_clover: {self.edge_selected.v1.c_clover}')
-            # print(f'm_inverse: {m_inverse_clover}')
-            # print(f'r3_clover: {r3_clover}', f'c3_clover: {c3_clover}')
+            print(f'r0_clover: {self.edge_selected.v0.r_clover}', f'r2_clover: {self.edge_selected.v1.r_clover}')
+            print(f'c0_clover: {self.edge_selected.v0.c_clover}', f'c2_clover: {self.edge_selected.v1.c_clover}')
+            #print(f'm_inverse: {m_inverse_clover}')
+            print(f'r3_clover: {r3_clover}', f'c3_clover: {c3_clover}')
             self.main_surface.add_triangle(self.edge_selected,Vertex(c3,r3, c3_clover, r3_clover))
 
             self.add_triangle_error_text.set("")
@@ -455,7 +479,9 @@ def clover_position(x, t):
 
 
 def generate_developing_map(abstract_surface):
-
+    main_surface = generate_real_surface_map(abstract_surface)
+    app.main_surface = main_surface
+    app.plot_fresh(main_surface.triangles[0].t)
 
 
 
@@ -490,25 +516,79 @@ def triangle_order_generator(edge_list, prev_state, n, top_bottom_list):
     edge_list.append(next_edge_on_new_triangle)
     return triangle_order_generator(edge_list, new_prev_state, n, top_bottom_list)
 
-def generate_real_surface_map(abstract_surface,ax):
-    punctured_triangles = []
-    for triangle in abstract_surface.triangles:
-        for edge in triangle.edges:
-            if not edge.edge_glued:
-                punctured_triangles.append(triangle)
-                break
-    number_of_outer_edges = len(abstract_surface.triangles)+2
-    if len(punctured_triangles):
-        first_triangle = punctured_triangles[0]
-    else:
-        first_triangle = abstract_surface.triangles[0]
-    first_edge_index = 0
+def generate_new_triangle(current_edge, current_abstract_edge, main_surface, distance_from_initial_triangle, e03, e30, e23, e32, A023, max_distance):
+
+
+    if distance_from_initial_triangle > max_distance:
+        return
+
+    app.correct_edge_orientation(current_edge)
+
+    # m_inverse = compute_m_inverse(current_edge.v0.r, current_edge.v1.r, current_edge.v0.c,
+    #                                       current_edge.v1.c, e03, e23)
+    # c3 = compute_c3(m_inverse, e03, e23, A023)
+    # r3 = compute_r3(current_edge.v0.c, current_edge.v1.c, c3, e30, e32)
+
+    r3, c3 = compute_all_until_r3c3(current_edge.v0.r, current_edge.v1.r, current_edge.v0.c,
+                                          current_edge.v1.c, e03, e23,  e30, e32, A023)
+
+    # m_inverse_clover = compute_m_inverse(current_edge.v0.r_clover, current_edge.v1.r_clover,
+    #                                       current_edge.v0.c_clover,
+    #                                       current_edge.v1.c_clover, e03, e23)
+    # c3_clover = compute_c3(m_inverse_clover, e03, e23, A023)
+    # r3_clover = compute_r3(current_edge.v0.c_clover, current_edge.v1.c_clover, c3_clover, e30, e32)
+
+    r3_clover, c3_clover = compute_all_until_r3c3(current_edge.v0.r_clover, current_edge.v1.r_clover, current_edge.v0.c_clover,
+                                          current_edge.v1.c_clover, e03, e23,  e30, e32, A023)
+
+    # print('r0: ', current_edge.v0.r_clover, 'r2:', current_edge.v1.r_clover)
+    # print('c0: ', current_edge.v0.c_clover, 'c2: ', current_edge.v1.c_clover)
+    # print('r3: ', r3_clover, 'c3: ', c3_clover)
+
+    new_triangle = main_surface.add_triangle(current_edge, Vertex(c3, r3, c3_clover, r3_clover))
+
+    abstract_triangle = current_abstract_edge.edge_glued[2].triangle
+
+    new_triangle.index = abstract_triangle.index
+
+    abstract_triangle = current_abstract_edge.edge_glued[2].triangle
+
+    flipped = (current_abstract_edge.edge_glued[1] != current_abstract_edge.edge_glued[2].v0)
+
+    edge_index = 0
     for edge_index in range(3):
-        if not first_triangle.edges[edge_index].edge_glued:
-            first_edge_index = (edge_index - 1) % 3
-            break
-    edge_list = [first_triangle.edges[first_edge_index]]
-    edge_list, top_bottom_list = triangle_order_generator(edge_list, 'top', len(abstract_surface.triangles), ['top'])
+        if abstract_triangle.edges[edge_index] == current_abstract_edge:
+            edge_index = current_abstract_edge.index
+
+    next_surface_index = 0
+    for next_surface_edge in new_triangle.edges[1:]:
+        if flipped:
+            next_abstract_edge = abstract_triangle.edges[(edge_index-(next_surface_index+1))%3]
+        else:
+            next_abstract_edge =  abstract_triangle.edges[(edge_index + (next_surface_index + 1)) % 3]
+
+        next_surface_index += 1
+        generate_new_triangle(next_surface_edge, next_abstract_edge, main_surface,
+                              distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
+
+
+
+    return
+
+
+
+
+    pass
+
+def generate_real_surface_map(abstract_surface):
+    initial_triangle_index = 0
+    number_of_branches = 2
+
+    initial_abstract_triangle = abstract_surface.triangles[0]
+    for triangle in abstract_surface.triangles:
+        if triangle.index == initial_triangle_index:
+            initial_abstract_triangle = triangle
+
     t = 1
     e01 = 1
     e02 = 1
@@ -521,110 +601,185 @@ def generate_real_surface_map(abstract_surface,ax):
     e23 = 1
     e32 = 1
     A023 = 1
-    main_surface = Surface([1,0,0], [0,t,0], [0,0, 1],
-                                                             [0, e01/t, e02], [e10, 0, e12], [e20, e21/t, 0])
-    current_edge_real_surface = main_surface.triangles[0].edges[0]
-    current_real_triangle = main_surface.triangles[0]
-    current_abstract_triangle = edge_list[1].triangle
-    current_edge_abstract_surface = edge_list[0].edge_glued[2]
-    main_surface.triangles[0].index = edge_list[0].triangle.index
-    for edge in edge_list[1:]:
-        app.correct_edge_orientation(current_edge_real_surface)
-        m_inverse = compute_m_inverse(current_edge_real_surface.v0.r, current_edge_real_surface.v1.r, current_edge_real_surface.v0.c,
-                                      current_edge_real_surface.v1.c, e03, e23)
-        c3 = compute_c3(m_inverse, e03, e23, A023)
-        r3 = compute_r3(current_edge_real_surface.v0.c, current_edge_real_surface.v1.c, c3, e30, e32)
-        main_surface.add_triangle(current_edge_real_surface, Vertex(c3, r3))
-        current_real_triangle = main_surface.triangles[-1]
-        current_real_triangle.index = current_abstract_triangle.index
+    c0 = [1,0,0]
+    c1 = [0,t,0]
+    c2 = [0,0,1]
+    r0 = [0, e01/t, e02]
+    r1 = [e10, 0, e12]
+    r2= [e20, e21/t, 0]
+    c0_clover = [1,0,0]
+    c1_clover = [0,1,0]
+    c2_clover = [0,0,1]
+    x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
+    cube_root_x_coord_t = np.power(x_coord_t, 1)
+    r0_clover = [0, cube_root_x_coord_t, 1]
+    r1_clover = [1, 0, cube_root_x_coord_t]
+    r2_clover = [cube_root_x_coord_t, 1, 0]
 
-        current_edge_abstract_index = 0
-        next_edge_is_anticlockwise = False
-        for temp_index in range(3):
-            if current_abstract_triangle.edges[temp_index] == current_edge_abstract_surface:
-                current_edge_abstract_index = temp_index
-                break
-        if current_abstract_triangle.edges[(current_edge_abstract_index + 1)%3] == edge:
-            next_edge_is_anticlockwise = True
-        current_edge_real_surface = current_real_triangle.edges[((-1)**next_edge_is_anticlockwise) % 3]
-        current_abstract_triangle = edge.edge_glued[2].triangle
-        current_edge_abstract_surface = edge.edge_glued[2]
-    #main_surface.normalise_vertices()
+    main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover ,c2_clover,r0_clover, r1_clover, r2_clover)
 
-    # print(top_bottom_list)
-    # print([edge.triangle.index for edge in edge_list])
-    # vertex_points = []
-    # r=2
-    # thetas = np.linspace(0,2*np.pi, len(main_surface.triangles)+2)
-    # for theta in thetas:
-    #     vertex_points.append(np.array([r*np.cos(theta),r*np.sin(theta)]))
-    #
-    # first_connecting_edge = main_surface.triangles[0].edges[0]
-    # for edge in main_surface.triangles[0].edges:
-    #     if len(edge.triangles)==2:
-    #         first_connecting_edge = edge
-    # for vertex in main_surface.triangles[0].vertices:
-    #     if vertex != first_connecting_edge.v0 and vertex != first_connecting_edge.v1:
-    #         vertex.c = vertex_points[0]
-    #         for other_vertex_index in range(3):
-    #             if main_surface.triangles[0].vertices[other_vertex_index] == vertex:
-    #                 other_vertex_index = (other_vertex_index -1)%3
-    #                 main_surface.triangles[0].vertices[other_vertex_index].c = vertex_points[-1]
-    #
-    #
-    # vertex_points_used = [vertex_points[-1],vertex_points[0]]
-    #
-    #
-    # triangle_index = 1
-    #
-    #
-    #
-    # connecting_edges = []
-    # for triangle in main_surface.triangles[1:]:
-    #     for edge in triangle.edges:
-    #         if edge not in connecting_edges and len(edge.triangles) == 2:
-    #             if top_bottom_list[triangle_index] == 'top':
-    #                 vertex_point_to_use = vertex_points[(-1)**triangle_index*triangle_index]
-    #                 edge.v1.c = vertex_point_to_use
-    #                 vertex_points_used.append(vertex_point_to_use)
-    #             else:
-    #                 vertex_point_to_use = vertex_points[-(-1) ** triangle_index * triangle_index]
-    #                 edge.v0.c = vertex_point_to_use
-    #                 vertex_points_used.append(vertex_point_to_use)
-    #             connecting_edges.append(edge)
-    #
-    #     triangle_index+=1
-    #
-    #
-    # for triangle in main_surface.triangles:
-    #     for edge in triangle.edges:
-    #         if len(edge.v0.c) == 3:
-    #             print(triangle.index)
-    #             for v in vertex_points_used:
-    #                 for other_v_index in range(len(vertex_points)):
-    #                     if np.all(v!=vertex_points[other_v_index]):
-    #                         edge.v0.c = v
+    main_surface.triangles[0].index = initial_abstract_triangle.index
 
+    max_distance = 5
 
+    for edge_index in range(3):
+        generate_new_triangle(main_surface.triangles[0].edges[edge_index],  initial_abstract_triangle.edges[edge_index], main_surface, 0, e03, e30, e23, e32, A023, max_distance)
 
-
-    for triangle in main_surface.triangles:
-        [x1, y1, z1] = triangle.vertices[0].c
-        [x2, y2, z2] = triangle.vertices[1].c
-        [x3, y3, z3] = triangle.vertices[2].c
-        # try:
-        #     [x3, y3] = triangle.vertices[2].c
-        # except:
-        #     print(triangle.index)
-        [x1,y1] = clover_position([[x1],[y1],[z1]], t)
-        [x2, y2] = clover_position([[x2],[y2],[z2]], t)
-        [x3, y3] = clover_position([[x3],[y3],[z3]], t)
-        x = [x1, x2, x3, x1]
-        y = [y1, y2, y3, y1]
-        ax.plot(x, y)
-        ax.annotate(triangle.index,[np.mean(x[:-1]),np.mean(y[:-1])])
-
+    #print(main_surface.triangles)
     return main_surface
+
+
+#
+#
+# def generate_real_surface_map(abstract_surface):
+#     number_of_outer_edges = len(abstract_surface.triangles)+2
+#     if len(punctured_triangles):
+#         first_triangle = punctured_triangles[0]
+#     else:
+#         first_triangle = abstract_surface.triangles[0]
+#     first_edge_index = 0
+#     for edge_index in range(3):
+#         if not first_triangle.edges[edge_index].edge_glued:
+#             first_edge_index = (edge_index - 1) % 3
+#             break
+#     edge_list = [first_triangle.edges[first_edge_index]]
+#     edge_list, top_bottom_list = triangle_order_generator(edge_list, 'top', len(abstract_surface.triangles), ['top'])
+#     t = 1
+#     e01 = 1
+#     e02 = 1
+#     e10 = 1
+#     e12 = 1
+#     e20 = 1
+#     e21 = 1
+#     e03 = 1
+#     e30 = 1
+#     e23 = 1
+#     e32 = 1
+#     A023 = 1
+#     c0 = [1,0,0]
+#     c1 = [0,t,0]
+#     c2 = [0,0,1]
+#     r0 = [0, e01/t, e02]
+#     r1 = [e10, 0, e12]
+#     r2= [e20, e21/t, 0]
+#     c0_clover = [1,0,0]
+#     c1_clover = [0,1,0]
+#     c2_clover = [0,0,1]
+#     x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
+#     cube_root_x_coord_t = np.power(x_coord_t, 1)
+#     r0_clover = [0, cube_root_x_coord_t, 1]
+#     r1_clover = [1, 0, cube_root_x_coord_t]
+#     r2_clover = [cube_root_x_coord_t, 1, 0]
+#     main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover, r2_clover)
+#     current_edge_real_surface = main_surface.triangles[0].edges[0]
+#     current_real_triangle = main_surface.triangles[0]
+#     current_abstract_triangle = edge_list[1].triangle
+#     current_edge_abstract_surface = edge_list[0].edge_glued[2]
+#     main_surface.triangles[0].index = edge_list[0].triangle.index
+#     for edge in edge_list[1:]:
+#         app.correct_edge_orientation(current_edge_real_surface)
+#         m_inverse = compute_m_inverse(current_edge_real_surface.v0.r, current_edge_real_surface.v1.r, current_edge_real_surface.v0.c,
+#                                       current_edge_real_surface.v1.c, e03, e23)
+#         c3 = compute_c3(m_inverse, e03, e23, A023)
+#         r3 = compute_r3(current_edge_real_surface.v0.c, current_edge_real_surface.v1.c, c3, e30, e32)
+#
+#         m_inverse_clover = compute_m_inverse(current_edge_real_surface.v0.r_clover, current_edge_real_surface.v1.r_clover,
+#                                       current_edge_real_surface.v0.c_clover,
+#                                       current_edge_real_surface.v1.c_clover, e03, e23)
+#         c3_clover = compute_c3(m_inverse_clover, e03, e23, A023)
+#         r3_clover = compute_r3(current_edge_real_surface.v0.c_clover, current_edge_real_surface.v1.c_clover, c3, e30, e32)
+#
+#         main_surface.add_triangle(current_edge_real_surface, Vertex(c3, r3, r3_clover, c3_clover))
+#         current_real_triangle = main_surface.triangles[-1]
+#         current_real_triangle.index = current_abstract_triangle.index
+#
+#         current_edge_abstract_index = 0
+#         next_edge_is_anticlockwise = False
+#         for temp_index in range(3):
+#             if current_abstract_triangle.edges[temp_index] == current_edge_abstract_surface:
+#                 current_edge_abstract_index = temp_index
+#                 break
+#         if current_abstract_triangle.edges[(current_edge_abstract_index + 1)%3] == edge:
+#             next_edge_is_anticlockwise = True
+#         current_edge_real_surface = current_real_triangle.edges[((-1)**next_edge_is_anticlockwise) % 3]
+#         current_abstract_triangle = edge.edge_glued[2].triangle
+#         current_edge_abstract_surface = edge.edge_glued[2]
+#     #main_surface.normalise_vertices()
+#
+#     # print(top_bottom_list)
+#     # print([edge.triangle.index for edge in edge_list])
+#     # vertex_points = []
+#     # r=2
+#     # thetas = np.linspace(0,2*np.pi, len(main_surface.triangles)+2)
+#     # for theta in thetas:
+#     #     vertex_points.append(np.array([r*np.cos(theta),r*np.sin(theta)]))
+#     #
+#     # first_connecting_edge = main_surface.triangles[0].edges[0]
+#     # for edge in main_surface.triangles[0].edges:
+#     #     if len(edge.triangles)==2:
+#     #         first_connecting_edge = edge
+#     # for vertex in main_surface.triangles[0].vertices:
+#     #     if vertex != first_connecting_edge.v0 and vertex != first_connecting_edge.v1:
+#     #         vertex.c = vertex_points[0]
+#     #         for other_vertex_index in range(3):
+#     #             if main_surface.triangles[0].vertices[other_vertex_index] == vertex:
+#     #                 other_vertex_index = (other_vertex_index -1)%3
+#     #                 main_surface.triangles[0].vertices[other_vertex_index].c = vertex_points[-1]
+#     #
+#     #
+#     # vertex_points_used = [vertex_points[-1],vertex_points[0]]
+#     #
+#     #
+#     # triangle_index = 1
+#     #
+#     #
+#     #
+#     # connecting_edges = []
+#     # for triangle in main_surface.triangles[1:]:
+#     #     for edge in triangle.edges:
+#     #         if edge not in connecting_edges and len(edge.triangles) == 2:
+#     #             if top_bottom_list[triangle_index] == 'top':
+#     #                 vertex_point_to_use = vertex_points[(-1)**triangle_index*triangle_index]
+#     #                 edge.v1.c = vertex_point_to_use
+#     #                 vertex_points_used.append(vertex_point_to_use)
+#     #             else:
+#     #                 vertex_point_to_use = vertex_points[-(-1) ** triangle_index * triangle_index]
+#     #                 edge.v0.c = vertex_point_to_use
+#     #                 vertex_points_used.append(vertex_point_to_use)
+#     #             connecting_edges.append(edge)
+#     #
+#     #     triangle_index+=1
+#     #
+#     #
+#     # for triangle in main_surface.triangles:
+#     #     for edge in triangle.edges:
+#     #         if len(edge.v0.c) == 3:
+#     #             print(triangle.index)
+#     #             for v in vertex_points_used:
+#     #                 for other_v_index in range(len(vertex_points)):
+#     #                     if np.all(v!=vertex_points[other_v_index]):
+#     #                         edge.v0.c = v
+#     #
+#     #
+#     #
+#     #
+#     # for triangle in main_surface.triangles:
+#     #     [x1, y1, z1] = triangle.vertices[0].c
+#     #     [x2, y2, z2] = triangle.vertices[1].c
+#     #     [x3, y3, z3] = triangle.vertices[2].c
+#     #     # try:
+#     #     #     [x3, y3] = triangle.vertices[2].c
+#     #     # except:
+#     #     #     print(triangle.index)
+#     #     [x1,y1] = clover_position([[x1],[y1],[z1]], t)
+#     #     [x2, y2] = clover_position([[x2],[y2],[z2]], t)
+#     #     [x3, y3] = clover_position([[x3],[y3],[z3]], t)
+#     #     x = [x1, x2, x3, x1]
+#     #     y = [y1, y2, y3, y1]
+#     #     ax.plot(x, y)
+#     #     ax.annotate(triangle.index,[np.mean(x[:-1]),np.mean(y[:-1])])
+#
+#     return main_surface
 
 def get_dual_vertex(vertex, edge):
     flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
@@ -890,7 +1045,7 @@ def generate_combinatorial_map(abstract_surface, ax):
                         if flipped and edge.edge_glued[2] in plotted_edges:
                             [x1, y1] = edge.v1.coord
                             [x2, y2] = edge.v0.coord
-                        ax.arrow(x1,y1,(i+3)*(x2-x1)/(edge.arrow_strokes+7), (i+3)*(y2-y1)/(edge.arrow_strokes+7), head_width=0.5, color=edge.color)
+                        ax.arrow(x1,y1,(i+4)*(x2-x1)/(edge.arrow_strokes+7), (i+4)*(y2-y1)/(edge.arrow_strokes+7), head_width=0.5, color=edge.color)
                 except:
                     pass
 
@@ -932,7 +1087,7 @@ def import_file():
     ax.set_title('Combinatorial Map')
 
     generate_combinatorial_map(abstract_surface, ax)
-    #main_surface = generate_real_surface_map(abstract_surface,ax)
+
     ax.set_axis_off()
     chart_type.draw()
 

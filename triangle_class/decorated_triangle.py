@@ -71,6 +71,7 @@ class Surface:
         self.triangles.append(connecting_edge.triangles[-1])
         new_triangle.add_neighbour(self.triangles[-1])
         self.triangles[-1].add_neighbour(new_triangle)
+        return new_triangle
 
     def normalise_vertices(self):
         all_vertices = []
