@@ -438,8 +438,13 @@ class App(tk.Frame):
 class CombinatorialImport:
     def __init__(self, tk, filename):
         self.tk = tk
+        self.parameter_entries = {}
+        self.parameter_strings = {}
+        self.triangle_parameter_string = None
+        self.triangle_parameter_entry = None
         self.convert_gluing_table_to_surface(filename)
         self.win = self.tk.Toplevel()
+        self.win.resizable(width=False, height=False)
         self.win.wm_title("Uploaded Surface")
         self.l = tk.Label(self.win,
                      text="The uploaded gluing table is visualised as a combinatorial map below. You can change any edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
@@ -451,7 +456,13 @@ class CombinatorialImport:
         self.chart_type.get_tk_widget().pack()
         self.ax.set_title('Combinatorial Map')
 
+
+
+
         self.generate_combinatorial_map()
+
+
+
 
         self.ax.set_axis_off()
         self.chart_type.draw()
@@ -505,8 +516,8 @@ class CombinatorialImport:
                         if other_edge.index == other_edge_index[::-1]:
                             self.abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v1)
 
-    def generate_developing_map(self,):
-        self.main_surface = self.generate_real_surface_map()
+    def generate_developing_map(self):
+        self.generate_real_surface_map()
         app.main_surface = self.main_surface
         app.plot_fresh(self.main_surface.triangles[0].t)
 
@@ -631,9 +642,9 @@ class CombinatorialImport:
         r1_clover = [1, 0, cube_root_x_coord_t]
         r2_clover = [cube_root_x_coord_t, 1, 0]
 
-        main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover ,c2_clover,r0_clover, r1_clover, r2_clover)
+        self.main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover ,c2_clover,r0_clover, r1_clover, r2_clover)
 
-        main_surface.triangles[0].index = initial_abstract_triangle.index
+        self.main_surface.triangles[0].index = initial_abstract_triangle.index
 
 
 
@@ -822,9 +833,137 @@ class CombinatorialImport:
             else:
                 self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v1)
 
+    def matplotlib_to_tkinter(self, x):
+        x = np.array([[x[0]],[x[1]]])
+        mat1 = [-3.031443579456372, -4.828833563156737]
+        tk1 = [-66., 87.]
+        mat2 = [10.675953475476799, -0.25732417952460196]
+        tk2 = [272., 7.]
+        M = [[mat1[0], mat1[1], 0, 0], [0, 0, mat1[0], mat1[1]], [mat2[0], mat2[1], 0, 0], [0, 0, mat2[0], mat2[1]]]
+        T = [[tk1[0]], [tk1[1]], [tk2[0]], [tk2[1]]]
+        M = np.array(M)
+        T = np.array(T)
+        solution = np.matmul(np.linalg.inv(M), T).T.flatten()
+        A = np.array([[solution[0], solution[1]], [solution[2], solution[3]]])
+        kt_coords = np.matmul(A, x)
+        kt_coords = kt_coords.T.flatten()
+        abs_coord_x = self.chart_type.get_tk_widget().winfo_x() + kt_coords[
+            0] + 0.5 * self.chart_type.get_tk_widget().winfo_width()
+        abs_coord_y = self.chart_type.get_tk_widget().winfo_y() + kt_coords[
+            1] + 0.5 * self.chart_type.get_tk_widget().winfo_height()
+        return [abs_coord_x, abs_coord_y]
 
+    def generate_parameter_entrance_widgets(self, selected_triangle, event):
+        #print(event.x, event.y)
+        x = self.win.winfo_pointerx()
+        y = self.win.winfo_pointery()
+
+        click_tk_coords = [self.win.winfo_pointerx() - self.win.winfo_rootx(), self.win.winfo_pointery() - self.win.winfo_rooty()]
+        #print(self.win.winfo_pointerx() - self.win.winfo_rootx(), self.win.winfo_pointery() - self.win.winfo_rooty())
+
+
+
+        click_mat_coords = [event.xdata, event.ydata]
+
+        #print(event.xdata, event.ydata)
+
+
+        desired_x = 0
+        desired_y = 0
+        # abs_coord_x = self.win.winfo_pointerx() - self.win.winfo_rootx() +desired_x
+        # abs_coord_y = self.win.winfo_pointery() - self.win.winfo_rooty() + desired_y
+
+        origin_tk_coords = [self.chart_type.get_tk_widget().winfo_x() + 0.5*self.chart_type.get_tk_widget().winfo_width(), self.chart_type.get_tk_widget().winfo_y() + 0.5*self.chart_type.get_tk_widget().winfo_height()]
+
+
+
+
+
+        edges = selected_triangle.edges
+        try:
+            self.parameter_entries[selected_triangle] = []
+            [x1, y1] = selected_triangle.vertices[0].coord
+            [x2, y2] = selected_triangle.vertices[1].coord
+            [x3, y3] = selected_triangle.vertices[2].coord
+
+
+
+            centre = [np.mean([x1, x2, x3]), np.mean([y1, y2, y3])]
+
+            [x,y] = self.matplotlib_to_tkinter(centre)
+
+            self.triangle_parameter_entry = ttk.Entry(self.win, textvariable=selected_triangle.triangle_parameter, width=5)
+            self.triangle_parameter_entry.place(x=x,y=y)
+
+            for edge_index in range(3):
+                    first_coord = np.array(edges[edge_index].v0.coord)
+                    second_coord = np.array(edges[edge_index].v1.coord)
+                    ea_parameter_string = edges[edge_index].ea
+                    eb_parameter_string = edges[edge_index].eb
+                    ea_parameter_entry = ttk.Entry(self.win, textvariable=ea_parameter_string, width=5)
+                    eb_parameter_entry = ttk.Entry(self.win, textvariable=eb_parameter_string,width=5)
+                    [ea_x, ea_y] = self.matplotlib_to_tkinter(2 / 3 * first_coord + 1 / 3 * second_coord)
+                    [eb_x, eb_y] = self.matplotlib_to_tkinter(1 / 3 * first_coord + 2 / 3 * second_coord)
+                    self.parameter_entries[selected_triangle].append([ea_parameter_entry, eb_parameter_entry])
+                    ea_parameter_entry.place(x=ea_x, y=ea_y)
+                    eb_parameter_entry.place(x=eb_x, y=eb_y)
+        except:
+            self.parameter_entries[selected_triangle] = []
+            self.parameter_strings[selected_triangle] = []
+            [x1, y1] = selected_triangle.vertices[0].coord
+            [x2, y2] = selected_triangle.vertices[1].coord
+            [x3, y3] = selected_triangle.vertices[2].coord
+
+            centre = [np.mean([x1, x2, x3]), np.mean([y1, y2, y3])]
+
+            [x, y] = self.matplotlib_to_tkinter(centre)
+            self.triangle_parameter_string = tk.StringVar(value="1")
+            self.triangle_parameter_entry = ttk.Entry(self.win, textvariable=self.triangle_parameter_string, width=5)
+            self.triangle_parameter_entry.place(x=x, y=y)
+            for edge_index in range(3):
+                first_coord = np.array(edges[edge_index].v0.coord)
+                second_coord = np.array(edges[edge_index].v1.coord)
+                ea_parameter_string = edges[edge_index].ea
+                eb_parameter_string = edges[edge_index].eb
+                ea_parameter_entry = ttk.Entry(self.win, textvariable=ea_parameter_string,width=5)
+                eb_parameter_entry = ttk.Entry(self.win, textvariable=eb_parameter_string,width=5)
+                [ea_x, ea_y] = self.matplotlib_to_tkinter(2/3*first_coord+1/3*second_coord)
+                [eb_x, eb_y] = self.matplotlib_to_tkinter(1/3*first_coord+2/3*second_coord)
+                self.parameter_entries[selected_triangle].append([ea_parameter_entry, eb_parameter_entry])
+                self.parameter_strings[selected_triangle].append([ea_parameter_string, eb_parameter_string])
+                ea_parameter_entry.place(x=ea_x,y=ea_y)
+                eb_parameter_entry.place(x=eb_x, y=eb_y)
+
+
+
+        #self.parameter_entry_point = ttk.Entry(self.win)
+        #[abs_coord_x, abs_coord_y]= self.matplotlib_to_tkinter([event.xdata, event.ydata])
+
+        #self.parameter_entry_point.place(x=abs_coord_x, y=abs_coord_y)
+
+
+    def submit_triangle_params(self, selected_triangle):
+        for triangle in self.abstract_plotting_surface.triangles:
+            triangle.selected = False
+
+        for edge_data in self.parameter_entries[selected_triangle]:
+            edge_data[0].destroy()
+            edge_data[1].destroy()
+        self.parameter_entries = {}
+        self.triangle_parameter_entry.destroy()
+        self.triangle_parameter_entry = None
+
+        self.submit_entries_button.destroy()
+
+        self.plot_combinatorial_map()
 
     def select_triangle_combinatorial_map(self,event):
+
+        for triangle in self.abstract_plotting_surface.triangles:
+            if triangle.selected:
+                return
+
+
         coord = np.array([event.xdata, event.ydata])
         if not coord[0] or not coord[1]:
             return
@@ -840,14 +979,17 @@ class CombinatorialImport:
         centres = np.array(centres)
         distances = np.linalg.norm(np.repeat(np.array([coord]), len(centres), axis=0) - centres, axis=1)
         selected_triangle = self.abstract_plotting_surface.triangles[np.argmin(distances)]
-        for triangle in self.abstract_plotting_surface.triangles:
-            triangle.selected = False
+
+
         selected_triangle.selected = True
 
         self.plot_combinatorial_map()
 
+        self.generate_parameter_entrance_widgets(selected_triangle, event)
 
-
+        self.submit_entries_button = ttk.Button(self.win, text="Submit Triangle Parameters",
+                                          command=lambda:self.submit_triangle_params(selected_triangle))
+        self.submit_entries_button.pack(side='right', padx=10, pady=5)
 
 
 
@@ -942,6 +1084,19 @@ class CombinatorialImport:
 
         self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
         self.give_edge_identification_color_and_arrow()
+
+        for triangle in self.abstract_plotting_surface.triangles:
+            triangle.triangle_parameter = tk.StringVar(value="1")
+            for edge in triangle.edges:
+                edge.ea = tk.StringVar(value="1")
+                edge.eb = tk.StringVar(value="1")
+                flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                if not flipped:
+                    edge.edge_glued[2].ea = edge.ea
+                    edge.edge_glued[2].eb = edge.eb
+                else:
+                    edge.edge_glued[2].ea = edge.eb
+                    edge.edge_glued[2].eb = edge.ea
 
         # for triangle in abstract_plotting_surface.triangles:
         #     [x1, y1] = triangle.vertices[0].coord
