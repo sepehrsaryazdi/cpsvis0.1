@@ -73,9 +73,7 @@ class App(tk.Frame):
 
         self.add_triangle_frame = ttk.Frame(self.left_side_frame)
 
-
-
-        self.add_triangle_param_label = ttk.Label(self.add_triangle_frame, justify='left',
+        self.add_triangle_param_label = ttk.Label(self.add_triangle_frame, justify='right',
                                                text='Set Parameters In New Triangle [e03, e30, e23, e32, A023] (Must be positive)')
         self.add_triangle_param_label.pack(side='top', anchor='nw', padx=25, pady=10)
         self.add_triangle_param_entries = []
@@ -290,7 +288,11 @@ class App(tk.Frame):
             A023 = self.string_fraction_to_float(self.add_triangle_params[4].get())
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
-            self.correct_edge_orientation(self.edge_selected)
+            flipped = self.correct_edge_orientation(self.edge_selected)
+
+            if flipped:
+                [e03, e30, e23, e32] = [e23, e32, e03, e30]
+
             # print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
             # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
 
@@ -589,6 +591,9 @@ class CombinatorialImport:
 
         flipped = app.correct_edge_orientation(current_edge)
 
+        if flipped:
+            [e03, e30, e32, e23] = [e30, e03, e23, e32]
+            [e03, e30, e23, e32] = [e23, e32, e03, e30]
 
         # m_inverse = compute_m_inverse(current_edge.v0.r, current_edge.v1.r, current_edge.v0.c,
         #                                       current_edge.v1.c, e03, e23)
@@ -657,7 +662,7 @@ class CombinatorialImport:
                 e23 = edge_backward.ea
 
             [e03, e30, e32, e23] = [e30, e03, e23, e32]
-            if self.abstract_surface.orientation < 0:
+            if self.abstract_surface.orientation:
                 [e03, e30, e32, e23] = [e23, e32, e30, e03]
 
             A023 = edge_glued.triangle.triangle_parameter
@@ -667,7 +672,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 5
+        max_distance = 2
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
