@@ -69,7 +69,7 @@ class App(tk.Frame):
         self.error_text.set("")
         self.error_message_label = tk.Label(self.left_side_frame,justify='left',textvariable=self.error_text, fg='red')
 
-        self.error_message_label.pack(side='top',anchor='nw', padx=25, pady=0)
+        self.error_message_label.pack(side='left',anchor='nw', padx=25, pady=0)
 
         self.add_triangle_frame = ttk.Frame(self.left_side_frame)
 
@@ -439,15 +439,13 @@ class CombinatorialImport:
     def __init__(self, tk, filename):
         self.tk = tk
         self.parameter_entries = {}
-        self.parameter_strings = {}
-        self.triangle_parameter_string = None
         self.triangle_parameter_entry = None
         self.convert_gluing_table_to_surface(filename)
         self.win = self.tk.Toplevel()
         self.win.resizable(width=False, height=False)
         self.win.wm_title("Uploaded Surface")
         self.l = tk.Label(self.win,
-                     text="The uploaded gluing table is visualised as a combinatorial map below. You can change any edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
+                     text="The uploaded gluing table is visualised as a combinatorial map below. You can change any A-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
         self.l.pack(padx=20, pady=10)
         self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
         self.figure = plt.Figure(figsize=(7, 5), dpi=100)
@@ -455,7 +453,6 @@ class CombinatorialImport:
         self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
         self.chart_type.get_tk_widget().pack()
         self.ax.set_title('Combinatorial Map')
-
 
 
 
@@ -473,7 +470,11 @@ class CombinatorialImport:
                                      command=lambda: (self.generate_developing_map(), self.win.destroy()))
         self.continue_button.pack(side='right', padx=10, pady=5)
 
-
+        self.error_text = tk.StringVar()
+        self.error_text.set("")
+        self.error_message_label = tk.Label(self.win, textvariable=self.error_text,
+                                            fg='red')
+        self.error_message_label.pack(side='left', padx=10, pady=5)
 
 
 
@@ -943,8 +944,19 @@ class CombinatorialImport:
 
 
     def submit_triangle_params(self, selected_triangle):
-        for triangle in self.abstract_plotting_surface.triangles:
-            triangle.selected = False
+
+        try:
+            assert app.string_fraction_to_float(selected_triangle.triangle_parameter) > 0
+            for edge in selected_triangle.edges:
+                assert app.string_fraction_to_float(edge.ea) > 0
+                assert app.string_fraction_to_float(edge.eb) > 0
+        except:
+            self.error_text.set("One or more variables are not well-defined.")
+            return
+
+
+        selected_triangle.selected = False
+
 
         for edge_data in self.parameter_entries[selected_triangle]:
             edge_data[0].destroy()
@@ -952,6 +964,8 @@ class CombinatorialImport:
         self.parameter_entries = {}
         self.triangle_parameter_entry.destroy()
         self.triangle_parameter_entry = None
+
+        self.error_text.set("")
 
         self.submit_entries_button.destroy()
 
