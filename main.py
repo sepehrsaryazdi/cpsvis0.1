@@ -274,8 +274,11 @@ class App(tk.Frame):
         # if np.linalg.det(np.array([v0.c,v1.c,v2.c])) < 0:
         #     [v0, v1, v2] = [v1, v0, v2]
         vertices = np.array([v0, v1, v2, v0])
+        flipped = False
         if vertices[np.argwhere(edge.v0 == vertices)[0,0]+1] == edge.v1:
             [edge.v0,edge.v1] = [edge.v1, edge.v0]
+            flipped = True
+        return flipped
 
     def add_triangle(self, event):
         try:
@@ -445,7 +448,7 @@ class CombinatorialImport:
         self.win.resizable(width=False, height=False)
         self.win.wm_title("Uploaded Surface")
         self.l = tk.Label(self.win,
-                     text="The uploaded gluing table is visualised as a combinatorial map below. You can change any A-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
+                     text="The uploaded gluing table is visualised as a combinatorial map below. You can change A-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
         self.l.pack(padx=20, pady=10)
         self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
         self.figure = plt.Figure(figsize=(7, 5), dpi=100)
@@ -518,6 +521,33 @@ class CombinatorialImport:
                             self.abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v1)
 
     def generate_developing_map(self):
+
+        coord0 = self.abstract_plotting_surface.triangles[0].vertices[0].coord
+        coord1 = self.abstract_plotting_surface.triangles[0].vertices[1].coord
+        coord2 = self.abstract_plotting_surface.triangles[0].vertices[2].coord
+        coord0 = [coord0[0],coord0[1],1]
+        coord1 = [coord1[0],coord1[1],1]
+        coord2 = [coord2[0], coord2[1], 1]
+
+        self.abstract_surface.orientation = np.sign(np.linalg.det(np.array([coord0, coord1, coord2])))
+
+
+        for plotting_triangle in self.abstract_plotting_surface.triangles:
+            abstract_triangle = self.abstract_surface.triangles[plotting_triangle.index]
+            abstract_triangle.triangle_parameter = app.string_fraction_to_float(plotting_triangle.triangle_parameter.get())
+            edge_index = 0
+            for edge in plotting_triangle.edges:
+                flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                abstract_triangle.edges[edge_index].ea = app.string_fraction_to_float(edge.ea.get())
+                abstract_triangle.edges[edge_index].eb = app.string_fraction_to_float(edge.eb.get())
+                if not flipped:
+                    abstract_triangle.edges[edge_index].edge_glued[2].ea = app.string_fraction_to_float(edge.ea.get())
+                    abstract_triangle.edges[edge_index].edge_glued[2].eb = app.string_fraction_to_float(edge.eb.get())
+                else:
+                    abstract_triangle.edges[edge_index].edge_glued[2].ea = app.string_fraction_to_float(edge.eb.get())
+                    abstract_triangle.edges[edge_index].edge_glued[2].eb = app.string_fraction_to_float(edge.ea.get())
+                edge_index+=1
+
         self.generate_real_surface_map()
         app.main_surface = self.main_surface
         app.plot_fresh(self.main_surface.triangles[0].t)
@@ -557,7 +587,8 @@ class CombinatorialImport:
         if distance_from_initial_triangle > max_distance:
             return
 
-        app.correct_edge_orientation(current_edge)
+        flipped = app.correct_edge_orientation(current_edge)
+
 
         # m_inverse = compute_m_inverse(current_edge.v0.r, current_edge.v1.r, current_edge.v0.c,
         #                                       current_edge.v1.c, e03, e23)
@@ -603,6 +634,33 @@ class CombinatorialImport:
                 next_abstract_edge =  abstract_triangle.edges[(edge_index + (next_surface_index + 1)) % 3]
 
             next_surface_index += 1
+            edge_glued = next_abstract_edge.edge_glued[2]
+            edge_glued_index = 0
+            for index in range(3):
+                if edge_glued.triangle.edges[index] == edge_glued:
+                    edge_glued_index = index
+
+            edge_forward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
+            edge_backward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
+
+            if edge_forward.index != '02':
+                e03 = edge_forward.ea
+                e30 = edge_forward.eb
+            else:
+                e03 = edge_forward.eb
+                e30 = edge_forward.ea
+            if edge_backward.index != '02':
+                e32 = edge_backward.ea
+                e23 = edge_backward.eb
+            else:
+                e32 = edge_backward.eb
+                e23 = edge_backward.ea
+
+            [e03, e30, e32, e23] = [e30, e03, e23, e32]
+            if self.abstract_surface.orientation < 0:
+                [e03, e30, e32, e23] = [e23, e32, e30, e03]
+
+            A023 = edge_glued.triangle.triangle_parameter
             self.generate_new_triangle(next_surface_edge, next_abstract_edge,
                                   distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
         return
@@ -616,18 +674,14 @@ class CombinatorialImport:
             if triangle.index == initial_triangle_index:
                 initial_abstract_triangle = triangle
 
-        t = 1
-        e01 = 1
-        e02 = 1
-        e10 = 1
-        e12 = 1
-        e20 = 1
-        e21 = 1
-        e03 = 1
-        e30 = 1
-        e23 = 1
-        e32 = 1
-        A023 = 1
+        t = initial_abstract_triangle.triangle_parameter
+        e01 = initial_abstract_triangle.edges[0].ea
+        e02 = initial_abstract_triangle.edges[2].ea
+        e10 = initial_abstract_triangle.edges[0].eb
+        e12 = initial_abstract_triangle.edges[1].ea
+        e20 = initial_abstract_triangle.edges[2].eb
+        e21 = initial_abstract_triangle.edges[1].eb
+
         c0 = [1,0,0]
         c1 = [0,t,0]
         c2 = [0,0,1]
@@ -649,7 +703,53 @@ class CombinatorialImport:
 
 
 
+
         for edge_index in range(3):
+            edge = initial_abstract_triangle.edges[edge_index]
+            edge_glued = initial_abstract_triangle.edges[edge_index].edge_glued[2]
+            edge_glued_index = 0
+            for index in range(3):
+                if edge_glued.triangle.edges[index] == edge_glued:
+                    edge_glued_index = index
+
+            edge_forward = edge_glued.triangle.edges[(edge_glued_index-1)%3]
+            edge_backward = edge_glued.triangle.edges[(edge_glued_index+1)%3]
+
+            if edge_forward.index != '02':
+                e03 = edge_forward.ea
+                e30 = edge_forward.eb
+            else:
+                e03 = edge_forward.eb
+                e30 = edge_forward.ea
+            if edge_backward.index != '02':
+                e32 = edge_backward.ea
+                e23 = edge_backward.eb
+            else:
+                e32 = edge_backward.eb
+                e23 = edge_backward.ea
+
+            [e03, e30, e32, e23] = [e30, e03, e23, e32]
+            if self.abstract_surface.orientation < 0:
+                [e03, e30, e32, e23] = [e23, e32, e30, e03]
+
+            A023 = edge_glued.triangle.triangle_parameter
+
+            print('orientation: ', self.abstract_surface.orientation)
+
+            #print(initial_abstract_triangle.index,initial_abstract_triangle.edges[edge_index].index,edge_glued.triangle.index,edge_glued.index,edge_glued_index)
+
+            print('---------------')
+            print('initial_edge:', edge.index)
+            print('initial_triangle: ', edge.triangle.index)
+            print('glued_edge: ', edge_glued.index)
+            print('glued_edge_triangle: ',edge_glued.triangle.index)
+            print('e03: ',e03)
+            print('e30: ', e30)
+            print('e23: ', e23)
+            print('e32: ', e32)
+
+
+
             self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index],  initial_abstract_triangle.edges[edge_index], 0, e03, e30, e23, e32, A023, max_distance)
 
         #print(main_surface.triangles)
@@ -1099,6 +1199,8 @@ class CombinatorialImport:
         self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
         self.give_edge_identification_color_and_arrow()
 
+
+
         for triangle in self.abstract_plotting_surface.triangles:
             triangle.triangle_parameter = tk.StringVar(value="1")
             for edge in triangle.edges:
@@ -1130,6 +1232,9 @@ def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
     if not filename:
         return
+    #gluing_table = pd.read_table(filename)
+    #columns = gluing_table.columns
+
     combinatorial_plot_window = CombinatorialImport(tk, filename)
 
 def convert_surface_to_gluing_table(self):
