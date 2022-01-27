@@ -946,10 +946,10 @@ class CombinatorialImport:
     def submit_triangle_params(self, selected_triangle):
 
         try:
-            assert app.string_fraction_to_float(selected_triangle.triangle_parameter) > 0
+            assert app.string_fraction_to_float(selected_triangle.triangle_parameter.get()) > 0
             for edge in selected_triangle.edges:
-                assert app.string_fraction_to_float(edge.ea) > 0
-                assert app.string_fraction_to_float(edge.eb) > 0
+                assert app.string_fraction_to_float(edge.ea.get()) > 0
+                assert app.string_fraction_to_float(edge.eb.get()) > 0
         except:
             self.error_text.set("One or more variables are not well-defined.")
             return
