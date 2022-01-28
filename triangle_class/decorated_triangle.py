@@ -37,19 +37,20 @@ class Edge:
         self.triangles = []
 
 class Triangle:
-    def __init__(self, e0, e1, e2):
+    def __init__(self, e0, e1, e2, parity):
         self.edges = [e0, e1, e2]
-        self.vertices = []
+        self.vertices = [e0.v0, e1.v0, e2.v0]
         for edge in self.edges:
             edge.triangles.append(self)
-        for edge in self.edges:
-            if edge.v0 not in self.vertices:
-                self.vertices.append(edge.v0)
-            if edge.v1 not in self.vertices:
-                self.vertices.append(edge.v1)
         [v0, v1, v2] = self.vertices
         if np.linalg.det([v0.c,v1.c,v2.c]) < 0:
-            self.vertices = [v0, v1, v2]
+            for edge in self.edges:
+                [edge.v0,edge.v1] = [edge.v1, edge.v0]
+
+        self.parity = parity
+
+        #print(np.linalg.det([self.edges[0].v0.c, self.edges[1].v0.c, self.edges[2].v0.c]))
+
         self.t = np.dot(v0.r_clover, v1.c_clover)*np.dot(v1.r_clover, v2.c_clover)*np.dot(v2.r_clover, v0.c_clover)/(np.dot(v1.r_clover, v0.c_clover)*np.dot(v2.r_clover, v1.c_clover)*np.dot(v0.r_clover, v2.c_clover))
         #print(self.t)
         self.neighbours = []
@@ -60,11 +61,11 @@ class Surface:
     def __init__(self, c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover, r2_clover):
         vertices = [Vertex(c0,r0, c0_clover, r0_clover), Vertex(c1,r1, c1_clover, r1_clover), Vertex(c2,r2, c2_clover, r2_clover)]
         edges = [Edge(vertices[0],vertices[1]),Edge(vertices[1],vertices[2]),Edge(vertices[2],vertices[0])]
-        initial_triangle = Triangle(edges[0],edges[1],edges[2])
+        initial_triangle = Triangle(edges[0],edges[1],edges[2], 0)
         self.triangles = [initial_triangle]
     def add_triangle(self, connecting_edge, new_vertex):
         #if np.linalg.det(np.array([connecting_edge.v0.c,connecting_edge.v1.c,new_vertex.c])) > 0:
-        new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v1,new_vertex), Edge(new_vertex,connecting_edge.v0))
+        new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v1,new_vertex), Edge(new_vertex,connecting_edge.v0),(connecting_edge.triangles[0].parity+1)%2)
         #else:
         #    new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v0, new_vertex),
         #                            Edge(new_vertex, connecting_edge.v1))

@@ -271,14 +271,16 @@ class App(tk.Frame):
         [v0,v1,v2] = edge.triangles[0].vertices
         # if np.linalg.det(np.array([v0.c,v1.c,v2.c])) < 0:
         #     [v0, v1, v2] = [v1, v0, v2]
-        vertices = np.array([v0, v1, v2, v0])
+        vertices = np.array([v0, v1, v2])
+        [v0, v1] = [edge.v0, edge.v1]
         flipped = False
-        [v0,v1] = [edge.v0, edge.v1]
-        if vertices[np.argwhere(edge.v0 == vertices)[0,0]+1] == edge.v1:
-            [v0,v1] = [edge.v1, edge.v0]
-            [edge.v0, edge.v1] = [edge.v1, edge.v0]
-            flipped = True
-        return (v0, v1,flipped)
+        # if edge.triangles[0].parity == 1:
+        #     [v0,v1] = [edge.v1, edge.v0]
+        # if vertices[(np.argwhere(edge.v0 == vertices)[0,0]+1)%3] != edge.v1:
+        #     [v0,v1] = [edge.v1, edge.v0]
+        #     [edge.v0, edge.v1] = [edge.v1, edge.v0]
+        #     flipped = True
+        return (v1, v0,flipped)
 
     def add_triangle(self, event):
         try:
@@ -290,19 +292,19 @@ class App(tk.Frame):
             A023 = self.string_fraction_to_float(self.add_triangle_params[4].get())
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
-            _, _, flipped = self.correct_edge_orientation(self.edge_selected)
+            v0, v1, flipped = self.correct_edge_orientation(self.edge_selected)
 
-            if flipped:
+            if self.edge_selected.triangles[0].parity == 0:
                 [e03, e30, e23, e32] = [e23, e32, e03, e30]
 
             # print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
             # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
 
-            r3, c3 = compute_all_until_r3c3(self.edge_selected.v0.r, self.edge_selected.v1.r, self.edge_selected.v0.c,
-                                              self.edge_selected.v1.c, e03, e23, e30, e32, A023)
+            r3, c3 = compute_all_until_r3c3(v0.r, v1.r, v0.c,
+                                              v1.c, e03, e23, e30, e32, A023)
 
-            r3_clover, c3_clover = compute_all_until_r3c3(self.edge_selected.v0.r_clover, self.edge_selected.v1.r_clover, self.edge_selected.v0.c_clover,
-                                              self.edge_selected.v1.c_clover, e03, e23, e30, e32, A023)
+            r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
+                                              v1.c_clover, e03, e23, e30, e32, A023)
             # print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
             # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
             # print(f'm_inverse: {m_inverse}')
@@ -601,6 +603,8 @@ class CombinatorialImport:
         #print(current_edge.v0.c)
         #print(current_edge.v1.c)
         flipped = (current_abstract_edge.edge_glued[1] != current_abstract_edge.edge_glued[2].v0)
+        #if flipped:
+        #    [v0,v1] = [v1,v0]
         #if flipped:
         [e03, e30, e23, e32] = [e23, e32, e03, e30]
         # else:
