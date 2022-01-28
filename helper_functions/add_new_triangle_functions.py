@@ -1,4 +1,7 @@
 import numpy as np
+from sympy import Matrix
+
+
 
 def compute_m_inverse(r0, r2, c0, c2, e03, e23):
     A = np.array([[1 / e03, 0, 0], [0, 1 / e23, 0], [0, 0, 1 / (e03 * e23)]])
