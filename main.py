@@ -276,11 +276,11 @@ class App(tk.Frame):
         flipped = False
         # if edge.triangles[0].parity == 1:
         #     [v0,v1] = [edge.v1, edge.v0]
-        # if vertices[(np.argwhere(edge.v0 == vertices)[0,0]+1)%3] != edge.v1:
-        #     [v0,v1] = [edge.v1, edge.v0]
-        #     [edge.v0, edge.v1] = [edge.v1, edge.v0]
+        if vertices[(np.argwhere(edge.v0 == vertices)[0,0]+1)%3] == edge.v1:
+            #[v0,v1] = [edge.v1, edge.v0]
+            [edge.v0, edge.v1] = [edge.v1, edge.v0]
         #     flipped = True
-        return (v1, v0,flipped)
+        return (v0, v1,flipped)
 
     def add_triangle(self, event):
         try:
@@ -606,6 +606,7 @@ class CombinatorialImport:
         #if flipped:
         #    [v0,v1] = [v1,v0]
         #if flipped:
+        #if current_edge.triangles[0].parity == 1:
         [e03, e30, e23, e32] = [e23, e32, e03, e30]
         # else:
         #     [e03, e30, e32, e23] = [e30, e03, e23, e32]

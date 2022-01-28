@@ -44,8 +44,10 @@ class Triangle:
             edge.triangles.append(self)
         [v0, v1, v2] = self.vertices
         if np.linalg.det([v0.c,v1.c,v2.c]) < 0:
-            for edge in self.edges:
-                [edge.v0,edge.v1] = [edge.v1, edge.v0]
+            self.vertices = [v0, v2, v1]
+        # if np.linalg.det([v0.c,v1.c,v2.c]) < 0:
+        #     for edge in self.edges:
+        #         [edge.v0,edge.v1] = [edge.v1, edge.v0]
 
         self.parity = parity
 
