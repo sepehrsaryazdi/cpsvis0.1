@@ -754,12 +754,12 @@ class CombinatorialImport:
             A023 = edge_glued.triangle.triangle_parameter
             self.generate_new_triangle(next_surface_edge, next_abstract_edge,
                                   distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
-            break
+
         return
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 1
+        max_distance = 3
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
