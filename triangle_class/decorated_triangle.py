@@ -65,9 +65,9 @@ class Surface:
         edges = [Edge(vertices[0],vertices[1]),Edge(vertices[1],vertices[2]),Edge(vertices[2],vertices[0])]
         initial_triangle = Triangle(edges[0],edges[1],edges[2], 0)
         self.triangles = [initial_triangle]
-    def add_triangle(self, connecting_edge, new_vertex):
+    def add_triangle(self, connecting_edge, v0, v1, new_vertex):
         #if np.linalg.det(np.array([connecting_edge.v0.c,connecting_edge.v1.c,new_vertex.c])) > 0:
-        new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v1,new_vertex), Edge(new_vertex,connecting_edge.v0),(connecting_edge.triangles[0].parity+1)%2)
+        new_triangle = Triangle(connecting_edge, Edge(v1,new_vertex), Edge(new_vertex,v0),(connecting_edge.triangles[0].parity+1)%2)
         #else:
         #    new_triangle = Triangle(connecting_edge, Edge(connecting_edge.v0, new_vertex),
         #                            Edge(new_vertex, connecting_edge.v1))
