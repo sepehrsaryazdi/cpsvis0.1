@@ -15,24 +15,26 @@ import os
 
 def clover_position(x, t):
     x = np.array(x)
-    x = x/(sum(sum(x)))
+    x = x/abs(sum(sum(x)))
     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
     v = 1 / 3 * np.array([[1], [1], [1]])
     #x = np.matmul(P,x)
     T_inverse = np.array([[0, -np.sqrt(2), -1/np.sqrt(2)], [0,0, np.sqrt(3/2)],[-1,1,1]])
 
     [x,y,z] = np.matmul(T_inverse,x-v)
-    return [x[0],y[0]]
+    return [-x[0],y[0]]
 
-
+#
 # def clover_position(x,t):
 #     #P = np.array([[1,-1/2,-1/2],[-1/2,1/2, 0],[-1/2, 0, 1/2]])
 #     #v = 1 / 3 * np.array([[1], [1], [1]])
 #     #x = np.matmul(P,x-v)+v
+#     x = np.array(x)
+#     x = x/(sum(sum(x)))
 #     cube_root1 = np.array([1,0])
 #     cube_root2 = np.array([np.cos(2*np.pi/3), np.sin(2*np.pi/3)])
 #     cube_root3 = np.array([np.cos(-2*np.pi/3), np.sin(-2*np.pi/3)])
-#     [x,y] = x[0]*cube_root1 + x[1]*cube_root2/t + x[2]*cube_root3
+#     [x,y] = x[0]*cube_root1 + x[1]*cube_root2 + x[2]*cube_root3
 #     return [x,y]
 
 class App(tk.Frame):
@@ -272,7 +274,7 @@ class App(tk.Frame):
         # if np.linalg.det(np.array([v0.c,v1.c,v2.c])) < 0:
         #     [v0, v1, v2] = [v1, v0, v2]
         vertices = np.array([v0, v1, v2])
-        [v0, v1] = [edge.v0, edge.v1]
+
         flipped = False
         # if edge.triangles[0].parity == 1:
         #     [v0,v1] = [edge.v1, edge.v0]
@@ -280,6 +282,7 @@ class App(tk.Frame):
             #[v0,v1] = [edge.v1, edge.v0]
             [edge.v0, edge.v1] = [edge.v1, edge.v0]
         #     flipped = True
+        [v0, v1] = [edge.v0, edge.v1]
         return (v0, v1,flipped)
 
     def add_triangle(self, event):
@@ -607,7 +610,7 @@ class CombinatorialImport:
         #    [v0,v1] = [v1,v0]
         #if flipped:
         #if current_edge.triangles[0].parity == 1:
-        [e03, e30, e23, e32] = [e23, e32, e03, e30]
+        #[e03, e30, e23, e32] = [e23, e32, e03, e30]
         # else:
         #     [e03, e30, e32, e23] = [e30, e03, e23, e32]
         # if self.abstract_surface.orientation < 0:
@@ -718,7 +721,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 1
+        max_distance = 0
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
@@ -765,8 +768,11 @@ class CombinatorialImport:
                 if edge_glued.triangle.edges[index] == edge_glued:
                     edge_glued_index = index
 
-            edge_forward = edge_glued.triangle.edges[(edge_glued_index+1)%3]
-            edge_backward = edge_glued.triangle.edges[(edge_glued_index-1)%3]
+            flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+
+
+            edge_forward = edge_glued.triangle.edges[(edge_glued_index+(-1)**flipped)%3]
+            edge_backward = edge_glued.triangle.edges[(edge_glued_index-(-1)**flipped)%3]
 
             if edge_forward.index != '02':
                 e03 = edge_forward.ea
@@ -781,7 +787,11 @@ class CombinatorialImport:
                 e32 = edge_backward.eb
                 e23 = edge_backward.ea
 
-            # [e03, e30, e32, e23] = [e30, e03, e23, e32]
+            if flipped:
+                [e03, e30, e32, e23] = [e30, e03, e23, e32]
+            else:
+                [e03, e30, e32, e23] = [e23, e32, e30, e03]
+            #[e03, e30, e32, e23] = [e30, e03, e23, e32]
             # if self.abstract_surface.orientation < 0:
             #     [e03, e30, e32, e23] = [e23, e32, e30, e03]
 
