@@ -269,7 +269,7 @@ class App(tk.Frame):
         all_edges = []
         for triangle in self.main_surface.triangles:
             for edge in triangle.edges:
-                if len(edge.triangles)==1:
+                if not edge.connected:
                     all_edges.append(edge)
         distances = []
         for edge in all_edges:
@@ -293,19 +293,20 @@ class App(tk.Frame):
         self.chart_type.draw()
 
     def correct_edge_orientation(self, edge):
-        [v0,v1,v2] = edge.triangles[0].vertices
+        [v0,v1,v2] = edge.triangle.vertices
         # if np.linalg.det(np.array([v0.c,v1.c,v2.c])) < 0:
         #     [v0, v1, v2] = [v1, v0, v2]
         vertices = np.array([v0, v1, v2])
-
+        [v0, v1] = [edge.v0, edge.v1]
         flipped = False
         # if edge.triangles[0].parity == 1:
         #     [v0,v1] = [edge.v1, edge.v0]
         if vertices[(np.argwhere(edge.v0 == vertices)[0,0]+1)%3] == edge.v1:
             #[v0,v1] = [edge.v1, edge.v0]
-            [edge.v0, edge.v1] = [edge.v1, edge.v0]
+            #[edge.v0, edge.v1] = [edge.v1, edge.v0]
+            [v0, v1] = [v1,v0]
         #     flipped = True
-        [v0, v1] = [edge.v0, edge.v1]
+
         return (v0, v1,flipped)
 
     def add_triangle(self, event):
@@ -319,9 +320,12 @@ class App(tk.Frame):
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
             v0, v1, flipped = self.correct_edge_orientation(self.edge_selected)
+            #
+            # v0 = self.edge_selected.v1
+            # v1 = self.edge_selected.v0
 
-            if self.edge_selected.triangles[0].parity == 0:
-                [e03, e30, e23, e32] = [e23, e32, e03, e30]
+            # if self.edge_selected.triangle.parity == 0:
+            #     [e03, e30, e23, e32] = [e23, e32, e03, e30]
 
             # print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
             # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
@@ -335,8 +339,8 @@ class App(tk.Frame):
             # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
             # print(f'm_inverse: {m_inverse}')
             # print(f'r3: {r3}', f'c3: {c3}')
-            print(f'r0_clover: {self.edge_selected.v0.r_clover}', f'r2_clover: {self.edge_selected.v1.r_clover}')
-            print(f'c0_clover: {self.edge_selected.v0.c_clover}', f'c2_clover: {self.edge_selected.v1.c_clover}')
+            print(f'r0_clover: {v0.r_clover}', f'r2_clover: {v1.r_clover}')
+            print(f'c0_clover: {v0.c_clover}', f'c2_clover: {v1.c_clover}')
             #print(f'm_inverse: {m_inverse_clover}')
             print(f'r3_clover: {r3_clover}', f'c3_clover: {c3_clover}')
             self.main_surface.add_triangle(self.edge_selected,v0,v1,Vertex(c3,r3, c3_clover, r3_clover))
@@ -345,6 +349,7 @@ class App(tk.Frame):
             if self.edge_selected:
                 self.plot_data[-1][0].remove()
             self.edge_selected = self.main_surface.triangles[-1].edges[-2]
+
             for triangle in self.main_surface.triangles:
                 [x1, y1, z1] = triangle.vertices[0].c_clover
                 [x2, y2, z2] = triangle.vertices[1].c_clover
@@ -623,7 +628,7 @@ class CombinatorialImport:
         v0, v1, flipped = app.correct_edge_orientation(current_edge)
 
         v2 = None
-        for vertex in current_edge.triangles[0].vertices:
+        for vertex in current_edge.triangle.vertices:
             if vertex != v0 and vertex != v1:
                 v2 = vertex
 
@@ -670,6 +675,7 @@ class CombinatorialImport:
         # c3_clover = compute_c3(m_inverse_clover, e03, e23, A023)
         # r3_clover = compute_r3(current_edge.v0.c_clover, current_edge.v1.c_clover, c3_clover, e30, e32)
 
+
         r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
                                               v1.c_clover, e03, e23,  e30, e32, A023)
         # r3_clover = np.array(r3_clover)/sum(r3_clover)
@@ -679,9 +685,9 @@ class CombinatorialImport:
         print('c0: ', v0.c_clover, 'c2: ', v1.c_clover)
         print('r3: ', r3_clover, 'c3: ', c3_clover)
 
-        for coord in [current_edge.v0.c_clover, c3_clover,current_edge.v1.c_clover]:
+        for coord in [c3_clover]:
             [x,y,z] = coord
-            print(clover_position([[x],[y],[z]],0))
+            print('c3 clover position:', clover_position([[x],[y],[z]],0))
 
         new_triangle = self.main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
 
@@ -747,9 +753,6 @@ class CombinatorialImport:
             # if self.abstract_surface.orientation < 0:
             #     [e03, e30, e32, e23] = [e23, e32, e30, e03]
 
-            A023 = edge_glued.triangle.triangle_parameter
-
-
 
             A023 = edge_glued.triangle.triangle_parameter
             self.generate_new_triangle(next_surface_edge, next_abstract_edge,
@@ -759,7 +762,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 3
+        max_distance = 2
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
