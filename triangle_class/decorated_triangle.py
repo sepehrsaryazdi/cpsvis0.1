@@ -57,7 +57,6 @@ class Triangle:
 
         #print(np.linalg.det([self.edges[0].v0.c, self.edges[1].v0.c, self.edges[2].v0.c]))
 
-        self.t = np.dot(v0.r_clover, v1.c_clover)*np.dot(v1.r_clover, v2.c_clover)*np.dot(v2.r_clover, v0.c_clover)/(np.dot(v1.r_clover, v0.c_clover)*np.dot(v2.r_clover, v1.c_clover)*np.dot(v0.r_clover, v2.c_clover))
         #print(self.t)
         self.neighbours = []
     def add_neighbour(self, neighbour_triangle):

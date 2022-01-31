@@ -15,7 +15,7 @@ import os
 
 def clover_position(x, t):
     x = np.array(x)
-    #x = x/sum(sum(x))
+    x = x/sum(sum(x))
 
     T_R2e = [[-1/np.sqrt(2), 1/np.sqrt(2), 0],[-1/np.sqrt(6), -1/np.sqrt(6), np.sqrt(2/3)],[1,1,1]]
 
@@ -201,64 +201,41 @@ class App(tk.Frame):
 
     def canonical_cell_decomp(self, event):
 
-        # connected_edges = {}
-        # for triangle in self.main_surface.triangles:
-        #     for edge in triangle.edges:
-        #         if edge.connected:
-        #             try:
-        #                 connected_edges[edge.edge_connected]
-        #             except:
-        #                 connected_edges[edge] = 1
-        # connected_edges = list(connected_edges.keys())
-        #
-        # for edge in connected_edges:
-        #     c0 = edge.v0.c
-        #     edge_connected = edge.edge_connected
-        #     c1 = edge_connected.triangle.edges[(edge_connected.index+1) % 3].v1.c
-        #     c2 = edge.v1.c
-        #     c3 = edge.triangle.edges[(edge.index+1) % 3].v1.c
-        #
-        #     outitude_sign = compute_outitude_sign(c0,c1,c2,c3)
-        #
-        #     if outitude_sign < 0:
-        #         self.main_surface.flip_edge(edge)
-        found_no_edges = False
-        while not found_no_edges:
-            found_edge = False
-            for triangle in self.main_surface.triangles:
+        try:
+            found_no_edges = False
+            while not found_no_edges:
+                found_edge = False
+                for triangle in self.main_surface.triangles:
+                    if not found_edge:
+                        for edge in triangle.edges:
+                            if edge.edge_connected:
+                                c0 = edge.v0.c
+                                edge_connected = edge.edge_connected
+                                c1 = edge_connected.triangle.edges[(edge_connected.index+1) % 3].v1.c
+                                c2 = edge.v1.c
+                                c3 = edge.triangle.edges[(edge.index+1) % 3].v1.c
+                                outitude_sign = compute_outitude_sign(c0,c1,c2,c3)
+                                if outitude_sign < 0:
+                                    self.main_surface.flip_edge(edge)
+                                    found_edge = True
+                                    break
                 if not found_edge:
-                    for edge in triangle.edges:
-                        if edge.edge_connected:
-                            c0 = edge.v0.c
-                            edge_connected = edge.edge_connected
-                            c1 = edge_connected.triangle.edges[(edge_connected.index+1) % 3].v1.c
-                            c2 = edge.v1.c
-                            c3 = edge.triangle.edges[(edge.index+1) % 3].v1.c
-                            outitude_sign = compute_outitude_sign(c0,c1,c2,c3)
-                            if outitude_sign < 0:
-                                self.main_surface.flip_edge(edge)
-                                found_edge = True
-                                break
-            if not found_edge:
-                found_no_edges = True
+                    found_no_edges = True
 
-        for triangle in self.main_surface.triangles:
-            for edge in triangle.edges:
-                if edge.edge_connected:
-                    c0 = edge.v0.c
-                    edge_connected = edge.edge_connected
-                    c1 = edge_connected.triangle.edges[(edge_connected.index + 1) % 3].v1.c
-                    c2 = edge.v1.c
-                    c3 = edge.triangle.edges[(edge.index + 1) % 3].v1.c
-                    outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
-                    #print(outitude_sign)
-
-
-
-
-        self.plot_fresh(self.t)
-        #print('done')
-
+            for triangle in self.main_surface.triangles:
+                for edge in triangle.edges:
+                    if edge.edge_connected:
+                        c0 = edge.v0.c
+                        edge_connected = edge.edge_connected
+                        c1 = edge_connected.triangle.edges[(edge_connected.index + 1) % 3].v1.c
+                        c2 = edge.v1.c
+                        c3 = edge.triangle.edges[(edge.index + 1) % 3].v1.c
+                        outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
+                        #print(outitude_sign)
+            self.plot_fresh(self.t)
+            self.generate_surface_error_text.set("")
+        except:
+            self.generate_surface_error_text.set("Please add an initial triangle before computing canonical cell decomposition.")
 
 
         pass
@@ -294,6 +271,9 @@ class App(tk.Frame):
         v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
         self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                            [v0[1], v1[1]], c='red'))
+        #[x,y,z] = [1,-self.main_surface.triangles[0].t,self.main_surface.triangles[0].t**2]
+        #[x,y] = clover_position([[x],[y],[z]],0)
+        #self.ax.scatter(x,y, c='red')
         self.chart_type.draw()
         self.generate_surface_error_text.set("")
 
@@ -492,12 +472,12 @@ class App(tk.Frame):
             r1= [e10, 0, e12]
             r2= [e20, e21 / t, 0]
             c0_clover = [1,0,0]
-            c1_clover = [0,1,0]
+            c1_clover = [0,t,0]
             c2_clover = [0,0,1]
             x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
             cube_root_x_coord_t = np.power(x_coord_t, 1/3)
             r0_clover = [0, cube_root_x_coord_t, 1]
-            r1_clover = [1, 0, cube_root_x_coord_t]
+            r1_clover = [cube_root_x_coord_t, 0, 1]
             r2_clover = [cube_root_x_coord_t, 1, 0]
             self.error_text.set("")
             self.main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover, r2_clover)
@@ -711,17 +691,17 @@ class CombinatorialImport:
         flipped = (current_abstract_edge.edge_glued[1] != current_abstract_edge.edge_glued[2].v0)
 
 
-        # print('---------------')
-        # print('flipped', flipped)
-        # print('orientation: ', self.abstract_surface.orientation)
-        # print('initial_edge:', current_abstract_edge.index)
-        # print('initial_triangle: ', current_abstract_edge.triangle.index)
-        # print('glued_edge: ', current_abstract_edge.edge_glued[2].index)
-        # print('glued_edge_triangle: ', current_abstract_edge.edge_glued[2].triangle.index)
-        # print('e03: ', e03)
-        # print('e30: ', e30)
-        # print('e23: ', e23)
-        # print('e32: ', e32)
+        print('---------------')
+        print('flipped', flipped)
+        print('orientation: ', self.abstract_surface.orientation)
+        print('initial_edge:', current_abstract_edge.index)
+        print('initial_triangle: ', current_abstract_edge.triangle.index)
+        print('glued_edge: ', current_abstract_edge.edge_glued[2].index)
+        print('glued_edge_triangle: ', current_abstract_edge.edge_glued[2].triangle.index)
+        print('e03: ', e03)
+        print('e30: ', e30)
+        print('e23: ', e23)
+        print('e32: ', e32)
 
         r3, c3 = compute_all_until_r3c3(v0.r, v1.r, v0.c,
                                               v1.c, e03, e23,  e30, e32, A023)
@@ -732,13 +712,13 @@ class CombinatorialImport:
         # r3_clover = np.array(r3_clover)/sum(r3_clover)
         # c3_clover = np.array(c3_clover)/sum(c3_clover)
 
-        # print('r0: ', v0.r_clover, 'r2:', v1.r_clover)
-        # print('c0: ', v0.c_clover, 'c2: ', v1.c_clover)
-        # print('r3: ', r3_clover, 'c3: ', c3_clover)
-        #
-        # for coord in [c3_clover]:
-        #     [x,y,z] = coord
-        #     print('c3 clover position:', clover_position([[x],[y],[z]],0))
+        print('r0: ', v0.r_clover, 'r2:', v1.r_clover)
+        print('c0: ', v0.c_clover, 'c2: ', v1.c_clover)
+        print('r3: ', r3_clover, 'c3: ', c3_clover)
+
+        for coord in [c3_clover]:
+            [x,y,z] = coord
+            print('c3 clover position:', clover_position([[x],[y],[z]],0))
 
         new_triangle = self.main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
 
@@ -755,51 +735,59 @@ class CombinatorialImport:
 
         edge_index = 0
         for index in range(3):
-            if abstract_triangle.edges[edge_index] == current_abstract_edge.edge_glued[2]:
+            if abstract_triangle.edges[index] == current_abstract_edge.edge_glued[2]:
                 edge_index = index
+        # edge_index = 0
+        # for index in range(3):
+        #     if current_abstract_edge.triangle.edges[index] == current_abstract_edge:
+        #         edge_index = index
 
-        if flipped:
-            first_edge = -1
-            second_edge = 1
-        else:
-            first_edge = 1
-            second_edge = -1
+        #print('edge_index:', edge_index)
 
-        next_edge_indices = [first_edge,second_edge]
+        # if flipped:
+        #     first_edge = -1
+        #     second_edge = 1
+        # else:
+        #     first_edge = 1
+        #     second_edge = -1
 
 
-        next_surface_index = 0
-        for next_surface_edge in new_triangle.edges[1:]:
+        next_edge_indices = [1,-1]
+
+
+        next_surface_index = 1
+        for next_surface_edge in new_triangle.edges[1:][::-1]:
             next_abstract_edge = abstract_triangle.edges[(edge_index+next_edge_indices[next_surface_index])%3]
-            next_surface_index += 1
+            print((edge_index+next_edge_indices[next_surface_index])%3, edge_index, next_abstract_edge.index, next_abstract_edge.triangle.index)
+            next_surface_index -=1
             edge_glued = next_abstract_edge.edge_glued[2]
             edge_glued_index = 0
             for index in range(3):
                 if edge_glued.triangle.edges[index] == edge_glued:
                     edge_glued_index = index
 
-            flipped = (next_abstract_edge.edge_glued[1] != next_abstract_edge.edge_glued[2].v0)
+            #flipped = ((next_abstract_edge.edge_glued[1] != next_abstract_edge.edge_glued[2].v0) + (next_abstract_edge.edge_glued[2].index == '02')+(next_abstract_edge.index == '02'))%2
 
-            edge_forward = edge_glued.triangle.edges[(edge_glued_index + (-1) ** flipped) % 3]
-            edge_backward = edge_glued.triangle.edges[(edge_glued_index - (-1) ** flipped) % 3]
+            edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
+            edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
 
-            if edge_forward.index != '02':
-                e03 = edge_forward.ea
-                e30 = edge_forward.eb
+            if edge_backward.index == '02':
+                e03 = edge_backward.ea
+                e30 = edge_backward.eb
             else:
-                e03 = edge_forward.eb
-                e30 = edge_forward.ea
-            if edge_backward.index != '02':
-                e32 = edge_backward.ea
-                e23 = edge_backward.eb
+                e03 = edge_backward.eb
+                e30 = edge_backward.ea
+            if edge_forward.index == '02':
+                e32 = edge_forward.ea
+                e23 = edge_forward.eb
             else:
-                e32 = edge_backward.eb
-                e23 = edge_backward.ea
+                e32 = edge_forward.eb
+                e23 = edge_forward.ea
 
-            if flipped:
-                [e03, e30, e32, e23] = [e30, e03, e23, e32]
-            else:
-                [e03, e30, e32, e23] = [e23, e32, e30, e03]
+            # if flipped:
+            #     [e03, e30, e32, e23] = [e30, e03, e23, e32]
+            # else:
+            #     [e03, e30, e32, e23] = [e23, e32, e30, e03]
             # [e03, e30, e32, e23] = [e30, e03, e23, e32]
             # if self.abstract_surface.orientation < 0:
             #     [e03, e30, e32, e23] = [e23, e32, e30, e03]
@@ -813,7 +801,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 5
+        max_distance = 1
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
@@ -840,7 +828,8 @@ class CombinatorialImport:
         x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
         cube_root_x_coord_t = np.power(x_coord_t, 1/3)
         r0_clover = [0, cube_root_x_coord_t, 1]
-        r1_clover = [1, 0, cube_root_x_coord_t]
+        #r1_clover = [1, 0, cube_root_x_coord_t]
+        r1_clover = [cube_root_x_coord_t, 0, 1]
         r2_clover = [cube_root_x_coord_t, 1, 0]
 
 
@@ -854,7 +843,8 @@ class CombinatorialImport:
         self.main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover , c2_clover, r0_clover, r1_clover, r2_clover)
 
         self.main_surface.triangles[0].index = initial_abstract_triangle.index
-
+        self.main_surface.triangles[0].t = cube_root_x_coord_t
+        print(self.main_surface.triangles[0].t)
         #print(self.main_surface.triangles[0].edges[0].v0.c_clover,self.main_surface.triangles[0].edges[0].v1.c_clover)
         #print(self.main_surface.triangles[0].edges[1].v0.c_clover, self.main_surface.triangles[0].edges[1].v1.c_clover)
         #print(self.main_surface.triangles[0].edges[2].v0.c_clover, self.main_surface.triangles[0].edges[2].v1.c_clover)
@@ -868,29 +858,29 @@ class CombinatorialImport:
                 if edge_glued.triangle.edges[index] == edge_glued:
                     edge_glued_index = index
 
-            flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+            flipped = ((edge.edge_glued[1] != edge.edge_glued[2].v0)+ (edge.edge_glued[2].index == '02') + (edge.index == '02'))%2
 
 
-            edge_forward = edge_glued.triangle.edges[(edge_glued_index+(-1)**flipped)%3]
-            edge_backward = edge_glued.triangle.edges[(edge_glued_index-(-1)**flipped)%3]
+            edge_forward = edge_glued.triangle.edges[(edge_glued_index+1)%3]
+            edge_backward = edge_glued.triangle.edges[(edge_glued_index-1)%3]
 
-            if edge_forward.index != '02':
-                e03 = edge_forward.ea
-                e30 = edge_forward.eb
+            if edge_backward.index == '02':
+                e03 = edge_backward.ea
+                e30 = edge_backward.eb
             else:
-                e03 = edge_forward.eb
-                e30 = edge_forward.ea
-            if edge_backward.index != '02':
-                e32 = edge_backward.ea
-                e23 = edge_backward.eb
+                e03 = edge_backward.eb
+                e30 = edge_backward.ea
+            if edge_forward.index == '02':
+                e32 = edge_forward.ea
+                e23 = edge_forward.eb
             else:
-                e32 = edge_backward.eb
-                e23 = edge_backward.ea
+                e32 = edge_forward.eb
+                e23 = edge_forward.ea
 
-            if flipped:
-                [e03, e30, e32, e23] = [e30, e03, e23, e32]
-            else:
-                [e03, e30, e32, e23] = [e23, e32, e30, e03]
+            # if flipped:
+            #     [e03, e30, e32, e23] = [e30, e03, e23, e32]
+            # else:
+            #     [e03, e30, e32, e23] = [e23, e32, e30, e03]
             #[e03, e30, e32, e23] = [e30, e03, e23, e32]
             # if self.abstract_surface.orientation < 0:
             #     [e03, e30, e32, e23] = [e23, e32, e30, e03]
