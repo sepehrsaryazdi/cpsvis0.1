@@ -23,6 +23,14 @@ def compute_r3(c0, c2, c3, e30, e32):
     r3 = r3.T.flatten()
     return r3
 
+def compute_outitude_sign(c0,c1,c2,c3):
+    D = [c1,c2,c3]
+    D_prime = [c0,c1,c3]
+    C = [c0,c1,c2]
+    C_prime = [c0,c2,c3]
+    return np.linalg.det(D) + np.linalg.det(D_prime) - np.linalg.det(C) - np.linalg.det(C_prime)
+
+
 def compute_t(e01, e12, e20, e10, e21, e02):
     return e01*e12*e20/(e10*e21*e02)
 
