@@ -796,12 +796,12 @@ class CombinatorialImport:
             A023 = edge_glued.triangle.triangle_parameter
             self.generate_new_triangle(next_surface_edge, next_abstract_edge,
                                   distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
-
+            break
         return
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 1
+        max_distance = 0
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
@@ -822,15 +822,20 @@ class CombinatorialImport:
         r0 = [0, e01/t, e02]
         r1 = [e10, 0, e12]
         r2= [e20, e21/t, 0]
-        c0_clover = [1,0,0]
-        c1_clover = [0,1,0]
-        c2_clover = [0,0,1]
+        c0_clover = [0, 1, 0]
+
+        c1_clover = [0, 0, 1]
+        c2_clover = [1, 0, 0]
+
+
         x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
         cube_root_x_coord_t = np.power(x_coord_t, 1/3)
-        r0_clover = [0, cube_root_x_coord_t, 1]
-        #r1_clover = [1, 0, cube_root_x_coord_t]
-        r1_clover = [cube_root_x_coord_t, 0, 1]
-        r2_clover = [cube_root_x_coord_t, 1, 0]
+
+        r0_clover = [1, 0, cube_root_x_coord_t]
+        r1_clover = [cube_root_x_coord_t, 1, 0]
+        r2_clover = [0, cube_root_x_coord_t, 1]
+        #r1_clover = [cube_root_x_coord_t, 0, 1]
+
 
 
         # c0_clover = np.array(c0_clover)/sum(c0_clover)
