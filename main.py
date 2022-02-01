@@ -755,11 +755,11 @@ class CombinatorialImport:
         next_edge_indices = [1,-1]
 
 
-        next_surface_index = 1
-        for next_surface_edge in new_triangle.edges[1:][::-1]:
+        next_surface_index = 0
+        for next_surface_edge in new_triangle.edges[1:]:
             next_abstract_edge = abstract_triangle.edges[(edge_index+next_edge_indices[next_surface_index])%3]
             print((edge_index+next_edge_indices[next_surface_index])%3, edge_index, next_abstract_edge.index, next_abstract_edge.triangle.index)
-            next_surface_index -=1
+            next_surface_index +=1
             edge_glued = next_abstract_edge.edge_glued[2]
             edge_glued_index = 0
             for index in range(3):
@@ -801,7 +801,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 0
+        max_distance = 1
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
