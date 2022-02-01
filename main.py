@@ -271,9 +271,14 @@ class App(tk.Frame):
         v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
         self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                            [v0[1], v1[1]], c='red'))
-        #[x,y,z] = [1,-self.main_surface.triangles[0].t,self.main_surface.triangles[0].t**2]
-        #[x,y] = clover_position([[x],[y],[z]],0)
-        #self.ax.scatter(x,y, c='red')
+        [x1,y1,z1] = [1,-self.main_surface.triangles[0].t,self.main_surface.triangles[0].t**2]
+        [x1,y1] = clover_position([[x1],[y1],[z1]],0)
+        [x2, y2, z2] = [self.main_surface.triangles[0].t, -self.main_surface.triangles[0].t**2, -1]
+        [x2, y2] = clover_position([[x2], [y2], [z2]], 0)
+        [x3, y3, z3] = [self.main_surface.triangles[0].t, 1/self.main_surface.triangles[0].t, -1]
+        [x3, y3] = clover_position([[x3], [y3], [z3]], 0)
+        self.ax.scatter([x1,x2,x3],[y1,y2,y3], c='red')
+        self.ax.plot([x1, x2, x3,x1], [y1, y2, y3,y1], c='green')
         self.chart_type.draw()
         self.generate_surface_error_text.set("")
 
@@ -801,7 +806,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 1
+        max_distance = 0
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
@@ -823,7 +828,6 @@ class CombinatorialImport:
         r1 = [e10, 0, e12]
         r2= [e20, e21/t, 0]
         c0_clover = [0, 1, 0]
-
         c1_clover = [0, 0, 1]
         c2_clover = [1, 0, 0]
 
@@ -908,7 +912,7 @@ class CombinatorialImport:
 
 
 
-            self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index],  edge, 0, e03, e30, e23, e32, A023, max_distance)
+            self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index-1],  edge, 0, e03, e30, e23, e32, A023, max_distance)
 
         # triangle_boundaries = []
         # for triangle in self.main_surface.triangles[1:]:
