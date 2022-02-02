@@ -271,19 +271,14 @@ class App(tk.Frame):
         v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
         self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                            [v0[1], v1[1]], c='red'))
-        r0 = self.main_surface.triangles[0].vertices[0].r_clover
-        r1 = self.main_surface.triangles[0].vertices[1].r_clover
-        r2 = self.main_surface.triangles[0].vertices[2].r_clover
-        [x1,y1,z1] = np.cross(r2,r0)
-        [x2,y2,z2] = np.cross(r2,r1)
-        [x3,y3,z3] = np.cross(r1,r0)
-        [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
-        [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
-        [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
-        x = [x1,x2,x3,x1]
-        y = [y1,y2,y3,y1]
-        self.ax.plot(x,y,c='green')
-        self.ax.scatter([x1,x2,x3],[y1,y2,y3],c='red')
+        # [x1,y1,z1] = [1,-self.main_surface.triangles[0].t,self.main_surface.triangles[0].t**2]
+        # [x1,y1] = clover_position([[x1],[y1],[z1]],0)
+        # [x2, y2, z2] = [self.main_surface.triangles[0].t, -self.main_surface.triangles[0].t**2, -1]
+        # [x2, y2] = clover_position([[x2], [y2], [z2]], 0)
+        # [x3, y3, z3] = [self.main_surface.triangles[0].t, 1/self.main_surface.triangles[0].t, -1]
+        # [x3, y3] = clover_position([[x3], [y3], [z3]], 0)
+        # self.ax.scatter([x1,x2,x3],[y1,y2,y3], c='red')
+        # self.ax.plot([x1, x2, x3,x1], [y1, y2, y3,y1], c='green')
         self.chart_type.draw()
         self.generate_surface_error_text.set("")
 
@@ -386,7 +381,6 @@ class App(tk.Frame):
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
             v0, v1, flipped = self.correct_edge_orientation(self.edge_selected)
-            #print(v0.c_clover,v1.c_clover)
             #
             # v0 = self.edge_selected.v1
             # v1 = self.edge_selected.v0
@@ -402,8 +396,6 @@ class App(tk.Frame):
 
             r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
                                               v1.c_clover, e03, e23, e30, e32, A023)
-
-            #print('c3_clover: ',c3_clover)
             # print(f'r0: {self.edge_selected.v0.r}', f'r2: {self.edge_selected.v1.r}')
             # print(f'c0: {self.edge_selected.v0.c}', f'c2: {self.edge_selected.v1.c}')
             # print(f'm_inverse: {m_inverse}')
@@ -484,23 +476,13 @@ class App(tk.Frame):
             r0 = [0, e01 / t, e02]
             r1= [e10, 0, e12]
             r2= [e20, e21 / t, 0]
-            # c0_clover = [1,0,0]
-            # c1_clover = [0,1,0]
-            # c2_clover = [0,0,1]
-            # x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
-            # cube_root_x_coord_t = np.power(x_coord_t, 1/3)
-            # r0_clover = [0, cube_root_x_coord_t, 1]
-            # r1_clover = [cube_root_x_coord_t, 0, 1]
-            # r2_clover = [cube_root_x_coord_t, 1, 0]
-            c0_clover = [1, 0, 0]
-            c1_clover = [0, 1, 0]
-            c2_clover = [0, 0, 1]
-
+            c0_clover = [1,0,0]
+            c1_clover = [0,t,0]
+            c2_clover = [0,0,1]
             x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
-            cube_root_x_coord_t = np.power(x_coord_t, (1 / 3))
-
+            cube_root_x_coord_t = np.power(x_coord_t, 1/3)
             r0_clover = [0, cube_root_x_coord_t, 1]
-            r1_clover = [1, 0, cube_root_x_coord_t]
+            r1_clover = [cube_root_x_coord_t, 0, 1]
             r2_clover = [cube_root_x_coord_t, 1, 0]
             self.error_text.set("")
             self.main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover, r2_clover)
@@ -714,17 +696,17 @@ class CombinatorialImport:
         flipped = (current_abstract_edge.edge_glued[1] != current_abstract_edge.edge_glued[2].v0)
 
 
-        # print('---------------')
-        # print('flipped', flipped)
-        # #print('orientation: ', self.abstract_surface.orientation)
-        # print('initial_edge:', current_abstract_edge.index)
-        # print('initial_triangle: ', current_abstract_edge.triangle.index)
-        # print('glued_edge: ', current_abstract_edge.edge_glued[2].index)
-        # print('glued_edge_triangle: ', current_abstract_edge.edge_glued[2].triangle.index)
-        # print('e03: ', e03)
-        # print('e30: ', e30)
-        # print('e23: ', e23)
-        # print('e32: ', e32)
+        print('---------------')
+        print('flipped', flipped)
+        print('orientation: ', self.abstract_surface.orientation)
+        print('initial_edge:', current_abstract_edge.index)
+        print('initial_triangle: ', current_abstract_edge.triangle.index)
+        print('glued_edge: ', current_abstract_edge.edge_glued[2].index)
+        print('glued_edge_triangle: ', current_abstract_edge.edge_glued[2].triangle.index)
+        print('e03: ', e03)
+        print('e30: ', e30)
+        print('e23: ', e23)
+        print('e32: ', e32)
 
         r3, c3 = compute_all_until_r3c3(v0.r, v1.r, v0.c,
                                               v1.c, e03, e23,  e30, e32, A023)
@@ -735,13 +717,13 @@ class CombinatorialImport:
         # r3_clover = np.array(r3_clover)/sum(r3_clover)
         # c3_clover = np.array(c3_clover)/sum(c3_clover)
 
-        # print('r0: ', v0.r_clover, 'r2:', v1.r_clover)
-        # print('c0: ', v0.c_clover, 'c2: ', v1.c_clover)
-        # print('r3: ', r3_clover, 'c3: ', c3_clover)
-        #
-        # for coord in [c3_clover]:
-        #     [x,y,z] = coord
-        #     print('c3 clover position:', clover_position([[x],[y],[z]],0))
+        print('r0: ', v0.r_clover, 'r2:', v1.r_clover)
+        print('c0: ', v0.c_clover, 'c2: ', v1.c_clover)
+        print('r3: ', r3_clover, 'c3: ', c3_clover)
+
+        for coord in [c3_clover]:
+            [x,y,z] = coord
+            print('c3 clover position:', clover_position([[x],[y],[z]],0))
 
         new_triangle = self.main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
 
@@ -775,13 +757,13 @@ class CombinatorialImport:
         #     second_edge = -1
 
 
-        next_edge_indices = [1,-1]
+        next_edge_indices = [-1,1]
 
 
         next_surface_index = 0
         for next_surface_edge in new_triangle.edges[1:]:
             next_abstract_edge = abstract_triangle.edges[(edge_index+next_edge_indices[next_surface_index])%3]
-            #print((edge_index+next_edge_indices[next_surface_index])%3, edge_index, next_abstract_edge.index, next_abstract_edge.triangle.index)
+            print((edge_index+next_edge_indices[next_surface_index])%3, edge_index, next_abstract_edge.index, next_abstract_edge.triangle.index)
             next_surface_index +=1
             edge_glued = next_abstract_edge.edge_glued[2]
             edge_glued_index = 0
@@ -807,11 +789,6 @@ class CombinatorialImport:
                 e32 = edge_forward.eb
                 e23 = edge_forward.ea
 
-            # e03= 1
-            # e30=1
-            # e32 =1
-            # e23=1
-
             # if flipped:
             #     [e03, e30, e32, e23] = [e30, e03, e23, e32]
             # else:
@@ -824,12 +801,12 @@ class CombinatorialImport:
             A023 = edge_glued.triangle.triangle_parameter
             self.generate_new_triangle(next_surface_edge, next_abstract_edge,
                                   distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
-
+            break
         return
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 3
+        max_distance = 1
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
@@ -844,40 +821,33 @@ class CombinatorialImport:
         e20 = initial_abstract_triangle.edges[2].eb
         e21 = initial_abstract_triangle.edges[1].eb
 
-        # c0 = [1,0,0]
-        # c1 = [0,t,0]
-        # c2 = [0,0,1]
-        # r0 = [0, e01/t, e02]
-        # r1 = [e10, 0, e12]
-        # r2= [e20, e21/t, 0]
 
-        cube_root_a_coord_t = np.power(t, (1 / 3))
-        c0 = [cube_root_a_coord_t, 0, 0]
-        c1 = [0, cube_root_a_coord_t, 0]
-        c2 = [0, 0, cube_root_a_coord_t]
-        r0 = [0, e01 / cube_root_a_coord_t, e02 / cube_root_a_coord_t]
-        r1 = [e10 / cube_root_a_coord_t, 0, e12 / cube_root_a_coord_t]
-        r2 = [e20 / cube_root_a_coord_t, e21 / cube_root_a_coord_t, 0]
+        c0 = [1,0,0]
+        c1 = [0,t,0]
+        c2 = [0,0,1]
+        r0 = [0, e01/t, e02]
+        r1 = [e10, 0, e12]
+        r2= [e20, e21/t, 0]
+        # c0_clover = [0, 1, 0]
+        # c1_clover = [0, 0, 1]
+        # c2_clover = [1, 0, 0]
+        # x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
+        # cube_root_x_coord_t = np.power(x_coord_t, 1/3)
+        # r0_clover = [1, 0, cube_root_x_coord_t]
+        # r1_clover = [cube_root_x_coord_t, 1, 0]
+        # r2_clover = [0, cube_root_x_coord_t, 1]
+
+        cube_root_a_coord_t = np.power(t, 1/3)
+
+        c0_clover = [0, cube_root_a_coord_t, 0]
+        c1_clover = [0, 0, cube_root_a_coord_t]
+        c2_clover = [cube_root_a_coord_t, 0, 0]
+        r0_clover = [e01/cube_root_a_coord_t, 0, e12/cube_root_a_coord_t]
+        r1_clover = [e20/cube_root_a_coord_t, e21/cube_root_a_coord_t, 0]
+        r2_clover = [0, e01 / cube_root_a_coord_t, e02 / cube_root_a_coord_t]
 
 
-        c0_clover = [1, 0, 0]
-        c1_clover = [0, 1, 0]
-        c2_clover = [0, 0, 1]
 
-        x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
-        cube_root_x_coord_t = np.power(x_coord_t, 1/3)
-
-        r0_clover = [0, cube_root_x_coord_t, 1]
-        r1_clover = [1, 0, cube_root_x_coord_t]
-        r2_clover = [cube_root_x_coord_t, 1, 0]
-
-        # cube_root_a_coord_t = np.power(t, (1 / 3))
-        # c0_clover = [cube_root_a_coord_t, 0, 0]
-        # c1_clover = [0, cube_root_a_coord_t, 0]
-        # c2_clover = [0, 0, cube_root_a_coord_t]
-        # r0_clover = [0, e01 / cube_root_a_coord_t, e02 / cube_root_a_coord_t]
-        # r1_clover = [e10 / cube_root_a_coord_t, 0, e12 / cube_root_a_coord_t]
-        # r2_clover = [e20 / cube_root_a_coord_t, e21 / cube_root_a_coord_t, 0]
 
 
         #r1_clover = [cube_root_x_coord_t, 0, 1]
@@ -891,13 +861,11 @@ class CombinatorialImport:
         # r1_clover = np.array(r1_clover)/sum(r1_clover)
         # r2_clover = np.array(r2_clover)/sum(r2_clover)
 
-
-
         self.main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover , c2_clover, r0_clover, r1_clover, r2_clover)
 
         self.main_surface.triangles[0].index = initial_abstract_triangle.index
         self.main_surface.triangles[0].t = cube_root_a_coord_t
-        #print(self.main_surface.triangles[0].t)
+        print(self.main_surface.triangles[0].t)
         #print(self.main_surface.triangles[0].edges[0].v0.c_clover,self.main_surface.triangles[0].edges[0].v1.c_clover)
         #print(self.main_surface.triangles[0].edges[1].v0.c_clover, self.main_surface.triangles[0].edges[1].v1.c_clover)
         #print(self.main_surface.triangles[0].edges[2].v0.c_clover, self.main_surface.triangles[0].edges[2].v1.c_clover)
@@ -956,7 +924,7 @@ class CombinatorialImport:
 
 
 
-            self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index],  edge, 0, e03, e30, e23, e32, A023, max_distance)
+            self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index-1],  edge, 0, e03, e30, e23, e32, A023, max_distance)
 
         # triangle_boundaries = []
         # for triangle in self.main_surface.triangles[1:]:
@@ -966,10 +934,6 @@ class CombinatorialImport:
         #     triangle_boundaries.append(triangle.edges[1].v1.c_clover)
 
         #print(main_surface.triangles)
-        # print(len(self.main_surface.triangles))
-        # for triangle in self.main_surface.triangles:
-        #     print(np.linalg.det([v.c_clover for v in triangle.vertices]))
-
 
 
     def get_dual_vertex(self,vertex, edge):

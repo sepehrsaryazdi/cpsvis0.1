@@ -66,13 +66,16 @@ class Surface:
     def __init__(self, c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover, r2_clover):
         vertices = [Vertex(c0,r0, c0_clover, r0_clover), Vertex(c1,r1, c1_clover, r1_clover), Vertex(c2,r2, c2_clover, r2_clover)]
         edges = [Edge(vertices[0],vertices[1], False),Edge(vertices[1],vertices[2], False),Edge(vertices[2],vertices[0], False)]
+        #print(np.linalg.det([c0,c1,c2]))
         initial_triangle = Triangle(edges[0],edges[1],edges[2])
         self.triangles = [initial_triangle]
     def add_triangle(self, connecting_edge, v0, v1, new_vertex):
-        #if np.linalg.det(np.array([connecting_edge.v0.c,connecting_edge.v1.c,new_vertex.c])) > 0:
+        # if np.linalg.det(np.array([v0.c,v1.c,new_vertex.c])) > 0:
+        #     print(v0.c_clover,v1.c_clover, new_vertex.c_clover)
 
         connecting_edge.connected = True
         new_triangle = Triangle(Edge(v0, v1, True), Edge(v1,new_vertex, False), Edge(new_vertex,v0, False))
+        #print([v.c_clover for v in new_triangle.vertices])
         connecting_edge.edge_connected = new_triangle.edges[0]
         new_triangle.edges[0].edge_connected = connecting_edge
         new_triangle.edges[0].connected = True
