@@ -61,6 +61,12 @@ def clover_position(x, t):
 #     [x,y] = x[0]*cube_root1 + x[1]*cube_root2 + x[2]*cube_root3
 #     return [x,y]
 
+class MSL3R:
+    def __init__(self):
+        pass
+
+
+
 class App(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
@@ -198,6 +204,9 @@ class App(tk.Frame):
 
         self.canonical_cell_decomp_button.bind('<ButtonPress>',
                                         self.canonical_cell_decomp)
+
+    def sl3r(self):
+        pass
 
     def canonical_cell_decomp(self, event):
 
@@ -417,6 +426,12 @@ class App(tk.Frame):
             self.add_triangle_error_text.set("")
             if self.edge_selected:
                 self.plot_data[-1][0].remove()
+            self.ax.clear()
+            self.ax.set_axis_off()
+            self.ax = self.figure.add_subplot(111)
+            self.ax.set_title('Cloverleaf Position')
+            self.ax.set_axis_off()
+            self.figure.canvas.mpl_connect('button_press_event', self.onclick)
             self.edge_selected = self.main_surface.triangles[-1].edges[-2]
 
             for triangle in self.main_surface.triangles:
@@ -829,7 +844,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 3
+        max_distance = 4
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
@@ -1518,7 +1533,8 @@ menubar = tk.Menu(root)
 app = App(root)
 filemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import Gluing Table (CSV)", command =import_file )
-filemenu.add_command(label="Export Gluing Table (CSV)", command =export_file )
+filemenu.add_command(label="Apply M From SL(3,R)", command=app.sl3r)
+#filemenu.add_command(label="Export Gluing Table (CSV)", command =export_file )
 filemenu.add_command(label="Restart Program", command=restart_popup)
 filemenu.add_command(label="Exit", command=exit_popup)
 menubar.add_cascade(label="File", menu=filemenu)
