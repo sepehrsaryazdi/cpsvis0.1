@@ -271,19 +271,19 @@ class App(tk.Frame):
         v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
         self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                            [v0[1], v1[1]], c='red'))
-        r0 = self.main_surface.triangles[0].vertices[0].r_clover
-        r1 = self.main_surface.triangles[0].vertices[1].r_clover
-        r2 = self.main_surface.triangles[0].vertices[2].r_clover
-        [x1,y1,z1] = np.cross(r2,r0)
-        [x2,y2,z2] = np.cross(r2,r1)
-        [x3,y3,z3] = np.cross(r1,r0)
-        [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
-        [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
-        [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
-        x = [x1,x2,x3,x1]
-        y = [y1,y2,y3,y1]
-        self.ax.plot(x,y,c='green')
-        self.ax.scatter([x1,x2,x3],[y1,y2,y3],c='red')
+        # r0 = self.main_surface.triangles[0].vertices[0].r_clover
+        # r1 = self.main_surface.triangles[0].vertices[1].r_clover
+        # r2 = self.main_surface.triangles[0].vertices[2].r_clover
+        # [x1,y1,z1] = np.cross(r2,r0)
+        # [x2,y2,z2] = np.cross(r2,r1)
+        # [x3,y3,z3] = np.cross(r1,r0)
+        # [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
+        # [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
+        # [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
+        # x = [x1,x2,x3,x1]
+        # y = [y1,y2,y3,y1]
+        # self.ax.plot(x,y,c='green')
+        # self.ax.scatter([x1,x2,x3],[y1,y2,y3],c='red')
         self.chart_type.draw()
         self.generate_surface_error_text.set("")
 
