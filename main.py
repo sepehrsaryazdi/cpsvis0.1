@@ -63,8 +63,161 @@ def clover_position(x, t):
 
 class MSL3R:
     def __init__(self):
-        pass
+        self.tk = tk
+        self.parameter_entries = {}
+        self.triangle_parameter_entry = None
+        self.win = self.tk.Toplevel()
+        self.win.resizable(width=False, height=False)
+        self.win.wm_title("Enter M from SL(3,R)")
+        self.l = tk.Label(self.win,
+                           text="Enter the matrix M from SL(3,ℝ) below to apply on the decorations (R • M⁻¹, M • C).")
+        self.l.pack(padx=20, pady=10)
 
+
+        self.m_equals_text_frame = ttk.Frame(self.win)
+        self.m_equals_text = tk.Label(self.m_equals_text_frame, text="M = ")
+        self.m_equals_text.pack(side="left",padx=0,pady=5)
+
+
+
+        self.matrix_frame = ttk.Frame(self.m_equals_text_frame)
+
+        self.matrix_entries = []
+        self.row_frames = []
+        for i in range(3):
+            self.row_frames.append(ttk.Frame(self.matrix_frame))
+
+        j=0
+        for i in range(9):
+            self.matrix_entries.append(ttk.Entry(self.row_frames[j], width=8))
+            if (i+1) % 3 == 0:
+                j+=1
+
+
+
+        for j in range(3):
+            for entry in self.matrix_entries[3*j:3*j+3]:
+                entry.pack(side="left",anchor="nw")
+
+        for row in self.row_frames:
+            row.pack(side="top", anchor="nw")
+
+
+
+
+
+
+        self.m_equals_text_frame.pack(side="top")
+
+        self.button_frame = ttk.Frame(self.win)
+
+        self.clear_matrix_button = ttk.Button(self.button_frame, text="Clear Matrix")
+        self.clear_matrix_button.pack(side="left")
+
+        self.normalise_matrix_button = ttk.Button(self.button_frame,text="Normalise M (Set det M = 1)")
+        self.normalise_matrix_button.pack(side="left", padx=25)
+
+        self.apply_matrix_button = ttk.Button(self.button_frame, text="Apply Matrix")
+        self.apply_matrix_button.pack(side="left", padx=(0,25))
+        self.close_button = ttk.Button(self.button_frame, text="Close")
+        self.close_button.pack(side="left")
+
+
+        self.button_frame.pack(side="top", pady=(20,0))
+
+        self.matrix_frame.pack(side="left", padx=(5,25), pady=5)
+
+        self.error_variable = tk.StringVar()
+        self.error_label = tk.Label(self.win, textvariable=self.error_variable, fg="red")
+        self.error_label.pack(side="top", pady=5)
+
+        self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+
+        self.matrix_variables = []
+        i = 0
+        for entry in self.matrix_entries:
+            string_variable = tk.StringVar()
+            self.matrix_variables.append(string_variable)
+            entry["textvariable"] = string_variable
+
+            if i in [0, 4, 8]:
+                string_variable.set("1")
+            else:
+                string_variable.set("0")
+            i += 1
+
+        app.m_matrix_data = self.matrix_variables
+
+        self.clear_matrix_button.bind("<ButtonPress>", self.clear_matrix)
+        self.apply_matrix_button.bind("<ButtonPress>", self.apply_matrix)
+        self.normalise_matrix_button.bind("<ButtonPress>", self.normalise_matrix)
+        self.close_button.bind("<ButtonPress>", lambda e: self.win.destroy())
+
+    def apply_matrix(self,event):
+
+        try:
+            M = self.create_matrix()
+            self.error_variable.set("")
+        except:
+            self.error_variable.set("One or more entries are not well-defined.")
+            return
+
+
+        try:
+
+            assert np.isclose(np.linalg.det(M),1)
+            M_inverse = np.linalg.inv(M)
+            vertex_dictionary = {}
+            for triangle in app.main_surface.triangles:
+                for vertex in triangle.vertices:
+                    try:
+                        vertex_dictionary[vertex]
+                    except:
+                        vertex_dictionary[vertex] = 1
+
+            vertices = list(vertex_dictionary.keys())
+            for vertex in vertices:
+                vertex.r = np.matmul(vertex.r,M_inverse)
+                vertex.c = np.matmul(M,vertex.c)
+                vertex.r_clover = np.matmul(vertex.r_clover, M_inverse)
+                vertex.c_clover = np.matmul(M_inverse, vertex.c_clover)
+            self.error_variable.set("")
+            app.plot_fresh(app.t)
+        except:
+            self.error_variable.set("The matrix does not have determinant 1. Please normalise the matrix first.")
+
+    def create_matrix(self):
+        M = []
+        matrix_data = [app.string_fraction_to_float(string.get()) for string in self.matrix_variables]
+        matrix_data = matrix_data[::-1]
+        for i in range(3):
+            row = []
+            for j in range(3):
+                row.append(matrix_data.pop())
+            M.append(row)
+        return np.array(M)
+
+    def clear_matrix(self, event):
+        for var in self.matrix_variables:
+            var.set("")
+        self.error_variable.set("")
+
+    def normalise_matrix(self, event):
+        try:
+            self.create_matrix()
+            self.error_variable.set("")
+        except:
+            self.error_variable.set("One or more entries are not well-defined.")
+            return
+        try:
+            assert not np.isclose(np.linalg.det(self.create_matrix()), 0)
+            determinant = np.linalg.det(self.create_matrix())
+            cube_root_determinant = np.sign(determinant)*np.power(abs(determinant),(1/3))
+            for var in self.matrix_variables:
+                var.set(f'{app.string_fraction_to_float(var.get())/cube_root_determinant}')
+            self.error_variable.set("")
+        except:
+            self.error_variable.set("This matrix is singular and has determinant zero. Please enter a non-singular matrix.")
 
 
 class App(tk.Frame):
@@ -206,6 +359,7 @@ class App(tk.Frame):
                                         self.canonical_cell_decomp)
 
     def sl3r(self):
+
         pass
 
     def canonical_cell_decomp(self, event):
@@ -1524,6 +1678,22 @@ def restart_program():
     python = sys.executable
     os.execl(python, python, *sys.argv)
 
+def slr3r():
+    try:
+        app.main_surface
+        slr3_window = MSL3R()
+    except:
+        win = tk.Toplevel()
+        win.wm_title("Surface Invalid")
+        l = tk.Label(win, text="Please ensure you have a valid surface before applying a matrix from SL(3,ℝ).")
+        l.pack(padx=20, pady=10)
+        win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        cancel = ttk.Button(win, text="Close", command=win.destroy)
+        cancel.pack(side='right', padx=25, pady=5)
+
+
+
+
 
 root = tk.Tk()
 root.title('Convex Projective Surface Visualisation Tool')
@@ -1533,7 +1703,7 @@ menubar = tk.Menu(root)
 app = App(root)
 filemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import Gluing Table (CSV)", command =import_file )
-filemenu.add_command(label="Apply M From SL(3,R)", command=app.sl3r)
+filemenu.add_command(label="Apply M From SL(3,ℝ)", command=slr3r)
 #filemenu.add_command(label="Export Gluing Table (CSV)", command =export_file )
 filemenu.add_command(label="Restart Program", command=restart_popup)
 filemenu.add_command(label="Exit", command=exit_popup)
