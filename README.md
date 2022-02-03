@@ -3,7 +3,7 @@ Convex Projective Surface Visualiation Tool in Python
 
 Installation Instructions:
 
-1. Install the following dependencies: numpy, matplotlib, tkinter, pandas, os.
+1. Install the following dependencies: numpy, matplotlib, pandas.
 2. Run main.py script using Python 3.9.7 or greater.
 
 Gluing Table Uploads:
