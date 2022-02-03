@@ -9,6 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from helper_functions.add_new_triangle_functions import *
 from tkinter import filedialog
 import pandas as pd
+import pickle
 import sys
 import os
 
@@ -641,45 +642,48 @@ class App(tk.Frame):
             self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface.")
 
 class CombinatorialImport:
-    def __init__(self, tk, filename):
-        self.tk = tk
-        self.parameter_entries = {}
-        self.triangle_parameter_entry = None
-        self.convert_gluing_table_to_surface(filename)
-        self.win = self.tk.Toplevel()
-        self.win.resizable(width=False, height=False)
-        self.win.wm_title("Uploaded Surface")
-        self.l = tk.Label(self.win,
-                     text="The uploaded gluing table is visualised as a combinatorial map below. You can change A-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
-        self.l.pack(padx=20, pady=10)
-        self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-        self.figure = plt.Figure(figsize=(7, 5), dpi=100)
-        self.ax = self.figure.add_subplot(111)
-        self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
-        self.chart_type.get_tk_widget().pack()
-        self.ax.set_title('Combinatorial Map')
+    def __init__(self, tk, filename, create_window=True):
+        if create_window:
+            self.tk = tk
+            self.parameter_entries = {}
+            self.triangle_parameter_entry = None
+            self.convert_gluing_table_to_surface(filename)
+            self.win = self.tk.Toplevel()
+            self.win.resizable(width=False, height=False)
+            self.win.wm_title("Uploaded Surface")
+            self.l = tk.Label(self.win,
+                         text="The uploaded gluing table is visualised as a combinatorial map below. You can change A-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
+            self.l.pack(padx=20, pady=10)
+            self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+            self.figure = plt.Figure(figsize=(7, 5), dpi=100)
+            self.ax = self.figure.add_subplot(111)
+            self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
+            self.chart_type.get_tk_widget().pack()
+            self.ax.set_title('Combinatorial Map')
+            self.generate_combinatorial_map()
+            self.ax.set_axis_off()
+            self.chart_type.draw()
+            self.cancel = ttk.Button(self.win, text="Cancel", command=self.win.destroy)
+            self.cancel.pack(side='right', padx=25, pady=5)
+            self.continue_button = ttk.Button(self.win, text="Continue",
+                                         command=lambda: (self.generate_developing_map(), self.win.destroy()))
+            self.continue_button.pack(side='right', padx=10, pady=5)
 
+            self.error_text = tk.StringVar()
+            self.error_text.set("")
+            self.error_message_label = tk.Label(self.win, textvariable=self.error_text,
+                                                fg='red')
+            self.error_message_label.pack(side='left', padx=10, pady=5)
+        else:
+            f = open(f"{filename}", "rb")
+            self.abstract_surface = pickle.load(f, encoding="bytes")
+            self.abstract_surface.triangles
+            f.close()
+            self.generate_real_surface_map()
+            app.main_surface = self.main_surface
+            app.abstract_surface = self.abstract_surface
+            app.plot_fresh(self.main_surface.triangles[0].t)
 
-
-        self.generate_combinatorial_map()
-
-
-
-
-        self.ax.set_axis_off()
-        self.chart_type.draw()
-
-        self.cancel = ttk.Button(self.win, text="Cancel", command=self.win.destroy)
-        self.cancel.pack(side='right', padx=25, pady=5)
-        self.continue_button = ttk.Button(self.win, text="Continue",
-                                     command=lambda: (self.generate_developing_map(), self.win.destroy()))
-        self.continue_button.pack(side='right', padx=10, pady=5)
-
-        self.error_text = tk.StringVar()
-        self.error_text.set("")
-        self.error_message_label = tk.Label(self.win, textvariable=self.error_text,
-                                            fg='red')
-        self.error_message_label.pack(side='left', padx=10, pady=5)
 
 
 
@@ -753,6 +757,7 @@ class CombinatorialImport:
 
         self.generate_real_surface_map()
         app.main_surface = self.main_surface
+        app.abstract_surface = self.abstract_surface
         app.plot_fresh(self.main_surface.triangles[0].t)
 
     def triangle_order_generator(self,edge_list, prev_state, n, top_bottom_list):
@@ -1375,11 +1380,11 @@ def convert_surface_to_gluing_table(self):
 
 def export_file():
     try:
-        app.main_surface
+        app.abstract_surface
     except:
         win = tk.Toplevel()
-        win.wm_title("Surface Invalid")
-        l = tk.Label(win, text="Please ensure you have a valid surface before exporting.")
+        win.wm_title("No Uploaded Surface")
+        l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before exporting.")
         l.pack(padx=20, pady=10)
         win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
         cancel = ttk.Button(win, text="Close", command=win.destroy)
@@ -1387,13 +1392,17 @@ def export_file():
         return
 
     current_dir = os.getcwd()
-    dir_name = filedialog.askdirectory()  # asks user to choose a directory
+    dir_name = filedialog.asksaveasfilename(filetypes=[(".txt", ".txt")])
     if not dir_name:
         return
-    os.chdir(dir_name)  # changes your current directory
-    gluing_data = convert_surface_to_gluing_table()
 
-    os.chdir(current_dir)
+    if '.txt' in dir_name:
+        dir_name = dir_name[:-4]
+
+    f = open(f"{dir_name}.txt", "wb+")
+    pickle.dump(app.abstract_surface, f)
+
+    f.close()
 
 def exit_file():
     exit()
@@ -1437,7 +1446,25 @@ def slr3r():
         cancel = ttk.Button(win, text="Close", command=win.destroy)
         cancel.pack(side='right', padx=25, pady=5)
 
+def import_saved_params():
+    filename = filedialog.askopenfilename(filetypes=[(".txt", ".txt")])
+    if not filename:
+        return
+    try:
 
+        combinatorial_data = CombinatorialImport(tk,filename,False)
+
+
+
+    except:
+        win = tk.Toplevel()
+        win.wm_title("Saved Parameter File Invalid")
+        l = tk.Label(win,
+                     text="There was an error uploading these saved parameters. Please ensure you have selected a valid saved parameter file.")
+        l.pack(side="top", padx=20, pady=10)
+        win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        cancel = ttk.Button(win, text="Close", command=win.destroy)
+        cancel.pack(side='right', padx=25, pady=5)
 
 
 
@@ -1450,7 +1477,8 @@ app = App(root)
 filemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import Gluing Table (CSV)", command =import_file )
 filemenu.add_command(label="Apply M From SL(3,ℝ)", command=slr3r)
-#filemenu.add_command(label="Export Gluing Table (CSV)", command =export_file )
+filemenu.add_command(label="Save Imported Parameters", command =export_file )
+filemenu.add_command(label="Import Saved Parameters", command =import_saved_params )
 filemenu.add_command(label="Restart Program", command=restart_popup)
 filemenu.add_command(label="Exit", command=exit_popup)
 menubar.add_cascade(label="File", menu=filemenu)
