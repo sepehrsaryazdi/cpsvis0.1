@@ -107,7 +107,7 @@ class MSL3R:
         self.error_label = tk.Label(self.win, textvariable=self.error_variable, fg="red")
         self.error_label.pack(side="top", pady=5)
 
-        self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        #self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
 
         self.matrix_variables = []
         i = 0
@@ -133,7 +133,6 @@ class MSL3R:
 
         try:
             M = self.create_matrix()
-            print(M)
             self.error_variable.set("")
         except:
             self.error_variable.set("One or more entries are not well-defined.")
