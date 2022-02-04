@@ -133,6 +133,7 @@ class MSL3R:
 
         try:
             M = self.create_matrix()
+            print(M)
             self.error_variable.set("")
         except:
             self.error_variable.set("One or more entries are not well-defined.")
@@ -654,7 +655,7 @@ class CombinatorialImport:
             self.l = tk.Label(self.win,
                          text="The uploaded gluing table is visualised as a combinatorial map below. You can change A-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
             self.l.pack(padx=20, pady=10)
-            self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+            #self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
             self.figure = plt.Figure(figsize=(7, 5), dpi=100)
             self.ax = self.figure.add_subplot(111)
             self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
@@ -1369,7 +1370,7 @@ def import_file():
         l.pack(side="top",padx=20, pady=10)
         l2 = tk.Label(win, text="Explicit examples of the required structure are available in the 'example_gluing_tables' folder. Note that every edge on all triangles must be glued.")
         l2.pack(side="top",padx=20,pady=(0,10))
-        win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
         cancel = ttk.Button(win, text="Close", command=win.destroy)
         cancel.pack(side='right', padx=25, pady=5)
 
@@ -1386,7 +1387,7 @@ def export_file():
         win.wm_title("No Uploaded Surface")
         l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before exporting.")
         l.pack(padx=20, pady=10)
-        win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
         cancel = ttk.Button(win, text="Close", command=win.destroy)
         cancel.pack(side='right', padx=25, pady=5)
         return
@@ -1412,7 +1413,7 @@ def restart_popup():
     win.wm_title("Restart Program")
     l = tk.Label(win, text="Are you sure you want to restart the program? Any unsaved data will be lost.")
     l.pack(padx=20,pady=10)
-    win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
     cancel = ttk.Button(win, text="Cancel", command=win.destroy)
     cancel.pack(side='right', padx=25, pady=5)
     restart = ttk.Button(win,text="Restart", command=restart_program)
@@ -1423,7 +1424,7 @@ def exit_popup():
     win.wm_title("Exit Program")
     l = tk.Label(win, text="Are you sure you want to exit the program? Any unsaved data will be lost.")
     l.pack(padx=20, pady=10)
-    win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
     cancel = ttk.Button(win, text="Cancel", command=win.destroy)
     cancel.pack(side='right', padx=25, pady=5)
     restart = ttk.Button(win, text="Exit", command=exit_file)
@@ -1442,7 +1443,7 @@ def slr3r():
         win.wm_title("Surface Invalid")
         l = tk.Label(win, text="Please ensure you have a valid surface before applying a matrix from SL(3,ℝ).")
         l.pack(padx=20, pady=10)
-        win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
         cancel = ttk.Button(win, text="Close", command=win.destroy)
         cancel.pack(side='right', padx=25, pady=5)
 
@@ -1462,7 +1463,7 @@ def import_saved_params():
         l = tk.Label(win,
                      text="There was an error uploading these saved parameters. Please ensure you have selected a valid saved parameter file.")
         l.pack(side="top", padx=20, pady=10)
-        win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
         cancel = ttk.Button(win, text="Close", command=win.destroy)
         cancel.pack(side='right', padx=25, pady=5)
 
@@ -1470,7 +1471,7 @@ def import_saved_params():
 
 root = tk.Tk()
 root.title('Convex Projective Surface Visualisation Tool')
-root.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+#root.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
 root.geometry("1000x520")
 menubar = tk.Menu(root)
 app = App(root)
