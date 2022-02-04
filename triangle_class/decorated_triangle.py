@@ -137,8 +137,12 @@ class Surface:
                 if vertex not in all_vertices:
                     all_vertices.append(vertex)
         for vertex in all_vertices:
+            vertex.c = [vertex.c[0],vertex.c[1],vertex.c[2],1]
+            #vertex.c_clover = [vertex.c_clover[0], vertex.c_clover[1], vertex.c_clover[2], 1]
             vertex.c = vertex.c/np.linalg.norm(vertex.c)
-            vertex.c_clover = vertex.c_clover / np.linalg.norm(vertex.c_clover)
+            #vertex.c_clover = vertex.c_clover / np.linalg.norm(vertex.c_clover)
+            vertex.c = np.array(vertex.c[1:])/(1+vertex.c[0])
+            #vertex.c_clover = np.array(vertex.c_clover[1:])/(1+vertex.c_clover[0])
 
     # def add_vertex(self, triangle, new_vertex):
     #     decoration = triangle.decoration
