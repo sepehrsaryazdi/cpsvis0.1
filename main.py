@@ -486,7 +486,8 @@ class App(tk.Frame):
 
 
     def canonical_cell_instructions(self, event):
-        
+        pass
+
 
     def canonical_cell_decomp(self, event):
 
