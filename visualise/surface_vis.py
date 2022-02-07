@@ -21,8 +21,14 @@ class SurfaceVisual:
             y = [y1, y2, y3]
             z = [z1, z2, z3]
             verts.append(list(zip(x,y,z)))
-        choices = ["tab:blue", "tab:green", "tab:orange", "tab:red", "tab:purple"]
-        colors = [choices[np.random.randint(0,5)] for vert in verts]  # MWE colors
+        unique_indices = []
+        for triangle in self.surface.triangles:
+            unique_indices.append(triangle.index)
+        unique_indices = list(set(unique_indices))
+        choices = ["tab:blue", "tab:green", "tab:orange", "tab:red", "tab:purple", "tab:olive", "tab:brown", "tab:pink"]
+        if len(unique_indices) > len(choices):
+           choices = choices * int(np.ceil(len(self.surface.triangles) / len(choices)) * len(choices))
+        colors = [choices[self.surface.triangles[index].index] for index in range(len(self.surface.triangles))]  # MWE colors
         patchcollection = Poly3DCollection(verts, linewidth=1, edgecolor="k", facecolor=colors, rasterized=True)
         self.ax.add_collection3d(patchcollection)
         self.ax.set_xlabel('x')
@@ -34,6 +40,8 @@ class SurfaceVisual:
         self.ax = Axes3D(self.fig, auto_add_to_figure=False)
         self.fig.add_axes(self.ax)
         verts = []
+
+
 
         all_vertices = []
         for triangle in self.surface.triangles:
@@ -58,8 +66,16 @@ class SurfaceVisual:
         for vertex in all_vertices:
             vertex.c = old_coords[vertex_index]
             vertex_index+=1
-        choices = ["tab:blue", "tab:green", "tab:orange", "tab:red", "tab:purple"]
-        colors = [choices[np.random.randint(0, 5)] for vert in verts]  # MWE colors
+
+        unique_indices = []
+        for triangle in self.surface.triangles:
+            unique_indices.append(triangle.index)
+        unique_indices = list(set(unique_indices))
+        choices = ["tab:blue", "tab:green", "tab:orange", "tab:red", "tab:purple", "tab:olive", "tab:brown", "tab:pink"]
+        if len(unique_indices) > len(choices):
+            choices = choices * int(np.ceil(len(self.surface.triangles) / len(choices)) * len(choices))
+        colors = [choices[self.surface.triangles[index].index] for index in
+                  range(len(self.surface.triangles))]  # MWE colors
         patchcollection = Poly3DCollection(verts, linewidth=1, edgecolor="k", facecolor=colors, rasterized=True)
         self.ax.add_collection3d(patchcollection)
         self.ax.set_xlabel('x')

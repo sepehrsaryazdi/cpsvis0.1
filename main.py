@@ -730,6 +730,7 @@ class App(tk.Frame):
             self.error_text.set("")
             self.main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover, r2_clover)
             self.edge_selected = self.main_surface.triangles[-1].edges[-1]
+
             for triangle in self.main_surface.triangles:
                 [x1, y1, z1] = triangle.vertices[0].c_clover
                 [x2, y2, z2] = triangle.vertices[1].c_clover
