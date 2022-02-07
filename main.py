@@ -269,11 +269,12 @@ class App(tk.Frame):
         self.canonical_cell_decomp_button = ttk.Button(self.plot_buttons_frame, text='Canonical Cell Decomposition')
         self.canonical_cell_decomp_button.pack(side='left', anchor='nw', padx=5, pady=0)
 
-        self.normalise_decorations = ttk.Button(self.plot_buttons_frame, text='Normalise Decorations')
-        self.normalise_decorations.pack(side='left', anchor='nw', padx=5, pady=0)
+
 
         self.generate_surface = ttk.Button(self.plot_buttons_frame, text='Generate Hypersurface')
         self.generate_surface.pack(side='left', anchor='nw', padx=5, pady=0)
+        self.generate_surface_s3 = ttk.Button(self.plot_buttons_frame, text='Generate Hypersurface (Projected S³)')
+        self.generate_surface_s3.pack(side='left', anchor='nw', padx=5, pady=0)
         self.plot_buttons_frame.pack(side='top',anchor='nw')
         self.generate_surface_error_text = tk.StringVar()
         self.generate_surface_error_text.set("")
@@ -328,8 +329,8 @@ class App(tk.Frame):
                                       self.add_triangle)
         self.generate_surface.bind('<ButtonPress>',
                                       self.generate_surface_visual)
-        self.normalise_decorations.bind('<ButtonPress>',
-                                   self.normalise_decorations_function)
+        self.generate_surface_s3.bind('<ButtonPress>',
+                                   self.generate_surface_s3_function)
 
         self.canonical_cell_decomp_button.bind('<ButtonPress>',
                                         self.canonical_cell_decomp)
@@ -414,38 +415,14 @@ class App(tk.Frame):
         self.generate_surface_error_text.set("")
 
 
-    def normalise_decorations_function(self, event):
+    def generate_surface_s3_function(self, event):
 
         try:
-            self.ax.clear()
-            self.ax.set_axis_off()
-            self.ax.remove()
-            self.ax = self.figure.add_subplot(111)
-            self.ax.set_title('Cloverleaf Position')
-            self.ax.set_axis_off()
-            self.edge_selected = self.main_surface.triangles[-1].edges[-2]
-            self.main_surface.normalise_vertices()
-            for triangle in self.main_surface.triangles:
-                [x1, y1, z1] = triangle.vertices[0].c_clover
-                [x2, y2, z2] = triangle.vertices[1].c_clover
-                [x3, y3, z3] = triangle.vertices[2].c_clover
-                [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
-                [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
-                [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
-                x = [x1, x2, x3, x1]
-                y = [y1, y2, y3, y1]
-
-                self.plot_data.append(self.ax.plot(x, y, c='blue'))
-            v0 = self.edge_selected.v0.c_clover
-            v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
-            v1 = self.edge_selected.v1.c_clover
-            v1 = clover_position([[v1[0]], [v1[1]], [v1[2]]], self.t)
-            self.plot_data.append(self.ax.plot([v0[0], v1[0]],
-                                                   [v0[1], v1[1]], c='red'))
-            self.chart_type.draw()
             self.generate_surface_error_text.set("")
+            surface_vis = SurfaceVisual(self.main_surface)
+            surface_vis.show_vis_projected_3d()
         except:
-            self.generate_surface_error_text.set("Please add an initial triangle before normalising decorations.")
+            self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface (projected S³).")
 
     def string_fraction_to_float(self, string):
         if '/' in string:
@@ -851,7 +828,7 @@ class CombinatorialImport:
         return
 
     def generate_real_surface_map(self):
-        initial_triangle_index = 0
+        initial_triangle_index = 1
         max_distance = 4
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
@@ -1471,7 +1448,7 @@ def import_saved_params():
 root = tk.Tk()
 root.title('Convex Projective Surface Visualisation Tool')
 #root.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-root.geometry("1000x520")
+root.geometry("1100x520")
 menubar = tk.Menu(root)
 app = App(root)
 filemenu = tk.Menu(menubar, tearoff=0)
