@@ -472,7 +472,7 @@ class App(tk.Frame):
 
 
             print(len(self.reduced_main_surface.triangles))
-            reduced_main_surface = self.reduced_main_surface
+
             all_ones_abstract_surface = AbstractSurface()
             for triangle in self.abstract_surface.triangles:
                 all_ones_abstract_surface.add_triangle()
@@ -502,7 +502,7 @@ class App(tk.Frame):
                     edge.ea = 1
                     edge.eb = 1
 
-
+            edge_flip_sequence = []
 
             found_no_edges = False
             while not found_no_edges:
@@ -510,6 +510,7 @@ class App(tk.Frame):
                 for triangle in self.reduced_main_surface.triangles:
                     if not found_edge:
                         for edge in triangle.edges:
+                            print(edge.v0.c, edge.v1.c)
                             if edge.edge_connected:
                                 c0 = edge.v0.c
                                 edge_connected = edge.edge_connected
@@ -518,11 +519,14 @@ class App(tk.Frame):
                                 c3 = edge.triangle.edges[(edge.index + 1) % 3].v1.c
                                 outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
                                 if outitude_sign < 0:
-                                    self.reduced_main_surface.flip_edge(edge)
+                                    e_prime = self.reduced_main_surface.flip_edge(edge)
+                                    edge_flip_sequence.append((edge,e_prime))
                                     found_edge = True
                                     break
                 if not found_edge:
                     found_no_edges = True
+
+            reduced_main_surface = self.reduced_main_surface
 
             c0 = [1, 0, 0]
             c1 = [0, 1, 0]
@@ -577,7 +581,9 @@ class App(tk.Frame):
 
 
             print(reduced_main_surface)
+            print(edge_flip_sequence)
             print(all_ones_main_surface)
+
 
 
 

@@ -134,7 +134,7 @@ class Surface:
                 for neighbour in triangle_2.neighbours:
                     self.triangles[triangle_index].neighbours.append(neighbour)
 
-
+        return e_prime
 
 
     def normalise_vertices(self):
