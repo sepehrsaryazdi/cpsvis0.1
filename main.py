@@ -156,7 +156,7 @@ class MSL3R:
                 vertex.r = np.matmul(vertex.r,M_inverse)
                 vertex.c = np.matmul(M,vertex.c)
                 vertex.r_clover = np.matmul(vertex.r_clover, M_inverse)
-                vertex.c_clover = np.matmul(M_inverse, vertex.c_clover)
+                vertex.c_clover = np.matmul(M, vertex.c_clover)
             self.error_variable.set("")
             app.plot_fresh(app.t)
         except:
