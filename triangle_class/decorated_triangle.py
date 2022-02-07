@@ -71,6 +71,7 @@ class Surface:
         initial_triangle = Triangle(edges[0],edges[1],edges[2])
         self.triangles = [initial_triangle]
         initial_triangle.distance_from_centre = 0
+        initial_triangle.index = 0
     def add_triangle(self, connecting_edge, v0, v1, new_vertex):
         # if np.linalg.det(np.array([v0.c,v1.c,new_vertex.c])) > 0:
         #     print(v0.c_clover,v1.c_clover, new_vertex.c_clover)
@@ -84,6 +85,7 @@ class Surface:
         self.triangles.append(new_triangle)
         new_triangle.add_neighbour(connecting_edge.triangle)
         self.triangles[-1].add_neighbour(new_triangle)
+        new_triangle.index = connecting_edge.triangle.index+1
         new_triangle.distance_from_centre = connecting_edge.triangle.distance_from_centre+1
         return new_triangle
 
