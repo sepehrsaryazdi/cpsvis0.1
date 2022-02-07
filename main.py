@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from triangle_class.abstract_triangle import AbstractSurface
+from triangle_class.abstract_triangle import AbstractSurface, AbstractVertex, AbstractEdge
 from triangle_class.decorated_triangle import *
 from visualise.surface_vis import SurfaceVisual
 import matplotlib.pyplot as plt
@@ -202,7 +202,7 @@ class App(tk.Frame):
         self.pack(anchor='nw')
         self.plot_data = []
         self.left_side_frame = ttk.Frame()
-
+        self.abstract_surface = None
         self.create_surface_frame = ttk.Frame(self.left_side_frame)
         self.triangle_parameter_label = ttk.Label(self.create_surface_frame,justify='left', text='Set Initial Triangle Parameter (Must be positive)')
         self.triangle_parameter_label.pack(side='top', anchor='nw',padx=25, pady=10)
@@ -340,7 +340,7 @@ class App(tk.Frame):
         if distance_from_initial_triangle > max_distance:
             return
 
-        if len(self.abstract_surface.triangles) == len(self.temp_main_surface.triangles):
+        if len(self.abstract_surface.triangles) == len(self.reduced_main_surface.triangles):
             return
 
         v0, v1, flipped = app.correct_edge_orientation(current_edge)
@@ -352,7 +352,7 @@ class App(tk.Frame):
         r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
                                               v1.c_clover, e03, e23,  e30, e32, A023)
 
-        new_triangle = self.temp_main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
+        new_triangle = self.reduced_main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
 
 
         abstract_triangle = current_abstract_edge.edge_glued[2].triangle
@@ -435,11 +435,11 @@ class App(tk.Frame):
             r1_clover = [1, 0, cube_root_x_coord_t]
             r2_clover = [cube_root_x_coord_t, 1, 0]
 
-            self.temp_main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover,
+            self.reduced_main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover,
                                         r2_clover)
 
-            self.temp_main_surface.triangles[0].index = initial_abstract_triangle.index
-            self.temp_main_surface.triangles[0].t = cube_root_a_coord_t
+            self.reduced_main_surface.triangles[0].index = initial_abstract_triangle.index
+            self.reduced_main_surface.triangles[0].t = cube_root_a_coord_t
 
             for edge_index in range(3):
                 edge = initial_abstract_triangle.edges[edge_index]
@@ -467,11 +467,117 @@ class App(tk.Frame):
 
                 A023 = edge_glued.triangle.triangle_parameter
 
-                self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index], edge, 0, e03, e30, e23,
+                self.generate_new_triangle(self.reduced_main_surface.triangles[0].edges[edge_index], edge, 0, e03, e30, e23,
                                            e32, A023, max_distance)
 
 
-            print(len(self.temp_main_surface.triangles))
+            print(len(self.reduced_main_surface.triangles))
+            reduced_main_surface = self.reduced_main_surface
+            all_ones_abstract_surface = AbstractSurface()
+            for triangle in self.abstract_surface.triangles:
+                all_ones_abstract_surface.add_triangle()
+
+            for triangle_index in range(len(self.abstract_surface.triangles)):
+                triangle = self.abstract_surface.triangles[triangle_index]
+                for edge_index in range(3):
+                    edge = triangle.edges[edge_index]
+                    if edge.edge_glued:
+                        glued_edge = edge.edge_glued[2]
+                        for edge_glued_index in range(3):
+                            if glued_edge.triangle.edges[edge_glued_index] == glued_edge:
+
+                                all_ones_triangle = all_ones_abstract_surface.triangles[triangle_index]
+                                all_ones_edge = all_ones_triangle.edges[edge_index]
+                                all_ones_glued_edge_triangle = all_ones_abstract_surface.triangles[glued_edge.triangle.index]
+                                all_ones_glued_edge = all_ones_glued_edge_triangle.edges[edge_glued_index]
+                                flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                                if not flipped:
+                                    all_ones_abstract_surface.glue_edges(all_ones_edge, all_ones_glued_edge, all_ones_edge.v0, all_ones_glued_edge.v0)
+                                else:
+                                    all_ones_abstract_surface.glue_edges(all_ones_edge, all_ones_glued_edge, all_ones_edge.v0, all_ones_glued_edge.v1)
+
+            for triangle in all_ones_abstract_surface.triangles:
+                triangle.triangle_parameter = 1
+                for edge in triangle.edges:
+                    edge.ea = 1
+                    edge.eb = 1
+
+
+
+            found_no_edges = False
+            while not found_no_edges:
+                found_edge = False
+                for triangle in self.reduced_main_surface.triangles:
+                    if not found_edge:
+                        for edge in triangle.edges:
+                            if edge.edge_connected:
+                                c0 = edge.v0.c
+                                edge_connected = edge.edge_connected
+                                c1 = edge_connected.triangle.edges[(edge_connected.index + 1) % 3].v1.c
+                                c2 = edge.v1.c
+                                c3 = edge.triangle.edges[(edge.index + 1) % 3].v1.c
+                                outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
+                                if outitude_sign < 0:
+                                    self.reduced_main_surface.flip_edge(edge)
+                                    found_edge = True
+                                    break
+                if not found_edge:
+                    found_no_edges = True
+
+            c0 = [1, 0, 0]
+            c1 = [0, 1, 0]
+            c2 = [0, 0, 1]
+            r0 = [0, 1, 1]
+            r1 = [1, 0, 1]
+            r2 = [1, 1, 0]
+            c0_clover = [1, 0, 0]
+            c1_clover = [0, 1, 0]
+            c2_clover = [0, 0, 1]
+            r0_clover = [0, 1, 1]
+            r1_clover = [1, 0, 1]
+            r2_clover = [1, 1, 0]
+
+            self.reduced_main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover,
+                                                r1_clover,
+                                                r2_clover)
+
+            self.reduced_main_surface.triangles[0].index = initial_abstract_triangle.index
+            self.reduced_main_surface.triangles[0].t = cube_root_a_coord_t
+
+            for edge_index in range(3):
+                edge = initial_abstract_triangle.edges[edge_index]
+                edge_glued = initial_abstract_triangle.edges[edge_index].edge_glued[2]
+                edge_glued_index = 0
+                for index in range(3):
+                    if edge_glued.triangle.edges[index] == edge_glued:
+                        edge_glued_index = index
+
+                edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
+                edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
+
+                if edge_backward.index == '02':
+                    e03 = edge_backward.ea
+                    e30 = edge_backward.eb
+                else:
+                    e03 = edge_backward.eb
+                    e30 = edge_backward.ea
+                if edge_forward.index == '02':
+                    e32 = edge_forward.ea
+                    e23 = edge_forward.eb
+                else:
+                    e32 = edge_forward.eb
+                    e23 = edge_forward.ea
+
+                A023 = edge_glued.triangle.triangle_parameter
+
+                self.generate_new_triangle(self.reduced_main_surface.triangles[0].edges[edge_index], edge, 0, e03, e30, e23,
+                                           e32, A023, max_distance)
+
+            all_ones_main_surface = self.reduced_main_surface
+
+
+            print(reduced_main_surface)
+            print(all_ones_main_surface)
 
 
 

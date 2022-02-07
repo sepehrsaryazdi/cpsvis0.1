@@ -1,7 +1,7 @@
 
 
 
-class Edge:
+class AbstractEdge:
     def __init__(self, v0, v1):
         self.v0 = v0
         self.v1 = v1
@@ -12,17 +12,17 @@ class Edge:
         self.index = f'{v0.index}{v1.index}'
 
 
-class Vertex:
+class AbstractVertex:
     def __init__(self, index):
         self.index = index
         self.edges = []
         self.coord = []
 
-class Triangle:
+class AbstractTriangle:
     def __init__(self, index):
         self.index = index
-        self.vertices = [Vertex(0), Vertex(1),Vertex(2)]
-        self.edges = [Edge(self.vertices[0],self.vertices[1]),Edge(self.vertices[1],self.vertices[2]),Edge(self.vertices[0],self.vertices[2])]
+        self.vertices = [AbstractVertex(0), AbstractVertex(1),AbstractVertex(2)]
+        self.edges = [AbstractEdge(self.vertices[0],self.vertices[1]),AbstractEdge(self.vertices[1],self.vertices[2]),AbstractEdge(self.vertices[0],self.vertices[2])]
         for edge in self.edges:
             edge.triangle = self
         self.selected = False
@@ -32,7 +32,7 @@ class AbstractSurface:
         self.triangles = []
 
     def add_triangle(self):
-        self.triangles.append(Triangle(len(self.triangles)))
+        self.triangles.append(AbstractTriangle(len(self.triangles)))
 
     def glue_edges(self, edge, other_edge, initial_edge_vertex, initial_other_edge_vertex):
         if not edge.edge_glued:

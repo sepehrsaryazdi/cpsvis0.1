@@ -115,6 +115,7 @@ class Surface:
         for triangle_index in range(len(self.triangles)):
             if self.triangles[triangle_index] == triangle_1:
                 new_triangle_1 = Triangle(e_prime, e_prime_forward, e_prime_backward)
+                new_triangle_1.index = triangle_1.index
                 self.triangles[triangle_index] = new_triangle_1
                 for neighbour_index in range(len(self.triangles[triangle_index].neighbours)):
                     if self.triangles[triangle_index].neighbours[neighbour_index] == triangle_1:
@@ -125,6 +126,7 @@ class Surface:
         for triangle_index in range(len(self.triangles)):
             if self.triangles[triangle_index] == triangle_2:
                 new_triangle_2 = Triangle(e_prime_connected, e_prime_connected_forward, e_prime_connected_backward)
+                new_triangle_2.index = triangle_2.index
                 self.triangles[triangle_index] = new_triangle_2
                 for neighbour_index in range(len(self.triangles[triangle_index].neighbours)):
                     if self.triangles[triangle_index].neighbours[neighbour_index] == triangle_2:
