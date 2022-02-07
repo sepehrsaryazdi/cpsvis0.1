@@ -335,9 +335,158 @@ class App(tk.Frame):
         self.canonical_cell_decomp_button.bind('<ButtonPress>',
                                         self.canonical_cell_decomp)
 
-    def sl3r(self):
+    def generate_new_triangle(self,current_edge, current_abstract_edge, distance_from_initial_triangle, e03, e30, e23, e32, A023, max_distance):
+
+        if distance_from_initial_triangle > max_distance:
+            return
+
+        if len(self.abstract_surface.triangles) == len(self.temp_main_surface.triangles):
+            return
+
+        v0, v1, flipped = app.correct_edge_orientation(current_edge)
+
+        r3, c3 = compute_all_until_r3c3(v0.r, v1.r, v0.c,
+                                              v1.c, e03, e23,  e30, e32, A023)
+
+
+        r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
+                                              v1.c_clover, e03, e23,  e30, e32, A023)
+
+        new_triangle = self.temp_main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
+
+
+        abstract_triangle = current_abstract_edge.edge_glued[2].triangle
+
+        new_triangle.index = abstract_triangle.index
+
+        edge_index = 0
+        for index in range(3):
+            if abstract_triangle.edges[index] == current_abstract_edge.edge_glued[2]:
+                edge_index = index
+
+        next_edge_indices = [1,-1]
+
+
+        next_surface_index = 0
+        for next_surface_edge in new_triangle.edges[1:]:
+            next_abstract_edge = abstract_triangle.edges[(edge_index+next_edge_indices[next_surface_index])%3]
+            next_surface_index +=1
+            edge_glued = next_abstract_edge.edge_glued[2]
+            edge_glued_index = 0
+            for index in range(3):
+                if edge_glued.triangle.edges[index] == edge_glued:
+                    edge_glued_index = index
+
+            edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
+            edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
+
+            if edge_backward.index == '02':
+                e03 = edge_backward.ea
+                e30 = edge_backward.eb
+            else:
+                e03 = edge_backward.eb
+                e30 = edge_backward.ea
+            if edge_forward.index == '02':
+                e32 = edge_forward.ea
+                e23 = edge_forward.eb
+            else:
+                e32 = edge_forward.eb
+                e23 = edge_forward.ea
+            A023 = edge_glued.triangle.triangle_parameter
+            self.generate_new_triangle(next_surface_edge, next_abstract_edge,
+                                  distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
+
+        return
+
+    def compute_centre_cell_decomp(self):
+        try:
+            initial_triangle_index = 0
+            max_distance = len(self.abstract_surface.triangles)
+
+            initial_abstract_triangle = self.abstract_surface.triangles[0]
+            for triangle in self.abstract_surface.triangles:
+                if triangle.index == initial_triangle_index:
+                    initial_abstract_triangle = triangle
+
+            t = initial_abstract_triangle.triangle_parameter
+            e01 = initial_abstract_triangle.edges[0].ea
+            e02 = initial_abstract_triangle.edges[2].ea
+            e10 = initial_abstract_triangle.edges[0].eb
+            e12 = initial_abstract_triangle.edges[1].ea
+            e20 = initial_abstract_triangle.edges[2].eb
+            e21 = initial_abstract_triangle.edges[1].eb
+
+            cube_root_a_coord_t = np.power(t, (1 / 3))
+            c0 = [cube_root_a_coord_t, 0, 0]
+            c1 = [0, cube_root_a_coord_t, 0]
+            c2 = [0, 0, cube_root_a_coord_t]
+            r0 = [0, e01 / cube_root_a_coord_t, e02 / cube_root_a_coord_t]
+            r1 = [e10 / cube_root_a_coord_t, 0, e12 / cube_root_a_coord_t]
+            r2 = [e20 / cube_root_a_coord_t, e21 / cube_root_a_coord_t, 0]
+
+            c0_clover = [1, 0, 0]
+            c1_clover = [0, 1, 0]
+            c2_clover = [0, 0, 1]
+
+            x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
+            cube_root_x_coord_t = np.power(x_coord_t, 1 / 3)
+
+            r0_clover = [0, cube_root_x_coord_t, 1]
+            r1_clover = [1, 0, cube_root_x_coord_t]
+            r2_clover = [cube_root_x_coord_t, 1, 0]
+
+            self.temp_main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover, c2_clover, r0_clover, r1_clover,
+                                        r2_clover)
+
+            self.temp_main_surface.triangles[0].index = initial_abstract_triangle.index
+            self.temp_main_surface.triangles[0].t = cube_root_a_coord_t
+
+            for edge_index in range(3):
+                edge = initial_abstract_triangle.edges[edge_index]
+                edge_glued = initial_abstract_triangle.edges[edge_index].edge_glued[2]
+                edge_glued_index = 0
+                for index in range(3):
+                    if edge_glued.triangle.edges[index] == edge_glued:
+                        edge_glued_index = index
+
+                edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
+                edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
+
+                if edge_backward.index == '02':
+                    e03 = edge_backward.ea
+                    e30 = edge_backward.eb
+                else:
+                    e03 = edge_backward.eb
+                    e30 = edge_backward.ea
+                if edge_forward.index == '02':
+                    e32 = edge_forward.ea
+                    e23 = edge_forward.eb
+                else:
+                    e32 = edge_forward.eb
+                    e23 = edge_forward.ea
+
+                A023 = edge_glued.triangle.triangle_parameter
+
+                self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index], edge, 0, e03, e30, e23,
+                                           e32, A023, max_distance)
+
+
+            print(len(self.temp_main_surface.triangles))
+
+
+
+            self.generate_surface_error_text.set(
+                "")
+        except:
+            self.generate_surface_error_text.set(
+                "Please import a gluing table before computing centre coordinates of canonical cell decomposition.")
+
 
         pass
+
+
+    def canonical_cell_instructions(self, event):
+        
 
     def canonical_cell_decomp(self, event):
 
@@ -828,7 +977,7 @@ class CombinatorialImport:
         return
 
     def generate_real_surface_map(self):
-        initial_triangle_index = 1
+        initial_triangle_index = 0
         max_distance = 4
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
@@ -1410,6 +1559,7 @@ def restart_program():
     python = sys.executable
     os.execl(python, python, *sys.argv)
 
+
 def slr3r():
     try:
         app.main_surface
@@ -1453,14 +1603,17 @@ menubar = tk.Menu(root)
 app = App(root)
 filemenu = tk.Menu(menubar, tearoff=0)
 transformmenu = tk.Menu(menubar, tearoff=0)
+computemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import Gluing Table (CSV)", command =import_file )
 filemenu.add_command(label="Save Imported Parameters", command =export_file )
 filemenu.add_command(label="Import Saved Parameters", command =import_saved_params )
 filemenu.add_command(label="Restart Program", command=restart_popup)
 filemenu.add_command(label="Exit", command=exit_popup)
 transformmenu.add_command(label="Apply M From SL(3,ℝ)", command=slr3r)
+computemenu.add_command(label="Centre of Canonical Cell Decomposition", command=app.compute_centre_cell_decomp)
 menubar.add_cascade(label="File", menu=filemenu)
 menubar.add_cascade(label="Transform", menu=transformmenu)
+menubar.add_cascade(label="Compute", menu=computemenu)
 
 root.configure(menu=menubar)
 app.mainloop()
