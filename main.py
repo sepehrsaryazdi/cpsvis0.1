@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+
+from pyparsing import col
 from triangle_class.abstract_triangle import AbstractSurface, AbstractVertex, AbstractEdge
 from triangle_class.decorated_triangle import *
 from visualise.surface_vis import SurfaceVisual
@@ -1662,7 +1664,7 @@ def convert_surface_to_gluing_table(self):
 
 def export_file():
     try:
-        app.abstract_surface
+        assert app.abstract_surface
     except:
         win = tk.Toplevel()
         win.wm_title("No Uploaded Surface")
@@ -1674,17 +1676,61 @@ def export_file():
         return
 
     current_dir = os.getcwd()
-    dir_name = filedialog.asksaveasfilename(filetypes=[(".txt", ".txt")])
+    dir_name = filedialog.asksaveasfilename(filetypes=[("Excel files", ".csv")])
     if not dir_name:
         return
 
-    if '.txt' in dir_name:
+    if '.csv' in dir_name:
         dir_name = dir_name[:-4]
 
-    f = open(f"{dir_name}.txt", "wb+")
-    pickle.dump(app.abstract_surface, f)
 
-    f.close()
+    gluing_table_data = []
+    
+    for triangle in app.abstract_surface.triangles:
+        row = [triangle.index]
+        for edge in triangle.edges:
+            flipped = (edge.edge_glued[1]!=edge.edge_glued[2].v0)
+            if not flipped:
+                row.append(f"{edge.edge_glued[2].triangle.index} ({edge.edge_glued[2].index})")
+            else:
+                row.append(f"{edge.edge_glued[2].triangle.index} ({edge.edge_glued[2].index[::-1]})")
+        gluing_table_data.append(row)
+    
+    gluing_table_data = np.array(gluing_table_data)
+    gluing_table_data_last_col = gluing_table_data[:,-1].copy()
+    gluing_table_data[:,-1] = gluing_table_data[:,-2]
+    gluing_table_data[:,-2] = gluing_table_data_last_col
+
+    parameter_table_data = []
+
+    for triangle in app.abstract_surface.triangles:
+        row = [triangle.triangle_parameter]
+        for edge in triangle.edges:
+            if edge.index != '02':
+                row.append(edge.ea)
+            else:
+                row.append(edge.eb)
+        parameter_table_data.append(row)
+    
+    parameter_table_data = np.array(parameter_table_data)
+    parameter_table_data_last_col = parameter_table_data[:,-1].copy()
+    parameter_table_data[:,-1] = parameter_table_data[:,-2]
+    parameter_table_data[:,-2] = parameter_table_data_last_col
+
+    column_names = np.array(['Triangle', 'Edge 01', 'Edge 02', 'Edge 12', 'Triangle Parameter', 'Edge 01', 'Edge 02', 'Edge 12'])
+    data = np.hstack([gluing_table_data,parameter_table_data])
+    table = np.vstack([column_names, data])
+    
+    pd.DataFrame(table).to_csv(f"{dir_name}.csv")
+
+    
+
+    # f = open(f"{dir_name}.csv", "wb+")
+
+    
+    # pickle.dump(app.abstract_surface, f)
+
+    # f.close()
 
 def exit_file():
     exit()
@@ -1729,26 +1775,6 @@ def slr3r():
         cancel = ttk.Button(win, text="Close", command=win.destroy)
         cancel.pack(side='right', padx=25, pady=5)
 
-def import_saved_params():
-    filename = filedialog.askopenfilename(filetypes=[(".txt", ".txt")])
-    if not filename:
-        return
-    try:
-
-        combinatorial_data = CombinatorialImport(tk,filename,False)
-
-
-
-    except:
-        win = tk.Toplevel()
-        win.wm_title("Saved Parameter File Invalid")
-        l = tk.Label(win,
-                     text="There was an error uploading these saved parameters. Please ensure you have selected a valid saved parameter file.")
-        l.pack(side="top", padx=20, pady=10)
-        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-        cancel = ttk.Button(win, text="Close", command=win.destroy)
-        cancel.pack(side='right', padx=25, pady=5)
-
 
 
 root = tk.Tk()
@@ -1762,7 +1788,6 @@ transformmenu = tk.Menu(menubar, tearoff=0)
 computemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import Gluing Table (CSV)", command =import_file )
 filemenu.add_command(label="Save Imported Parameters", command =export_file )
-filemenu.add_command(label="Import Saved Parameters", command =import_saved_params )
 filemenu.add_command(label="Restart Program", command=restart_popup)
 filemenu.add_command(label="Exit", command=exit_popup)
 transformmenu.add_command(label="Apply M From SL(3,ℝ)", command=slr3r)
