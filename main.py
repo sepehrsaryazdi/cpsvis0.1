@@ -887,7 +887,7 @@ class CombinatorialImport:
             self.tk = tk
             self.parameter_entries = {}
             self.triangle_parameter_entry = None
-            self.input_parameters = None
+            self.input_parameters = []
             self.convert_gluing_table_to_surface(filename)
             self.win = self.tk.Toplevel()
             self.win.resizable(width=False, height=False)
