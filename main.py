@@ -887,12 +887,13 @@ class CombinatorialImport:
             self.tk = tk
             self.parameter_entries = {}
             self.triangle_parameter_entry = None
+            self.input_parameters = None
             self.convert_gluing_table_to_surface(filename)
             self.win = self.tk.Toplevel()
             self.win.resizable(width=False, height=False)
             self.win.wm_title("Uploaded Surface")
             self.l = tk.Label(self.win,
-                         text="The uploaded gluing table is visualised as a combinatorial map below. You can change A-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
+                         text="The uploaded gluing table is visualised as a combinatorial map below. You can change 𝒜-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
             self.l.pack(padx=20, pady=10)
             #self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
             self.figure = plt.Figure(figsize=(7, 5), dpi=100)
@@ -931,8 +932,19 @@ class CombinatorialImport:
     def convert_gluing_table_to_surface(self,filename):
         gluing_table = pd.read_table(filename)
         columns = gluing_table.columns.tolist()
+        
         columns = columns[0].rsplit(',')
-        edges = columns[1:]
+        if 'Triangle Parameter' in columns:
+            gluing_table_array = np.array(gluing_table)
+            gluing_table_array = np.array([[app.string_fraction_to_float(x) for x in row[0].rsplit(',')[4:]] for row in gluing_table_array])
+            for row in gluing_table_array:
+                for param in row:
+                    assert param > 0
+            gluing_table_array_last_col = gluing_table_array[:,-1].copy()
+            gluing_table_array[:,-1] = gluing_table_array[:,-2]
+            gluing_table_array[:,-2] = gluing_table_array_last_col
+            self.input_parameters = gluing_table_array
+        edges = columns[1:4]
         gluing_table = np.array(gluing_table.values.tolist())
         self.abstract_surface = AbstractSurface()
         new_gluing_table = []
@@ -1571,20 +1583,50 @@ class CombinatorialImport:
         self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
         self.give_edge_identification_color_and_arrow()
 
+        if len(self.input_parameters):
+            for triangle in self.abstract_plotting_surface.triangles:
+                pass
+                triangle.triangle_parameter = tk.StringVar(value=self.input_parameters[triangle.index,0])
+                for edge_index in range(3):
+                    edge = triangle.edges[edge_index]
+                    if edge.index != '02':
+                        edge.ea = tk.StringVar(value=self.input_parameters[triangle.index, edge_index+1])
+                    else:
+                        edge.eb = tk.StringVar(value=self.input_parameters[triangle.index, edge_index+1])
+                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                    if not flipped:
+                        try:
+                            edge.edge_glued[2].ea = edge.ea
+                        except:
+                            pass
+                        try:
+                            edge.edge_glued[2].eb = edge.eb
+                        except:
+                            pass
+                    else:
+                        try:
+                            edge.edge_glued[2].ea = edge.eb
+                        except:
+                            pass
+                        try:
+                            edge.edge_glued[2].eb = edge.ea
+                        except:
+                            pass
+                
 
-
-        for triangle in self.abstract_plotting_surface.triangles:
-            triangle.triangle_parameter = tk.StringVar(value="1")
-            for edge in triangle.edges:
-                edge.ea = tk.StringVar(value="1")
-                edge.eb = tk.StringVar(value="1")
-                flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-                if not flipped:
-                    edge.edge_glued[2].ea = edge.ea
-                    edge.edge_glued[2].eb = edge.eb
-                else:
-                    edge.edge_glued[2].ea = edge.eb
-                    edge.edge_glued[2].eb = edge.ea
+        else:
+            for triangle in self.abstract_plotting_surface.triangles:
+                triangle.triangle_parameter = tk.StringVar(value="1")
+                for edge in triangle.edges:
+                    edge.ea = tk.StringVar(value="1")
+                    edge.eb = tk.StringVar(value="1")
+                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                    if not flipped:
+                        edge.edge_glued[2].ea = edge.ea
+                        edge.edge_glued[2].eb = edge.eb
+                    else:
+                        edge.edge_glued[2].ea = edge.eb
+                        edge.edge_glued[2].eb = edge.ea
 
         self.plot_combinatorial_map()
 
