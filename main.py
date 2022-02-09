@@ -339,6 +339,9 @@ class App(tk.Frame):
 
     def generate_new_triangle(self,current_edge, current_abstract_edge, distance_from_initial_triangle, e03, e30, e23, e32, A023, max_distance):
 
+        
+
+
         if distance_from_initial_triangle > max_distance:
             return
 
@@ -354,9 +357,10 @@ class App(tk.Frame):
         r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
                                               v1.c_clover, e03, e23,  e30, e32, A023)
 
+        
+        
         new_triangle = self.reduced_main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
-
-
+        
         abstract_triangle = current_abstract_edge.edge_glued[2].triangle
 
         new_triangle.index = abstract_triangle.index
@@ -366,6 +370,10 @@ class App(tk.Frame):
             if abstract_triangle.edges[index] == current_abstract_edge.edge_glued[2]:
                 edge_index = index
 
+        new_triangle.edges[0].abstract_index = current_abstract_edge.edge_glued[2].index
+        new_triangle.edges[1].abstract_index = abstract_triangle.edges[(edge_index+1)%3].index
+        new_triangle.edges[2].abstract_index = abstract_triangle.edges[(edge_index-1)%3].index
+
         next_edge_indices = [1,-1]
 
 
@@ -374,6 +382,8 @@ class App(tk.Frame):
             next_abstract_edge = abstract_triangle.edges[(edge_index+next_edge_indices[next_surface_index])%3]
             next_surface_index +=1
             edge_glued = next_abstract_edge.edge_glued[2]
+            if edge_glued.triangle.index in [triangle.index for triangle in self.reduced_main_surface.triangles]:
+                continue
             edge_glued_index = 0
             for index in range(3):
                 if edge_glued.triangle.edges[index] == edge_glued:
@@ -395,6 +405,7 @@ class App(tk.Frame):
                 e32 = edge_forward.eb
                 e23 = edge_forward.ea
             A023 = edge_glued.triangle.triangle_parameter
+            
             self.generate_new_triangle(next_surface_edge, next_abstract_edge,
                                   distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
 
@@ -469,11 +480,63 @@ class App(tk.Frame):
 
                 A023 = edge_glued.triangle.triangle_parameter
 
+                
+                self.reduced_main_surface.triangles[0].edges[edge_index].abstract_index = edge.index
                 self.generate_new_triangle(self.reduced_main_surface.triangles[0].edges[edge_index], edge, 0, e03, e30, e23,
                                            e32, A023, max_distance)
 
+            for triangle in self.reduced_main_surface.triangles.copy():
+                
+                for edge_index in range(3):
+                    edge = triangle.edges[edge_index]
+                    if not edge.connected:
+                        abstract_triangle = self.abstract_surface.triangles[triangle.index]
+                        for abstract_edge in abstract_triangle.edges:
+                            if abstract_edge.index == edge.abstract_index:
+                                edge_glued = abstract_edge.edge_glued[2]
+                                edge_glued_index = 0
+                                for index in range(3):
+                                    if edge_glued.triangle.edges[index] == edge_glued:
+                                        edge_glued_index = index
 
-            print(len(self.reduced_main_surface.triangles))
+                                edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
+                                edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
+
+                                if edge_backward.index == '02':
+                                    e03 = edge_backward.ea
+                                    e30 = edge_backward.eb
+                                else:
+                                    e03 = edge_backward.eb
+                                    e30 = edge_backward.ea
+                                if edge_forward.index == '02':
+                                    e32 = edge_forward.ea
+                                    e23 = edge_forward.eb
+                                else:
+                                    e32 = edge_forward.eb
+                                    e23 = edge_forward.ea
+                                
+                                current_edge = edge
+
+                                A023 = edge_glued.triangle.triangle_parameter
+                                
+                                v0, v1, flipped = app.correct_edge_orientation(current_edge)
+
+                                r3, c3 = compute_all_until_r3c3(v0.r, v1.r, v0.c,
+                                                                    v1.c, e03, e23,  e30, e32, A023)
+
+
+                                r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
+                                                                    v1.c_clover, e03, e23,  e30, e32, A023)
+
+                                new_triangle = self.reduced_main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
+
+                                
+
+
+
+
+            self.main_surface = self.reduced_main_surface
+            self.plot_fresh(self.t)
 
             all_ones_abstract_surface = AbstractSurface()
             for triangle in self.abstract_surface.triangles:
@@ -504,6 +567,8 @@ class App(tk.Frame):
                     edge.ea = 1
                     edge.eb = 1
 
+            
+
             edge_flip_sequence = []
 
             found_no_edges = False
@@ -512,7 +577,6 @@ class App(tk.Frame):
                 for triangle in self.reduced_main_surface.triangles:
                     if not found_edge:
                         for edge in triangle.edges:
-                            print(edge.v0.c, edge.v1.c)
                             if edge.edge_connected:
                                 c0 = edge.v0.c
                                 edge_connected = edge.edge_connected
@@ -529,6 +593,8 @@ class App(tk.Frame):
                     found_no_edges = True
 
             reduced_main_surface = self.reduced_main_surface
+
+            
 
             c0 = [1, 0, 0]
             c1 = [0, 1, 0]
@@ -582,9 +648,9 @@ class App(tk.Frame):
             all_ones_main_surface = self.reduced_main_surface
 
 
-            print(reduced_main_surface)
-            print(edge_flip_sequence)
-            print(all_ones_main_surface)
+            #print(reduced_main_surface)
+            #print(edge_flip_sequence)
+            #print(all_ones_main_surface)
 
 
 
