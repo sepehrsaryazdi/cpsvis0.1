@@ -658,6 +658,11 @@ class App(tk.Frame):
                                     e_prime_backward = e_prime.triangle.edges[(e_prime.index-1)%3]
                                     sorted = np.sort([e_prime_forward.abstract_index[0], e_prime_backward.abstract_index[1]])
                                     e_prime.abstract_index = f'{sorted[0]}{sorted[1]}'
+                                    e_prime_connected = e_prime.edge_connected
+                                    e_prime_connected_forward = e_prime_connected.triangle.edges[(e_prime_connected.index+1)%3]
+                                    e_prime_connected_backward = e_prime_connected.triangle.edges[(e_prime_connected.index-1)%3]
+                                    sorted = np.sort([e_prime_connected_forward.abstract_index[0], e_prime_connected_backward.abstract_index[1]])
+                                    e_prime_connected.abstract_index = f'{sorted[0]}{sorted[1]}'
                                     edge_flip_sequence.append((edge,e_prime))
                                     found_edge = True
                                     break
@@ -666,6 +671,8 @@ class App(tk.Frame):
 
             self.main_surface = self.reduced_main_surface
             self.plot_fresh(self.t)
+
+
 
 
 
@@ -696,7 +703,18 @@ class App(tk.Frame):
 
             while edge_flip_sequence:
                 _, next_flip_edge = edge_flip_sequence.pop()
-                self.reduced_main_surface.flip_edge(next_flip_edge)
+                e_prime = self.reduced_main_surface.flip_edge(next_flip_edge.edge_connected)
+                e_prime_forward = e_prime.triangle.edges[(e_prime.index + 1) % 3]
+                e_prime_backward = e_prime.triangle.edges[(e_prime.index - 1) % 3]
+                sorted = np.sort([e_prime_forward.abstract_index[0], e_prime_backward.abstract_index[1]])
+                e_prime.abstract_index = f'{sorted[0]}{sorted[1]}'
+                e_prime_connected = e_prime.edge_connected
+                e_prime_connected_forward = e_prime_connected.triangle.edges[(e_prime_connected.index + 1) % 3]
+                e_prime_connected_backward = e_prime_connected.triangle.edges[(e_prime_connected.index - 1) % 3]
+                sorted = np.sort(
+                    [e_prime_connected_forward.abstract_index[0], e_prime_connected_backward.abstract_index[1]])
+                e_prime_connected.abstract_index = f'{sorted[0]}{sorted[1]}'
+
 
 
             #
@@ -704,6 +722,43 @@ class App(tk.Frame):
 
             self.main_surface = self.reduced_main_surface
             self.plot_fresh(self.t)
+
+            print([triangle.index for triangle in self.reduced_main_surface.triangles])
+
+            self.canonical_abstract_surface = AbstractSurface()
+            for triangle in self.reduced_main_surface.triangles[:len(self.abstract_surface.triangles)]:
+                self.canonical_abstract_surface.add_triangle()
+
+            print([triangle.index for triangle in self.canonical_abstract_surface.triangles])
+
+            for triangle in self.reduced_main_surface.triangles[:len(self.abstract_surface.triangles)]:
+                for edge in triangle.edges:
+                    if edge.connected:
+                        abstract_edge = self.canonical_abstract_surface.triangles[triangle.index].edges[0]
+                        for abstract_edge_index in range(3):
+                            if self.canonical_abstract_surface.triangles[triangle.index].edges[abstract_edge_index].index == edge.abstract_index:
+                                abstract_edge = self.canonical_abstract_surface.triangles[triangle.index].edges[abstract_edge_index]
+                        edge_connected = edge.edge_connected
+                        print(edge_connected.triangle.index)
+                        #edge_connected_triangle = self.canonical_abstract_surface.triangles[edge_connected.triangle.index]
+                        # edge_glued = edge_connected_triangle.edges[0]
+                        # for abstract_edge_glued_index in range(3):
+                        #     if edge_connected_triangle.edges[abstract_edge_glued_index].index == edge_connected.abstract_index:
+                        #         edge_glued = edge_connected_triangle.edges[abstract_edge_glued_index]
+                        #
+                        # #
+                        # # abstract_edge_original_triangle = self.abstract_surface.triangles[triangle.index]
+                        # # abstract_edge_original = abstract_edge_original_triangle.edges[0]
+                        # # for abstract_edge_original_index in range(3):
+                        # #     if abstract_edge_original_triangle.edges[abstract_edge_original_index] == abstract_edge_original:
+                        # #
+                        # self.canonical_abstract_surface.glue_edges(abstract_edge, edge_glued, abstract_edge.v0, edge_glued.v0)
+
+            print([triangle.index for triangle in self.canonical_abstract_surface.triangles])
+
+
+
+
 
 
             # self.all_ones_main_surface = Surface([1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [1, 0, 1], [1, 1, 0],
