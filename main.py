@@ -353,7 +353,6 @@ class App(tk.Frame):
         r3, c3 = compute_all_until_r3c3(v0.r, v1.r, v0.c,
                                               v1.c, e03, e23,  e30, e32, A023)
 
-
         r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
                                               v1.c_clover, e03, e23,  e30, e32, A023)
 
@@ -437,9 +436,6 @@ class App(tk.Frame):
     #             self.generate_all_ones_triangle(new_triangle)
 
     def generate_all_ones_triangle(self, current_edge,current_triangle):
-
-
-
         for edge in current_triangle.edges:
             if edge == current_edge:
                 continue
@@ -658,7 +654,7 @@ class App(tk.Frame):
                                 outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
                                 if outitude_sign < 0:
                                     e_prime = self.reduced_main_surface.flip_edge(edge)
-                                    
+                                    print('flipped_edge',edge.abstract_index, 'flipped edge triangle',edge.triangle.index)
                                     e_prime_forward = e_prime.triangle.edges[(e_prime.index+1)%3]
                                     e_prime_backward = e_prime.triangle.edges[(e_prime.index-1)%3]
                                     
@@ -698,11 +694,6 @@ class App(tk.Frame):
                                         prime_sorted.append(e_prime_connected_forward.abstract_index[1])
                                     prime_sorted = np.sort(prime_sorted)
                                     e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
-
-                                    
-
-                                    
-
                                     edge_flip_sequence.append((edge,e_prime))
                                     found_edge = True
                                     break
@@ -711,12 +702,22 @@ class App(tk.Frame):
             
             # for triangle in self.reduced_main_surface.triangles:
             #     for edge in triangle.edges:
-            #         print(edge.abstract_index, triangle.index)
+            #         print(edge.abstract_index,edge.edge_connected)
 
-            self.main_surface = self.reduced_main_surface
-            self.plot_fresh(self.t)
+            # for triangle in self.reduced_main_surface.triangles:
+            #         for edge in triangle.edges:
+            #             if edge.edge_connected:
+            #                 c0 = edge.v0.c
+            #                 edge_connected = edge.edge_connected
+            #                 c1 = edge_connected.triangle.edges[(edge_connected.index + 1) % 3].v1.c
+            #                 c2 = edge.v1.c
+            #                 c3 = edge.triangle.edges[(edge.index + 1) % 3].v1.c
+            #                 outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
+            #                 print(outitude_sign)
+            
+            
 
-
+            print('first_triangle',self.reduced_main_surface.triangles[0].index)
             self.reduced_main_surface.triangles[0].vertices[0].c = [1,0,0]
             self.reduced_main_surface.triangles[0].vertices[1].c = [0, 1, 0]
             self.reduced_main_surface.triangles[0].vertices[2].c = [0, 0, 1]
@@ -734,10 +735,12 @@ class App(tk.Frame):
 
             self.generate_all_ones_triangle(None,self.reduced_main_surface.triangles[0])
 
-
+            
             #print(self.reduced_main_surface.triangles)
             # self.main_surface = self.reduced_main_surface
             # self.plot_fresh(self.t)
+
+            
 
             
 
@@ -844,10 +847,11 @@ class App(tk.Frame):
             #             print(edge.abstract_index)
 
 
+            #self.main_surface = self.reduced_main_surface
+            #self.plot_fresh(self.t)
+            
             self.main_surface = self.reduced_main_surface
             self.plot_fresh(self.t)
-            
-
             
             
             
@@ -894,6 +898,7 @@ class App(tk.Frame):
 
                     abstract_edge.ea = np.dot(edge.v0.r,edge.v1.c)
                     abstract_edge.eb = np.dot(edge.v1.r, edge.v0.c)
+                   
                     
                     abstract_edge.triangle.triangle_parameter = edge.triangle.t
 
@@ -977,7 +982,7 @@ class App(tk.Frame):
 
 
     def canonical_cell_decomp(self, event):
-
+        
         try:
             found_no_edges = False
             while not found_no_edges:
@@ -998,6 +1003,7 @@ class App(tk.Frame):
                                     break
                 if not found_edge:
                     found_no_edges = True
+            print('did canonical cell decomp')
             self.plot_fresh(self.t)
             self.generate_surface_error_text.set("")
         except:
