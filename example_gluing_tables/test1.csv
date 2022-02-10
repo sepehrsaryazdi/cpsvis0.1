@@ -1,0 +1,3 @@
+Triangle,Edge 01,Edge 02,Edge 12,Triangle Parameter,Edge 01,Edge 02,Edge 12
+0,1 (21),1 (01),1 (02),2.0,1.0,1.0,4.0
+1,0 (02),0 (12),0 (10),2.0,1.0,4.0,1.0

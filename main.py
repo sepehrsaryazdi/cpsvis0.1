@@ -744,6 +744,45 @@ class App(tk.Frame):
             while edge_flip_sequence:
                 _, next_flip_edge = edge_flip_sequence.pop()
                 e_prime = self.reduced_main_surface.flip_edge(next_flip_edge.edge_connected)
+                # e_prime_forward = e_prime.triangle.edges[(e_prime.index+1)%3]
+                # e_prime_backward = e_prime.triangle.edges[(e_prime.index-1)%3]
+                                    
+                # if e_prime_backward.abstract_index != '02':
+                #     forward_sorted = np.sort([(int(e_prime_backward.abstract_index[0])-1)%3,int(e_prime_backward.abstract_index[0])])
+                # else:
+                #     forward_sorted = np.sort([(int(e_prime_backward.abstract_index[1])-1)%3,int(e_prime_backward.abstract_index[1])])
+                # e_prime_forward.abstract_index = f'{forward_sorted[0]}{forward_sorted[1]}'
+                # prime_sorted = []
+                # if e_prime_backward.abstract_index != '02':
+                #     prime_sorted.append(e_prime_backward.abstract_index[1])
+                # else:
+                #     prime_sorted.append(e_prime_backward.abstract_index[0])
+                # if e_prime_forward.abstract_index != '02':
+                #     prime_sorted.append(e_prime_forward.abstract_index[0])
+                # else:
+                #     prime_sorted.append(e_prime_forward.abstract_index[1])
+                # prime_sorted = np.sort(prime_sorted)
+                # e_prime.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
+                # e_prime_connected = e_prime.edge_connected
+                # e_prime_connected_forward = e_prime_connected.triangle.edges[(e_prime_connected.index+1)%3]
+                # e_prime_connected_backward = e_prime_connected.triangle.edges[(e_prime_connected.index-1)%3]
+                                    
+                # if e_prime_connected_backward.abstract_index != '02':
+                #     forward_sorted = np.sort([(int(e_prime_connected_backward.abstract_index[0])-1)%3,int(e_prime_connected_backward.abstract_index[0])])
+                # else:
+                #     forward_sorted = np.sort([(int(e_prime_connected_backward.abstract_index[1])-1)%3,int(e_prime_connected_backward.abstract_index[1])])
+                # e_prime_connected_forward.abstract_index = f'{forward_sorted[0]}{forward_sorted[1]}'
+                # prime_sorted = []
+                # if e_prime_connected_backward.abstract_index != '02':
+                #     prime_sorted.append(e_prime_connected_backward.abstract_index[1])
+                # else:
+                #     prime_sorted.append(e_prime_connected_backward.abstract_index[0])
+                # if e_prime_connected_forward.abstract_index != '02':
+                #     prime_sorted.append(e_prime_connected_forward.abstract_index[0])
+                # else:
+                #     prime_sorted.append(e_prime_connected_forward.abstract_index[1])
+                # prime_sorted = np.sort(prime_sorted)
+                # e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'                                                         
                 e_prime_forward = e_prime.triangle.edges[(e_prime.index+1)%3]
                 e_prime_backward = e_prime.triangle.edges[(e_prime.index-1)%3]   
                 if e_prime_forward.abstract_index != '02':
@@ -783,18 +822,22 @@ class App(tk.Frame):
                 e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                 [e_prime.triangle.index,e_prime_connected.triangle.index] = [e_prime_connected.triangle.index, e_prime.triangle.index]
 
-                # e_minus = np.dot(edge.v1.r, edge.v0.c)
-                # e_plus = np.dot(edge.v0.r, edge.v1.c)
-                # c_plus = np.dot(edge_forward.v0.r,edge_forward.v1.c)
-                # b_plus = np.dot(e_prime_forward.v1.r, e_prime_forward.v0.c)
-                # d_minus = np.dot(edge_backward.v1.r,edge_backward.v0.c)
-                # a_minus = np.dot(e_prime_connected_backward.v0.r,e_prime_connected_backward.v1.c)
-                # A = edge_connected.triangle.t
-                # B = edge.triangle.t
-                # C = (B*c_plus + A*b_plus)/e_minus
-                # D = (A*d_minus+B*a_minus)/e_plus
-                # e_prime.triangle.t = C
-                # e_prime_connected.triangle.t = D
+                edge = next_flip_edge.edge_connected
+                edge_forward = edge.triangle.edges[(edge.index+1)%3]
+                edge_backward = edge.triangle.edges[(edge.index-1)%3]
+                edge_connected = edge.edge_connected
+                e_minus = np.dot(edge.v1.r, edge.v0.c)
+                e_plus = np.dot(edge.v0.r, edge.v1.c)
+                c_plus = np.dot(edge_forward.v0.r,edge_forward.v1.c)
+                b_plus = np.dot(e_prime_forward.v1.r, e_prime_forward.v0.c)
+                d_minus = np.dot(edge_backward.v1.r,edge_backward.v0.c)
+                a_minus = np.dot(e_prime_connected_backward.v0.r,e_prime_connected_backward.v1.c)
+                A = edge_connected.triangle.t
+                B = edge.triangle.t
+                C = (B*c_plus + A*b_plus)/e_minus
+                D = (A*d_minus+B*a_minus)/e_plus
+                e_prime.triangle.t = C
+                e_prime_connected.triangle.t = D
 
             # for triangle in self.reduced_main_surface.triangles:
             #     for edge in triangle.edges:
@@ -805,12 +848,17 @@ class App(tk.Frame):
             self.plot_fresh(self.t)
             
 
-            print([triangle.index for triangle in self.reduced_main_surface.triangles])
+            
+            
+            
 
             self.canonical_abstract_surface = AbstractSurface()
             for triangle in self.reduced_main_surface.triangles[:len(self.abstract_surface.triangles)]:
                 self.canonical_abstract_surface.add_triangle()
+                self.canonical_abstract_surface.triangles[-1].index = triangle.index     
 
+            self.canonical_abstract_surface.triangles = np.array(self.canonical_abstract_surface.triangles)[np.argsort([triangle.index for triangle in self.canonical_abstract_surface.triangles])]      
+            
             
 
             for triangle in self.reduced_main_surface.triangles[:len(self.abstract_surface.triangles)]:
@@ -823,35 +871,93 @@ class App(tk.Frame):
                     #print(edge.abstract_index,triangle.index)
                     
                     abstract_triangle_original = self.abstract_surface.triangles[triangle.index]
-                    abstract_edge_original = abstract_triangle_original.edges[0]
+                    #abstract_edge_original = abstract_triangle_original.edges[0]
                     for temp_edge in abstract_triangle_original.edges:
                         if temp_edge.index == edge.abstract_index:
+                            
                             abstract_edge_original = temp_edge
                     
                     #print(abstract_edge_original.index, abstract_triangle_original.index)
 
-                    abstract_edge_glued = self.canonical_abstract_surface.triangles[abstract_edge_original.edge_glued[2].triangle.index].edges[0]
+                    #abstract_edge_glued = self.canonical_abstract_surface.triangles[abstract_edge_original.edge_glued[2].triangle.index].edges[0]
 
                     for temp_edge in self.canonical_abstract_surface.triangles[abstract_edge_original.edge_glued[2].triangle.index].edges:
-                        if temp_edge.index == abstract_edge_original.index:
+                        if temp_edge.index == abstract_edge_original.edge_glued[2].index:
                             abstract_edge_glued = temp_edge
                     
                     flipped = (abstract_edge_original.edge_glued[1] != abstract_edge_original.edge_glued[2].v0)
 
                     if not flipped:
-                        self.canonical_abstract_surface.glue_edges(abstract_edge, abstract_edge_glued, abstract_edge.v0, edge_glued.v0)
+                        self.canonical_abstract_surface.glue_edges(abstract_edge, abstract_edge_glued, abstract_edge.v0, abstract_edge_glued.v0)
                     else:
                         self.canonical_abstract_surface.glue_edges(abstract_edge, abstract_edge_glued, abstract_edge.v0, abstract_edge_glued.v1)
+
+                    abstract_edge.ea = np.dot(edge.v0.r,edge.v1.c)
+                    abstract_edge.eb = np.dot(edge.v1.r, edge.v0.c)
                     
+                    abstract_edge.triangle.triangle_parameter = edge.triangle.t
+
+
                     #edge_connected = edge.edge_connected
 
+            # for triangle in self.canonical_abstract_surface.triangles:
+            #     print(triangle.triangle_parameter)
+            #     for edge in triangle.edges:
+            #         print(edge.ea)
+            #         print(edge.eb)
 
 
+            dir_name = filedialog.asksaveasfilename(filetypes=[("Excel files", ".csv")])
+            if not dir_name:
+                return
+
+            if '.csv' in dir_name:
+                dir_name = dir_name[:-4]
 
 
-            #print(reduced_main_surface)
-            #print(edge_flip_sequence)
-            #print(all_ones_main_surface)
+            gluing_table_data = []
+            
+            for triangle in self.canonical_abstract_surface.triangles:
+                row = [triangle.index]
+                for edge in triangle.edges:
+                    flipped = (edge.edge_glued[1]!=edge.edge_glued[2].v0)
+                    if not flipped:
+                        row.append(f"{edge.edge_glued[2].triangle.index} ({edge.edge_glued[2].index})")
+                    else:
+                        row.append(f"{edge.edge_glued[2].triangle.index} ({edge.edge_glued[2].index[::-1]})")
+                gluing_table_data.append(row)
+            
+
+            gluing_table_data = np.array(gluing_table_data)
+            gluing_table_data_last_col = gluing_table_data[:,-1].copy()
+            gluing_table_data[:,-1] = gluing_table_data[:,-2]
+            gluing_table_data[:,-2] = gluing_table_data_last_col
+
+            print(gluing_table_data)
+
+            parameter_table_data = []
+
+            for triangle in self.canonical_abstract_surface.triangles:
+                row = [triangle.triangle_parameter]
+                for edge in triangle.edges:
+                    if edge.index != '02':
+                        row.append(edge.ea)
+                    else:
+                        row.append(edge.eb)
+                parameter_table_data.append(row)
+            
+            parameter_table_data = np.array(parameter_table_data)
+            parameter_table_data_last_col = parameter_table_data[:,-1].copy()
+            parameter_table_data[:,-1] = parameter_table_data[:,-2]
+            parameter_table_data[:,-2] = parameter_table_data_last_col
+
+            print(parameter_table_data)
+
+            column_names = np.array(['Triangle', 'Edge 01', 'Edge 02', 'Edge 12', 'Triangle Parameter', 'Edge 01', 'Edge 02', 'Edge 12'])
+            data = np.hstack([gluing_table_data,parameter_table_data])
+            table = pd.DataFrame(data)
+            table.columns = column_names
+            table.to_csv(f"{dir_name}.csv", index=False)
 
 
 
