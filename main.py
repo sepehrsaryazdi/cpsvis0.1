@@ -1958,9 +1958,9 @@ def export_file():
 
     column_names = np.array(['Triangle', 'Edge 01', 'Edge 02', 'Edge 12', 'Triangle Parameter', 'Edge 01', 'Edge 02', 'Edge 12'])
     data = np.hstack([gluing_table_data,parameter_table_data])
-    table = np.vstack([column_names, data])
-    
-    pd.DataFrame(table).to_csv(f"{dir_name}.csv")
+    table = pd.DataFrame(data)
+    table.columns = column_names
+    table.to_csv(f"{dir_name}.csv", index=False)
 
     
 
