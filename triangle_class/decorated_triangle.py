@@ -92,8 +92,10 @@ class Surface:
     def connect_edges(self, e1,e2):
         e1.edge_connected = e2
         e2.edge_connected = e1
-        e1.connected = True
-        e2.connected = True
+        if e1.edge_connected:
+            e1.connected = True
+        if e2.edge_connected:
+            e2.connected = True
 
     def flip_edge(self, edge):
 
@@ -105,10 +107,20 @@ class Surface:
         e_prime = Edge(edge_forward.v1, edge_connected_backward.v0, True)
         e_prime_forward = edge_connected_backward
         e_prime_backward = edge_forward
+        # if edge_connected_backward.edge_connected:
+        #     self.connect_edges(e_prime_forward, edge_connected_backward.edge_connected)
+        # if edge_forward.edge_connected:
+        #     self.connect_edges(e_prime_backward, edge_forward.edge_connected)
         e_prime_connected = Edge(e_prime.v1, e_prime.v0, e_prime.connected)
         self.connect_edges(e_prime,e_prime_connected)
+        
         e_prime_connected_forward = edge_backward
         e_prime_connected_backward = edge_connected_forward
+        # if edge_backward.edge_connected:
+        #     self.connect_edges(e_prime_connected_forward, edge_backward.edge_connected)
+        # if edge_connected_forward.edge_connected:
+        #     self.connect_edges(e_prime_connected_backward, edge_connected_forward.edge_connected)
+        
         triangle_1 = edge.triangle
         triangle_2 = edge_connected.triangle
 

@@ -527,6 +527,10 @@ class App(tk.Frame):
                 self.generate_new_triangle(self.reduced_main_surface.triangles[0].edges[edge_index], edge, 0, e03, e30, e23,
                                            e32, A023, max_distance)
 
+            # for triangle in self.reduced_main_surface.triangles:
+            #     for edge in triangle.edges:
+            #         print(edge.abstract_index, triangle.index, (edge.edge_connected.abstract_index, edge.edge_connected.triangle.index) if edge.edge_connected else None)
+
             for triangle in self.reduced_main_surface.triangles.copy():
                 for edge_index in range(3):
                     edge = triangle.edges[edge_index]
@@ -577,6 +581,16 @@ class App(tk.Frame):
                                 new_triangle.edges[(current_edge.edge_connected.index+1)%3].abstract_index = edge_forward.index
                                 new_triangle.edges[(current_edge.edge_connected.index-1)%3].abstract_index = edge_backward.index
 
+
+            
+            
+            # for triangle in self.reduced_main_surface.triangles:
+            #     for edge in triangle.edges:
+            #         if edge.abstract_index == '02' and triangle.index == 0 and edge.edge_connected:
+            #             print(edge.abstract_index, triangle.index, (edge.edge_connected.abstract_index,edge.edge_connected.triangle.index )if edge.edge_connected else None)
+            #             print(edge.v0.c,edge.v1.c,edge.triangle.edges[(edge.index+1)%3].v1.c)
+            
+            
             #
             # for triangle in self.reduced_main_surface.triangles:
             #     for edge in triangle.edges:
@@ -635,7 +649,7 @@ class App(tk.Frame):
             #     for edge in triangle.edges:
             #         print('Connected',edge.edge_connected)
             
-            
+            print([triangle.index for triangle in self.reduced_main_surface.triangles])
             
             edge_flip_sequence = []
 
@@ -654,7 +668,7 @@ class App(tk.Frame):
                                 outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
                                 if outitude_sign < 0:
                                     e_prime = self.reduced_main_surface.flip_edge(edge)
-                                    print('flipped_edge',edge.abstract_index, 'flipped edge triangle',edge.triangle.index)
+                                    
                                     e_prime_forward = e_prime.triangle.edges[(e_prime.index+1)%3]
                                     e_prime_backward = e_prime.triangle.edges[(e_prime.index-1)%3]
                                     
@@ -695,6 +709,11 @@ class App(tk.Frame):
                                     prime_sorted = np.sort(prime_sorted)
                                     e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                                     edge_flip_sequence.append((edge,e_prime))
+                                    
+                                    print('flipped edge', edge.abstract_index, 'flipped edge triangle', edge.triangle.index, edge.triangle == self.reduced_main_surface.triangles[0])
+                                    print('flipped edge connected', edge.edge_connected.abstract_index, 'flipped edge connected', edge.edge_connected.triangle.index)
+                                    print('flipped_e_prime',e_prime.abstract_index, 'flipped e_prime triangle',e_prime.triangle.index)
+                                    print('flipped_e_prime connected', e_prime.edge_connected.abstract_index, 'flipped e_prime triangle', e_prime.edge_connected.triangle.index)
                                     found_edge = True
                                     break
                 if not found_edge:
@@ -741,7 +760,6 @@ class App(tk.Frame):
             # self.plot_fresh(self.t)
 
             
-
             
 
             while edge_flip_sequence:
@@ -824,7 +842,18 @@ class App(tk.Frame):
                 prime_sorted = np.sort(prime_sorted)
                 e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                 [e_prime.triangle.index,e_prime_connected.triangle.index] = [e_prime_connected.triangle.index, e_prime.triangle.index]
-
+                prime_triangle_list_index = 0
+                prime_connected_triangle_list_index = 0
+                for index in range(len(self.reduced_main_surface.triangles)):
+                    if self.reduced_main_surface.triangles[index] == e_prime.triangle:
+                        prime_triangle_list_index = index
+                    if self.reduced_main_surface.triangles[index] == e_prime_connected.triangle:
+                        prime_connected_triangle_list_index = index
+                
+                self.reduced_main_surface.triangles[prime_triangle_list_index] = e_prime_connected.triangle
+                self.reduced_main_surface.triangles[prime_connected_triangle_list_index] = e_prime.triangle
+                
+                
                 edge = next_flip_edge.edge_connected
                 edge_forward = edge.triangle.edges[(edge.index+1)%3]
                 edge_backward = edge.triangle.edges[(edge.index-1)%3]
@@ -841,6 +870,37 @@ class App(tk.Frame):
                 D = (A*d_minus+B*a_minus)/e_plus
                 e_prime.triangle.t = C
                 e_prime_connected.triangle.t = D
+                print('-----------')
+                print('triangle index on right:', edge.triangle.index,'edge index on right triangle:', edge.abstract_index)
+                print('edges on right triangle:',edge.v0.c, edge.v1.c, edge_forward.v1.c)
+                print('edge covectors on right triangle:', edge.v0.r, edge.v1.r, edge_forward.v1.r)
+                print('triangle index on left:', edge_connected.triangle.index, 'edge index on left:', edge_connected.abstract_index)
+                print('edges on left triangle:', edge_connected.v0.c, edge_connected.v1.c, edge_connected.triangle.edges[(edge_connected.index+1)%3].v1.c)
+                print('edge covectors on left triangle:', edge_connected.v0.r, edge_connected.v1.r, edge_connected.triangle.edges[(edge_connected.index+1)%3].v1.r)
+                print('e_minus:', e_minus)
+                print('e_plus:', e_plus)
+                print('c_plus:', c_plus)
+                print('b_plus:', b_plus)
+                print('d_minus:', d_minus)
+                print('a_minus:', a_minus)
+                print('A:',A)
+                print('B:',B)
+                print('C:',C)
+                print('D:',D)
+                print('f_plus:', np.dot(e_prime.v0.r,e_prime.v1.c))
+                print('f_minus:', np.dot(e_prime.v1.r,e_prime.v0.c))
+                print('edges on right prime triangle:', e_prime.v0.c, e_prime.v1.c, e_prime_forward.v1.c)
+                print('edge covectors on right prime triangle:', e_prime.v0.r, e_prime.v1.r, e_prime_forward.v1.r)
+                print('edges on left prime triangle:', e_prime_connected.v0.c, e_prime_connected.v1.c, e_prime_connected_forward.v1.c)
+                print('edge covectors on left prime triangle:', e_prime_connected.v0.r, e_prime_connected.v1.r, e_prime_connected_forward.v1.r)
+
+                
+
+                
+                
+
+
+
 
             # for triangle in self.reduced_main_surface.triangles:
             #     for edge in triangle.edges:
@@ -849,11 +909,17 @@ class App(tk.Frame):
 
             #self.main_surface = self.reduced_main_surface
             #self.plot_fresh(self.t)
-            
+            print([triangle.index for triangle in self.reduced_main_surface.triangles])
             self.main_surface = self.reduced_main_surface
             self.plot_fresh(self.t)
+
+            print('----- starting edge params -----')
+
+            for triangle in self.reduced_main_surface.triangles[:len(self.abstract_surface.triangles)]:
+                for edge in triangle.edges:
+                    print(edge.abstract_index, triangle.index, np.dot(edge.v0.r,edge.v1.c),np.dot(edge.v1.r,edge.v0.c))
             
-            
+            print('---- end edge params ----')
             
 
             self.canonical_abstract_surface = AbstractSurface()
