@@ -413,28 +413,6 @@ class App(tk.Frame):
 
         return
 
-    # def generate_all_ones_triangle(self, current_triangle):
-    #     for edge in current_triangle.edges:
-    #         if not edge.connected:
-    #             if len(self.all_ones_main_surface.triangles) == len(self.abstract_surface.triangles):
-    #                 return
-    #             v0,v1,flipped = app.correct_edge_orientation(edge)
-    #             r3,c3 = compute_all_until_r3c3(v0.r,v1.r,v0.c,v1.c,1,1,1,1,1)
-    #             new_triangle = self.all_ones_main_surface.add_triangle(edge,v0,v1,Vertex(c3,r3, c3,r3))
-    #
-    #             for main_surface_triangle in self.main_surface.triangles:
-    #                 if main_surface_triangle.index == current_triangle.index:
-    #                     for edge_index in range(3):
-    #                         main_surface_edge = main_surface_triangle.edges[edge_index]
-    #
-    #                         if main_surface_edge.abstract_index == edge.abstract_index:
-    #                             edge.edge_connected.abstract_index = main_surface_edge.edge_connected.abstract_index
-    #                             new_triangle.edges[(edge.edge_connected.index+1)%3].abstract_index = main_surface_edge.edge_connected.triangle.edges[(main_surface_edge.edge_connected.index+1)%3].abstract_index
-    #                             new_triangle.edges[(edge.edge_connected.index - 1) % 3].abstract_index = main_surface_edge.edge_connected.triangle.edges[(main_surface_edge.edge_connected.index - 1) % 3].abstract_index
-    #
-    #                             new_triangle.index = main_surface_edge.edge_connected.triangle.index
-    #             self.generate_all_ones_triangle(new_triangle)
-
     def generate_all_ones_triangle(self, current_edge,current_triangle):
         for edge in current_triangle.edges:
             if edge == current_edge:
@@ -526,11 +504,6 @@ class App(tk.Frame):
                 self.reduced_main_surface.triangles[0].edges[edge_index].abstract_index = edge.index
                 self.generate_new_triangle(self.reduced_main_surface.triangles[0].edges[edge_index], edge, 0, e03, e30, e23,
                                            e32, A023, max_distance)
-
-            # for triangle in self.reduced_main_surface.triangles:
-            #     for edge in triangle.edges:
-            #         print(edge.abstract_index, triangle.index, (edge.edge_connected.abstract_index, edge.edge_connected.triangle.index) if edge.edge_connected else None)
-
             for triangle in self.reduced_main_surface.triangles.copy():
                 for edge_index in range(3):
                     edge = triangle.edges[edge_index]
@@ -581,75 +554,6 @@ class App(tk.Frame):
                                 new_triangle.edges[(current_edge.edge_connected.index+1)%3].abstract_index = edge_forward.index
                                 new_triangle.edges[(current_edge.edge_connected.index-1)%3].abstract_index = edge_backward.index
 
-
-            
-            
-            # for triangle in self.reduced_main_surface.triangles:
-            #     for edge in triangle.edges:
-            #         if edge.abstract_index == '02' and triangle.index == 0 and edge.edge_connected:
-            #             print(edge.abstract_index, triangle.index, (edge.edge_connected.abstract_index,edge.edge_connected.triangle.index )if edge.edge_connected else None)
-            #             print(edge.v0.c,edge.v1.c,edge.triangle.edges[(edge.index+1)%3].v1.c)
-            
-            
-            #
-            # for triangle in self.reduced_main_surface.triangles:
-            #     for edge in triangle.edges:
-            #         try:
-            #             print(edge.abstract_index)
-            #         except:
-            #             print('Failed: ', edge.triangle.index)
-            #
-            #
-
-
-
-
-
-
-
-
-
-            #print(self.main_surface.triangles)
-
-
-
-
-
-
-            # all_ones_abstract_surface = AbstractSurface()
-            # for triangle in self.abstract_surface.triangles:
-            #     all_ones_abstract_surface.add_triangle()
-            #
-            # for triangle_index in range(len(self.abstract_surface.triangles)):
-            #     triangle = self.abstract_surface.triangles[triangle_index]
-            #     for edge_index in range(3):
-            #         edge = triangle.edges[edge_index]
-            #         if edge.edge_glued:
-            #             glued_edge = edge.edge_glued[2]
-            #             for edge_glued_index in range(3):
-            #                 if glued_edge.triangle.edges[edge_glued_index] == glued_edge:
-            #
-            #                     all_ones_triangle = all_ones_abstract_surface.triangles[triangle_index]
-            #                     all_ones_edge = all_ones_triangle.edges[edge_index]
-            #                     all_ones_glued_edge_triangle = all_ones_abstract_surface.triangles[glued_edge.triangle.index]
-            #                     all_ones_glued_edge = all_ones_glued_edge_triangle.edges[edge_glued_index]
-            #                     flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-            #                     if not flipped:
-            #                         all_ones_abstract_surface.glue_edges(all_ones_edge, all_ones_glued_edge, all_ones_edge.v0, all_ones_glued_edge.v0)
-            #                     else:
-            #                         all_ones_abstract_surface.glue_edges(all_ones_edge, all_ones_glued_edge, all_ones_edge.v0, all_ones_glued_edge.v1)
-            #
-            # for triangle in all_ones_abstract_surface.triangles:
-            #     triangle.triangle_parameter = 1
-            #     for edge in triangle.edges:
-            #         edge.ea = 1
-            #         edge.eb = 1
-
-            # for triangle in self.reduced_main_surface.triangles[:2]:
-            #     for edge in triangle.edges:
-            #         print('Connected',edge.edge_connected)
-            
-            print([triangle.index for triangle in self.reduced_main_surface.triangles])
             
             edge_flip_sequence = []
 
@@ -710,33 +614,11 @@ class App(tk.Frame):
                                     e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                                     edge_flip_sequence.append((edge,e_prime))
                                     
-                                    print('flipped edge', edge.abstract_index, 'flipped edge triangle', edge.triangle.index, edge.triangle == self.reduced_main_surface.triangles[0])
-                                    print('flipped edge connected', edge.edge_connected.abstract_index, 'flipped edge connected', edge.edge_connected.triangle.index)
-                                    print('flipped_e_prime',e_prime.abstract_index, 'flipped e_prime triangle',e_prime.triangle.index)
-                                    print('flipped_e_prime connected', e_prime.edge_connected.abstract_index, 'flipped e_prime triangle', e_prime.edge_connected.triangle.index)
                                     found_edge = True
                                     break
                 if not found_edge:
                     found_no_edges = True
             
-            # for triangle in self.reduced_main_surface.triangles:
-            #     for edge in triangle.edges:
-            #         print(edge.abstract_index,edge.edge_connected)
-
-            # for triangle in self.reduced_main_surface.triangles:
-            #         for edge in triangle.edges:
-            #             if edge.edge_connected:
-            #                 c0 = edge.v0.c
-            #                 edge_connected = edge.edge_connected
-            #                 c1 = edge_connected.triangle.edges[(edge_connected.index + 1) % 3].v1.c
-            #                 c2 = edge.v1.c
-            #                 c3 = edge.triangle.edges[(edge.index + 1) % 3].v1.c
-            #                 outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
-            #                 print(outitude_sign)
-            
-            
-
-            print('first_triangle',self.reduced_main_surface.triangles[0].index)
             self.reduced_main_surface.triangles[0].vertices[0].c = [1,0,0]
             self.reduced_main_surface.triangles[0].vertices[1].c = [0, 1, 0]
             self.reduced_main_surface.triangles[0].vertices[2].c = [0, 0, 1]
@@ -754,11 +636,6 @@ class App(tk.Frame):
 
             self.generate_all_ones_triangle(None,self.reduced_main_surface.triangles[0])
 
-            
-           
-
-            
-            
 
             while edge_flip_sequence:
                 _, next_flip_edge = edge_flip_sequence.pop()
@@ -830,11 +707,6 @@ class App(tk.Frame):
                 e_prime.triangle.t = C
                 e_prime_connected.triangle.t = D
                             
-            
-
-           
-            
-
             self.canonical_abstract_surface = AbstractSurface()
             for triangle in self.reduced_main_surface.triangles[:len(self.abstract_surface.triangles)]:
                 self.canonical_abstract_surface.add_triangle()
@@ -958,7 +830,7 @@ class App(tk.Frame):
                                     break
                 if not found_edge:
                     found_no_edges = True
-            print('did canonical cell decomp')
+            
             self.plot_fresh(self.t)
             self.generate_surface_error_text.set("")
         except:
