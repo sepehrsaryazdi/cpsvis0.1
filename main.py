@@ -807,38 +807,38 @@ class App(tk.Frame):
                 e_prime_forward = e_prime.triangle.edges[(e_prime.index+1)%3]
                 e_prime_backward = e_prime.triangle.edges[(e_prime.index-1)%3]   
                 if e_prime_forward.abstract_index != '02':
-                    backward_sorted = np.sort([(int(e_prime_forward.abstract_index[0])-1)%3,int(e_prime_forward.abstract_index[0])])
+                    backward_sorted = np.sort([(int(e_prime_forward.abstract_index[0])-1)%3,int(e_prime_forward.abstract_index[1])])
                 else:
-                    backward_sorted = np.sort([(int(e_prime_forward.abstract_index[1])-1)%3,int(e_prime_forward.abstract_index[1])])
+                    backward_sorted = np.sort([(int(e_prime_forward.abstract_index[1])-1)%3,int(e_prime_forward.abstract_index[0])])
                 e_prime_backward.abstract_index = f'{backward_sorted[0]}{backward_sorted[1]}'
                 prime_sorted = []
                 if e_prime_forward.abstract_index != '02':
-                    prime_sorted.append(e_prime_forward.abstract_index[1])
-                else:
                     prime_sorted.append(e_prime_forward.abstract_index[0])
-                if e_prime_backward.abstract_index != '02':
-                    prime_sorted.append(e_prime_backward.abstract_index[0])
                 else:
+                    prime_sorted.append(e_prime_forward.abstract_index[1])
+                if e_prime_backward.abstract_index != '02':
                     prime_sorted.append(e_prime_backward.abstract_index[1])
+                else:
+                    prime_sorted.append(e_prime_backward.abstract_index[0])
                 prime_sorted = np.sort(prime_sorted)
                 e_prime.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                 e_prime_connected = e_prime.edge_connected
                 e_prime_connected_forward = e_prime_connected.triangle.edges[(e_prime_connected.index+1)%3]
                 e_prime_connected_backward = e_prime_connected.triangle.edges[(e_prime_connected.index-1)%3]
                 if e_prime_connected_forward.abstract_index != '02':
-                    backward_sorted = np.sort([(int(e_prime_connected_forward.abstract_index[0])-1)%3,int(e_prime_connected_forward.abstract_index[0])])
+                    backward_sorted = np.sort([(int(e_prime_connected_forward.abstract_index[0])-1)%3,int(e_prime_connected_forward.abstract_index[1])])
                 else:
-                    backward_sorted = np.sort([(int(e_prime_connected_forward.abstract_index[1])-1)%3,int(e_prime_connected_forward.abstract_index[1])])
+                    backward_sorted = np.sort([(int(e_prime_connected_forward.abstract_index[1])-1)%3,int(e_prime_connected_forward.abstract_index[0])])
                 e_prime_connected_backward.abstract_index = f'{backward_sorted[0]}{backward_sorted[1]}'
                 prime_sorted = []
                 if e_prime_connected_forward.abstract_index != '02':
-                    prime_sorted.append(e_prime_connected_forward.abstract_index[1])
-                else:
                     prime_sorted.append(e_prime_connected_forward.abstract_index[0])
-                if e_prime_connected_backward.abstract_index != '02':
-                    prime_sorted.append(e_prime_connected_backward.abstract_index[0])
                 else:
+                    prime_sorted.append(e_prime_connected_forward.abstract_index[1])
+                if e_prime_connected_backward.abstract_index != '02':
                     prime_sorted.append(e_prime_connected_backward.abstract_index[1])
+                else:
+                    prime_sorted.append(e_prime_connected_backward.abstract_index[0])
                 prime_sorted = np.sort(prime_sorted)
                 e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                 [e_prime.triangle.index,e_prime_connected.triangle.index] = [e_prime_connected.triangle.index, e_prime.triangle.index]
@@ -870,30 +870,37 @@ class App(tk.Frame):
                 D = (A*d_minus+B*a_minus)/e_plus
                 e_prime.triangle.t = C
                 e_prime_connected.triangle.t = D
-                print('-----------')
-                print('triangle index on right:', edge.triangle.index,'edge index on right triangle:', edge.abstract_index)
-                print('edges on right triangle:',edge.v0.c, edge.v1.c, edge_forward.v1.c)
-                print('edge covectors on right triangle:', edge.v0.r, edge.v1.r, edge_forward.v1.r)
-                print('triangle index on left:', edge_connected.triangle.index, 'edge index on left:', edge_connected.abstract_index)
-                print('edges on left triangle:', edge_connected.v0.c, edge_connected.v1.c, edge_connected.triangle.edges[(edge_connected.index+1)%3].v1.c)
-                print('edge covectors on left triangle:', edge_connected.v0.r, edge_connected.v1.r, edge_connected.triangle.edges[(edge_connected.index+1)%3].v1.r)
-                print('e_minus:', e_minus)
-                print('e_plus:', e_plus)
-                print('c_plus:', c_plus)
-                print('b_plus:', b_plus)
-                print('d_minus:', d_minus)
-                print('a_minus:', a_minus)
-                print('A:',A)
-                print('B:',B)
-                print('C:',C)
-                print('D:',D)
-                print('f_plus:', np.dot(e_prime.v0.r,e_prime.v1.c))
-                print('f_minus:', np.dot(e_prime.v1.r,e_prime.v0.c))
-                print('edges on right prime triangle:', e_prime.v0.c, e_prime.v1.c, e_prime_forward.v1.c)
-                print('edge covectors on right prime triangle:', e_prime.v0.r, e_prime.v1.r, e_prime_forward.v1.r)
-                print('edges on left prime triangle:', e_prime_connected.v0.c, e_prime_connected.v1.c, e_prime_connected_forward.v1.c)
-                print('edge covectors on left prime triangle:', e_prime_connected.v0.r, e_prime_connected.v1.r, e_prime_connected_forward.v1.r)
-
+                # print('-----------')
+                # print('triangle index on right:', edge.triangle.index,'edge index on right triangle:', edge.abstract_index)
+                # print('edges on right triangle:',edge.v0.c, edge.v1.c, edge_forward.v1.c)
+                # print('edge covectors on right triangle:', edge.v0.r, edge.v1.r, edge_forward.v1.r)
+                # print('triangle index on left:', edge_connected.triangle.index, 'edge index on left:', edge_connected.abstract_index)
+                # print('edges on left triangle:', edge_connected.v0.c, edge_connected.v1.c, edge_connected.triangle.edges[(edge_connected.index+1)%3].v1.c)
+                # print('edge covectors on left triangle:', edge_connected.v0.r, edge_connected.v1.r, edge_connected.triangle.edges[(edge_connected.index+1)%3].v1.r)
+                # print('e_minus:', e_minus)
+                # print('e_plus:', e_plus)
+                # print('c_plus:', c_plus)
+                # print('b_plus:', b_plus)
+                # print('d_minus:', d_minus)
+                # print('a_minus:', a_minus)
+                # print('A:',A)
+                # print('B:',B)
+                # print('C:',C)
+                # print('D:',D)
+                # print('f_plus:', np.dot(e_prime.v0.r,e_prime.v1.c))
+                # print('f_minus:', np.dot(e_prime.v1.r,e_prime.v0.c))
+                # print('edge index', edge.abstract_index, 'edge triangle index', edge.triangle.index)
+                # print('e_prime index', e_prime.abstract_index, 'e_prime triangle index', e_prime.triangle.index)
+                # print('edges on right prime triangle:', e_prime.v0.c, e_prime.v1.c, e_prime_forward.v1.c)
+                # print('edge covectors on right prime triangle:', e_prime.v0.r, e_prime.v1.r, e_prime_forward.v1.r)
+                # print('edges on left prime triangle:', e_prime_connected.v0.c, e_prime_connected.v1.c, e_prime_connected_forward.v1.c)
+                # print('edge covectors on left prime triangle:', e_prime_connected.v0.r, e_prime_connected.v1.r, e_prime_connected_forward.v1.r)
+                print('flipped edge', edge.abstract_index, 'flipped edge triangle', edge.triangle.index, edge.triangle == self.reduced_main_surface.triangles[0])
+                print('flipped edge connected', edge.edge_connected.abstract_index, 'flipped edge connected', edge.edge_connected.triangle.index)
+                print('flipped_e_prime',e_prime.abstract_index, 'flipped e_prime triangle',e_prime.triangle.index)
+                print('flipped_e_prime connected', e_prime.edge_connected.abstract_index, 'flipped e_prime triangle', e_prime.edge_connected.triangle.index)
+                print('e_prime_forward index', e_prime_forward.abstract_index)    
+                print('e_prime_backward index', e_prime_backward.abstract_index)                
                 
 
                 
