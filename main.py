@@ -1104,6 +1104,8 @@ class CombinatorialImport:
             self.continue_button = ttk.Button(self.win, text="Continue",
                                          command=lambda: (self.generate_developing_map(), self.win.destroy()))
             self.continue_button.pack(side='right', padx=10, pady=5)
+            self.randomise_button = ttk.Button(self.win, text="Randomise Parameters", command=self.randomise_parameters)
+            self.randomise_button.pack(side="left", padx=10, pady=5)
 
             self.error_text = tk.StringVar()
             self.error_text.set("")
@@ -1121,7 +1123,20 @@ class CombinatorialImport:
             app.plot_fresh(self.main_surface.triangles[0].t)
 
 
+    def randomise_parameters(self):
+        for triangle in self.abstract_plotting_surface.triangles:
+            for edge in triangle.edges:
+                edge.ea.set(round(abs(np.random.random()*10),1))
+                edge.eb.set(round(abs(np.random.random()*10),1))
+                triangle.triangle_parameter.set(round(abs(np.random.random()*10),1))
 
+                while not app.string_fraction_to_float(edge.ea.get()) > 0:
+                    edge.ea.set(round(abs(np.random.random()*10),1))
+                while not app.string_fraction_to_float(edge.eb.get()) > 0:
+                    edge.eb.set(round(abs(np.random.random()*10),1))
+                while not app.string_fraction_to_float(triangle.triangle_parameter.get()) > 0:
+                    triangle.triangle_parameter.set(round(abs(np.random.random()*10),1))
+        
 
 
     def convert_gluing_table_to_surface(self,filename):
