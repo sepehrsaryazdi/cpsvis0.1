@@ -1207,7 +1207,7 @@ class CombinatorialImport:
     def generate_developing_map(self):
 
         try:
-            assert int(self.depth_string.get()) >= 0
+            assert int(self.depth_string.get()) >=0
             self.error_text.set("")
         except:
             self.error_text.set("Please enter a valid non-negative integer value for depth.")
@@ -1338,7 +1338,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = int(self.depth_string.get())
+        max_distance = int(self.depth_string.get())-1
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
