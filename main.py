@@ -224,6 +224,8 @@ class App(tk.Frame):
         self.randomise_button = ttk.Button(self.surface_buttons_frame,text='Randomise Numbers')
         self.randomise_button.pack(side='left',anchor='nw', padx=25, pady=25)
 
+        
+
         self.add_initial_triangle_button = ttk.Button(self.surface_buttons_frame,text='Add Initial Triangle')
         self.add_initial_triangle_button.pack(side='left',anchor='nw', padx=20, pady=25)
         self.surface_buttons_frame.pack(side='top', anchor='nw')
@@ -618,6 +620,9 @@ class App(tk.Frame):
                                     break
                 if not found_edge:
                     found_no_edges = True
+                
+            print(edge_flip_sequence)
+            print(len(edge_flip_sequence))
             
             self.reduced_main_surface.triangles[0].vertices[0].c = [1,0,0]
             self.reduced_main_surface.triangles[0].vertices[1].c = [0, 1, 0]
@@ -1102,10 +1107,21 @@ class CombinatorialImport:
             self.cancel = ttk.Button(self.win, text="Cancel", command=self.win.destroy)
             self.cancel.pack(side='right', padx=25, pady=5)
             self.continue_button = ttk.Button(self.win, text="Continue",
-                                         command=lambda: (self.generate_developing_map(), self.win.destroy()))
+                                         command=lambda: (self.generate_developing_map()))
             self.continue_button.pack(side='right', padx=10, pady=5)
             self.randomise_button = ttk.Button(self.win, text="Randomise Parameters", command=self.randomise_parameters)
             self.randomise_button.pack(side="left", padx=10, pady=5)
+
+            self.depth_text=  tk.Label(self.win, text="Max Depth: ")
+            self.depth_text.pack(side="left",padx=10,pady=5)
+            self.depth_string = tk.StringVar()
+            self.depth_string.set("5")
+            
+
+            self.depth_input = ttk.Entry(self.win, textvariable=self.depth_string, width=5)
+            self.depth_input.pack(side="left", anchor="nw",padx=5,pady=25)
+            
+
 
             self.error_text = tk.StringVar()
             self.error_text.set("")
@@ -1126,16 +1142,16 @@ class CombinatorialImport:
     def randomise_parameters(self):
         for triangle in self.abstract_plotting_surface.triangles:
             for edge in triangle.edges:
-                edge.ea.set(round(abs(np.random.random()*10),1))
-                edge.eb.set(round(abs(np.random.random()*10),1))
-                triangle.triangle_parameter.set(round(abs(np.random.random()*10),1))
+                edge.ea.set(round(abs(np.random.random()*100),1))
+                edge.eb.set(round(abs(np.random.random()*100),1))
+                triangle.triangle_parameter.set(round(abs(np.random.random()*100),1))
 
                 while not app.string_fraction_to_float(edge.ea.get()) > 0:
-                    edge.ea.set(round(abs(np.random.random()*10),1))
+                    edge.ea.set(round(abs(np.random.random()*100),1))
                 while not app.string_fraction_to_float(edge.eb.get()) > 0:
-                    edge.eb.set(round(abs(np.random.random()*10),1))
+                    edge.eb.set(round(abs(np.random.random()*100),1))
                 while not app.string_fraction_to_float(triangle.triangle_parameter.get()) > 0:
-                    triangle.triangle_parameter.set(round(abs(np.random.random()*10),1))
+                    triangle.triangle_parameter.set(round(abs(np.random.random()*100),1))
         
 
 
@@ -1190,6 +1206,13 @@ class CombinatorialImport:
 
     def generate_developing_map(self):
 
+        try:
+            assert int(self.depth_string.get()) >= 0
+            self.error_text.set("")
+        except:
+            self.error_text.set("Please enter a valid non-negative integer value for depth.")
+            return
+
         coord0 = self.abstract_plotting_surface.triangles[0].vertices[0].coord
         coord1 = self.abstract_plotting_surface.triangles[0].vertices[1].coord
         coord2 = self.abstract_plotting_surface.triangles[0].vertices[2].coord
@@ -1221,6 +1244,7 @@ class CombinatorialImport:
         app.main_surface = self.main_surface
         app.abstract_surface = self.abstract_surface
         app.plot_fresh(self.main_surface.triangles[0].t)
+        self.win.destroy()
 
     def triangle_order_generator(self,edge_list, prev_state, n, top_bottom_list):
         if len(edge_list) == n:
@@ -1314,7 +1338,7 @@ class CombinatorialImport:
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
-        max_distance = 4
+        max_distance = int(self.depth_string.get())
 
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
