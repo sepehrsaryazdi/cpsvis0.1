@@ -573,6 +573,20 @@ class App(tk.Frame):
                                 c3 = edge.triangle.edges[(edge.index + 1) % 3].v1.c
                                 outitude_sign = compute_outitude_sign(c0, c1, c2, c3)
                                 if outitude_sign < 0:
+                                    r0 = edge.v0.r
+                                    r1 = edge_connected.triangle.edges[(edge_connected.index + 1) % 3].v1.r
+                                    r2 = edge.v1.r
+                                    r3 = edge.triangle.edges[(edge.index + 1) % 3].v1.r
+                                    e01 = np.dot(r0,c1)
+                                    e10 = np.dot(r1, c0)
+                                    e12 = np.dot(r1, c2)
+                                    e21 = np.dot(r2,c1)
+                                    e02 = np.dot(r0,c2)
+                                    e20 = np.dot(r2,c0)
+                                    print('edge outitude: ',outitude_edge_params(7,8,e10,e01, e21, e12, e02, e20))
+                                    print(e01,e10,e12,e21,e20,e02)
+
+
                                     e_prime = self.reduced_main_surface.flip_edge(edge)
                                     
                                     e_prime_forward = e_prime.triangle.edges[(e_prime.index+1)%3]
@@ -621,7 +635,7 @@ class App(tk.Frame):
                 if not found_edge:
                     found_no_edges = True
                 
-            print(edge_flip_sequence)
+            print([(x.abstract_index,x.triangle.index, y.abstract_index, y.triangle.index) for x,y in edge_flip_sequence])
             print(len(edge_flip_sequence))
             
             self.reduced_main_surface.triangles[0].vertices[0].c = [1,0,0]
@@ -2010,7 +2024,7 @@ def slr3r():
 
 
 root = tk.Tk()
-root.title('Convex Projective Surface Visualisation Tool')
+root.title('Convex Projective Structure Visualisation Tool')
 #root.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
 root.geometry("1100x520")
 menubar = tk.Menu(root)

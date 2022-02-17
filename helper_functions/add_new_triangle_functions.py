@@ -1,6 +1,7 @@
 import numpy as np
 
-
+def outitude_edge_params(A,B,a_minus,a_plus, b_minus, b_plus, e_minus, e_plus):
+    return A*(e_plus*a_plus+e_minus*b_minus-e_minus*e_plus) + B*(e_plus*b_plus+e_minus*a_minus - e_minus*e_plus)
 
 def compute_m_inverse(r0, r2, c0, c2, e03, e23):
     C = np.array([r0, r2, np.cross(c0, c2)])
