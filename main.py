@@ -49,7 +49,7 @@ class TranslationLength:
         self.tk = tk
         self.win = self.tk.Toplevel()
         self.win.wm_title("Translation Lengths and Length Spectrum")
-        self.l = tk.Label(self.win, text="Enter a fundamental group product string using the format below for the desired length.")
+        self.l = tk.Label(self.win, text="Enter a fundamental group product string using the format below.")
         self.l.pack(padx=20, pady=10)
         self.abstract_surface = app.abstract_surface
         self.figure = plt.Figure(figsize=(7, 5), dpi=100)
@@ -57,6 +57,37 @@ class TranslationLength:
         self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
         self.generate_combinatorial_map()
         self.chart_type.get_tk_widget().pack()
+        self.instructions = tk.Label(self.win, text="Referencing to an index of available generators shown above, write in the text box below the index and the power desired. Click \"Add String\" to multiply the string by the new generator product.")
+        self.instructions.pack(padx=20, pady=10)
+        self.product_string_frame = ttk.Frame(self.win)
+        self.gamma_equals_label = tk.Label(self.product_string_frame,text="γ = ",font=("Courier", 30))
+        self.product_string = tk.StringVar()
+        self.product_string_label = tk.Label(self.product_string_frame, textvariable=self.product_string, fg="blue",font=("Courier", 30))
+        self.product_string.set("α²")
+        self.gamma_equals_label.pack(side="left")
+        self.product_string_label.pack(side="left", pady=(0,5))
+        self.product_string_frame.pack(side="top")
+        self.enter_string_frame = ttk.Frame(self.win)
+        self.new_product_text = tk.Label(self.enter_string_frame, text="Next String Term: ")
+        self.new_product_text.pack(side="left")
+        self.new_product_string_label = tk.Label(self.enter_string_frame, text="α", fg="blue",font=("Courier", 44))
+        self.new_product_string_label.pack(side="left")
+        self.string_entries_frame = ttk.Frame(self.enter_string_frame)
+        self.enter_string_power_string = tk.StringVar(value="1")
+        self.enter_string_power_entry = ttk.Entry(self.string_entries_frame,textvariable=self.enter_string_power_string, width=3)
+        self.enter_string_index_string = tk.StringVar(value="1")
+        self.enter_string_index_entry = ttk.Entry(self.string_entries_frame,textvariable=self.enter_string_index_string,  width=3)
+        self.enter_string_power_entry.pack(side="top")
+        self.enter_string_index_entry.pack(side="top")
+        self.string_entries_frame.pack(side="left")
+        self.add_string_button = ttk.Button(self.enter_string_frame, text="Add String")
+        self.add_string_button.pack(side="left", padx=25)
+        self.enter_string_frame.pack()
+        
+
+
+    
+
         
     
     def find_last_vertex(self,vertex, glued_edge_belonging_to):
