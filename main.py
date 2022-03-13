@@ -6,6 +6,7 @@ from tkinter import ttk
 from numpy import arctan2
 
 from pyparsing import col
+from sqlalchemy import intersect
 from triangle_class.abstract_triangle import AbstractSurface, AbstractVertex, AbstractEdge
 from triangle_class.decorated_triangle import *
 from visualise.surface_vis import SurfaceVisual
@@ -57,7 +58,7 @@ class TranslationLength:
         self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
         self.generate_combinatorial_map()
         self.chart_type.get_tk_widget().pack()
-        self.instructions = tk.Label(self.win, text="Referencing to an index of available generators shown above, write in the text box below the index and the power desired.\nClick \"Add String\" to multiply the string by the new generator product.")
+        self.instructions = tk.Label(self.win, text="Referencing to an index of available generators shown above, write in the text box below the index and the power desired.\nClick \"Add String\" to multiply the string by the new generator product on the right.")
         self.instructions.pack(padx=20, pady=10)
         self.product_string_frame = ttk.Frame(self.win)
         self.gamma_equals_label = tk.Label(self.product_string_frame,text="γ = ",font=("Courier", 30))
@@ -93,8 +94,90 @@ class TranslationLength:
         self.error_message = tk.Label(self.win,textvariable=self.error_message_string, fg="red")
         self.error_message.pack(side="left",padx=5,pady=25)
         self.compute_translation_length_button.pack(side="right",anchor="ne",padx=25,pady=25)
+        self.compute_translation_matrices()
         self.add_string_button.bind("<ButtonPress>", self.add_string)
         self.clear_string_button.bind("<ButtonPress>", self.clear_string)
+        self.compute_translation_length_button.bind("<ButtonPress>", self.compute_translation_length)
+
+
+    def compute_matrix_path(self, initial_triangle, final_triangle):
+        triangle_list = np.array(self.abstract_plotting_surface.triangles)
+        final_triangle_list_index = np.where(triangle_list == final_triangle)[0][0]
+        current_triangle = initial_triangle
+        current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
+        product = np.identity(3)
+        while current_triangle != final_triangle:
+            if final_triangle_list_index < current_triangle_list_index:
+                product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
+                for edge in current_triangle.edges:
+                    other_edge = edge.edge_glued[2]
+                    if other_edge.triangle == triangle_list[current_triangle_list_index-1] and ((np.all(edge.v0.coord == other_edge.v0.coord) and np.all(edge.v1.coord == other_edge.v1.coord)) or (np.all(edge.v0.coord == other_edge.v1.coord) and np.all(edge.v1.coord == other_edge.v0.coord))):
+                        intersecting_edge = edge
+                
+                if intersecting_edge.index != '02':
+                    product = np.matmul(edge_matrix(intersecting_edge.ea, intersecting_edge.eb), product)
+                else:
+                    product = np.matmul(edge_matrix(intersecting_edge.eb, intersecting_edge.ea), product)
+                
+                current_triangle = triangle_list[current_triangle_list_index-1]
+                current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
+
+            else:
+                product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
+                for edge in current_triangle.edges:
+                    other_edge = edge.edge_glued[2]
+                    if other_edge.triangle == triangle_list[current_triangle_list_index+1] and ((np.all(edge.v0.coord == other_edge.v0.coord) and np.all(edge.v1.coord == other_edge.v1.coord)) or (np.all(edge.v0.coord == other_edge.v1.coord) and np.all(edge.v1.coord == other_edge.v0.coord))):
+                        intersecting_edge = edge
+                
+                if intersecting_edge.index != '02':
+                    product = np.matmul(edge_matrix(intersecting_edge.ea, intersecting_edge.eb), product)
+                else:
+                    product = np.matmul(edge_matrix(intersecting_edge.eb, intersecting_edge.ea), product)
+                
+                current_triangle = triangle_list[current_triangle_list_index+1]
+                current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
+    
+        return product
+    
+    
+    def compute_translation_matrices(self):
+        middle_index = int(np.median(np.linspace(1,len(self.abstract_plotting_surface.triangles))))-1
+        triangle_list = self.abstract_plotting_surface.triangles
+        centre_triangle = triangle_list[middle_index]
+
+        self.representations = []
+        
+        for edge in self.boundary_edges:
+            edge_to_reach = edge.edge_glued[2]
+            first_matrix = self.compute_matrix_path(edge.triangle, centre_triangle)
+            second_matrix = self.compute_matrix_path(centre_triangle,edge_to_reach.triangle)
+            if edge.index != '02':
+                final_edge_matrix = edge_matrix(edge.eb, edge.ea)
+            else:
+                final_edge_matrix = edge_matrix(edge.ea, edge.eb)
+            product = np.matmul(final_edge_matrix,np.matmul(second_matrix,first_matrix))
+            self.representations.append(product)
+     
+
+    def compute_translation_length(self, event):
+        
+        product = np.identity(3)
+        for product_data in self.product_string_data[::-1]:
+            [index, power] = product_data
+            if power != 0:
+                representation = self.representations[index-1]
+                product = np.matmul(np.linalg.matrix_power(representation, power),product)
+        
+        eigenvalues = np.linalg.eigvals(product)
+        absolute_eigenvalues = np.absolute(eigenvalues)
+        absolute_eigenvalues = np.sort(absolute_eigenvalues)
+        smallest_eigenvalue = absolute_eigenvalues[0]
+        largest_eigenvalue = absolute_eigenvalues[-1]
+
+        length = np.log(largest_eigenvalue/smallest_eigenvalue)
+        print(length)
+
+        
 
 
     def clear_string(self, event):
@@ -167,6 +250,7 @@ class TranslationLength:
         edges = []
         for plotting_triangle in self.abstract_plotting_surface.triangles:
             abstract_triangle = self.abstract_surface.triangles[plotting_triangle.index]
+            plotting_triangle.triangle_parameter = abstract_triangle.triangle_parameter
             for abstract_edge in abstract_triangle.edges:
                 try:
                     abstract_edge.edge_glued[2]
