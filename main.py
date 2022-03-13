@@ -1,3 +1,4 @@
+from fnmatch import translate
 import tkinter as tk
 from tkinter import ttk
 
@@ -37,6 +38,18 @@ def clover_position(x, t):
     [x,y] = x*alpha_10 + y*alpha_01
 
     return [x,y]
+
+
+
+class TranslationLength:
+    def __init__(self):
+        self.tk = tk
+        self.win = self.tk.Toplevel()
+        self.win.wm_title("Translation Lengths")
+        self.l = tk.Label(self.win, text="Enter a string using the format below for the desired length.")
+        self.l.pack(padx=20, pady=10)
+
+        
 
 
 class MSL3R:
@@ -79,12 +92,6 @@ class MSL3R:
 
         for row in self.row_frames:
             row.pack(side="top", anchor="nw")
-
-
-
-
-
-
         self.m_equals_text_frame.pack(side="top")
 
         self.button_frame = ttk.Frame(self.win)
@@ -338,6 +345,12 @@ class App(tk.Frame):
 
         self.canonical_cell_decomp_button.bind('<ButtonPress>',
                                         self.canonical_cell_decomp)
+
+    
+
+
+
+
 
     def generate_new_triangle(self,current_edge, current_abstract_edge, distance_from_initial_triangle, e03, e30, e23, e32, A023, max_distance):
 
@@ -2010,12 +2023,25 @@ def restart_program():
 
 def slr3r():
     try:
-        app.main_surface
+        assert app.main_surface
         slr3_window = MSL3R()
     except:
         win = tk.Toplevel()
         win.wm_title("Surface Invalid")
         l = tk.Label(win, text="Please ensure you have a valid surface before applying a matrix from SL(3,ℝ).")
+        l.pack(padx=20, pady=10)
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        cancel = ttk.Button(win, text="Close", command=win.destroy)
+        cancel.pack(side='right', padx=25, pady=5)
+
+def translatelength():
+    try:
+        assert app.abstract_surface
+        translatelength_window = TranslationLength()
+    except:
+        win = tk.Toplevel()
+        win.wm_title("No Uploaded Surface")
+        l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
         l.pack(padx=20, pady=10)
         #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
         cancel = ttk.Button(win, text="Close", command=win.destroy)
@@ -2038,9 +2064,9 @@ filemenu.add_command(label="Restart Program", command=restart_popup)
 filemenu.add_command(label="Exit", command=exit_popup)
 transformmenu.add_command(label="Apply M From SL(3,ℝ)", command=slr3r)
 computemenu.add_command(label="𝒜-Coordinates of Centre in Canonical Cell Decomposition", command=app.compute_centre_cell_decomp)
+computemenu.add_command(label="Translation Length and Lengths Spectrum", command=translatelength)
 menubar.add_cascade(label="File", menu=filemenu)
 menubar.add_cascade(label="Transform", menu=transformmenu)
 menubar.add_cascade(label="Compute", menu=computemenu)
-
 root.configure(menu=menubar)
 app.mainloop()
