@@ -1,6 +1,9 @@
+from enum import unique
 from fnmatch import translate
+from math import gamma
 import tkinter as tk
 from tkinter import ttk
+from numpy import arctan2
 
 from pyparsing import col
 from triangle_class.abstract_triangle import AbstractSurface, AbstractVertex, AbstractEdge
@@ -209,6 +212,7 @@ class TranslationLength:
 
         try:
             self.abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
+            self.vertex_traversed_list.append(vertex)
         except:
             return
 
@@ -308,6 +312,29 @@ class TranslationLength:
             self.ax.annotate(1, 9 * coord1 / 10 + 1 / 10 * (coord0 + coord2), color='grey')
             self.ax.annotate(2, 9 * coord2 / 10 + 1 / 10 * (coord1 + coord0), color='grey')
 
+        i=1
+        for edge in self.boundary_edges:
+            [x1,y1] = edge.v0.coord
+            [x2,y2] = edge.v1.coord
+            [x3,y3] = edge.edge_glued[2].v0.coord
+            [x4,y4] = edge.edge_glued[2].v1.coord
+            e_midpoint = np.array([1/2*(x1+x2),1/2*(y1+y2)])
+            e_glued_midpoint = np.array([1/2*(x3+x4),1/2*(y3+y4)])
+            curve_function = beziercurve(e_midpoint, np.array([0,0]), e_glued_midpoint)
+            t_vals = np.linspace(0.03,0.97,50)
+            gamma_coordinates = []
+            for t in t_vals:
+                gamma_coordinates.append(curve_function(t))
+            gamma_coordinates = np.array(gamma_coordinates)
+            self.ax.plot(gamma_coordinates[:,0],gamma_coordinates[:,1], c=edge.color)
+            self.ax.arrow(gamma_coordinates[25,0], gamma_coordinates[25,1], gamma_coordinates[26,0]-gamma_coordinates[25,0], gamma_coordinates[26,1]-gamma_coordinates[25,1],head_width=0.3, color=edge.color)
+            self.ax.arrow(gamma_coordinates[10,0], gamma_coordinates[10,1], gamma_coordinates[11,0]-gamma_coordinates[10,0], gamma_coordinates[11,1]-gamma_coordinates[10,1],head_width=0.3, color=edge.color)
+            self.ax.arrow(gamma_coordinates[40,0], gamma_coordinates[40,1], gamma_coordinates[41,0]-gamma_coordinates[40,0], gamma_coordinates[41,1]-gamma_coordinates[40,1],head_width=0.3, color=edge.color)
+            text_position = 1/2*(gamma_coordinates[40,:]+gamma_coordinates[30,:])
+            text_position+=1/2*np.array([-2*np.sign(text_position[0]),1])
+            self.ax.annotate(rf'$\alpha_{i}$',text_position,color=edge.color)
+            i+=1
+
         self.chart_type.draw()
 
     def generate_combinatorial_map(self):
@@ -336,9 +363,44 @@ class TranslationLength:
             self.abstract_plotting_surface.triangles[-1].index = triangle_index
 
         self.glue_plotting_surface_edges()
-
+        
+        self.vertex_traversed_list = []
         self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
-        self.give_edge_identification_color_and_arrow()        
+
+
+        vertex_angles = []
+        for vertex in self.vertex_traversed_list:
+            vertex_angles.append(arctan2(vertex.coord[1],vertex.coord[0]))
+        
+        self.vertex_traversed_list = np.array(self.vertex_traversed_list)[np.argsort(vertex_angles)]
+
+        
+
+        self.boundary_edges = []
+        for i in range(len(self.vertex_traversed_list)):
+            self.boundary_edges.append(0)
+        for triangle in self.abstract_plotting_surface.triangles:
+            for edge in triangle.edges:
+                for vertex_index in range(len(self.vertex_traversed_list)):
+                    vertex = self.vertex_traversed_list[vertex_index]
+                    next_vertex = self.vertex_traversed_list[(vertex_index+1)%len(self.vertex_traversed_list)]
+                    if (np.all(edge.v0.coord == vertex.coord) and np.all(edge.v1.coord == next_vertex.coord)) or (np.all(edge.v1.coord == vertex.coord) and np.all(edge.v0.coord == next_vertex.coord)):
+                        self.boundary_edges[vertex_index] = edge
+        
+       
+        
+
+
+        self.give_edge_identification_color_and_arrow()     
+
+        unique_boundaries = []
+        for boundry_edge in self.boundary_edges:
+            if boundry_edge.edge_glued[2] not in unique_boundaries:
+                unique_boundaries.append(boundry_edge)
+
+        self.boundary_edges = unique_boundaries
+    
+
 
         self.plot_combinatorial_map()
 
@@ -2094,6 +2156,9 @@ class CombinatorialImport:
             self.ax.annotate(0, 9 * coord0 / 10 + 1 / 10 * (coord1 + coord2), color='grey')
             self.ax.annotate(1, 9 * coord1 / 10 + 1 / 10 * (coord0 + coord2), color='grey')
             self.ax.annotate(2, 9 * coord2 / 10 + 1 / 10 * (coord1 + coord0), color='grey')
+        
+
+
 
         self.chart_type.draw()
 
