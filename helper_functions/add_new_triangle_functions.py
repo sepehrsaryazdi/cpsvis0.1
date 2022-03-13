@@ -1,6 +1,27 @@
 import numpy as np
 
 
+
+def integer_to_script(value, up=True):
+
+    value = str(value)
+    return_value = []
+    
+    if up:
+        superscripts = {"-": "⁻","0": "⁰", "1": "¹","2": "²","3": "³","4": "⁴","5": "⁵","6": "⁶","7": "⁷", "8": "⁸","9": "⁹"}
+        
+        for digit in value:
+            return_value.append(superscripts[digit])
+            
+    else:
+        subscripts = {"0": "₀", "1": "₁", "2": "₂","3": "₃","4": "₄", "5": "₅","6": "₆", "7": "₇", "8": "₈", "9":"₉"}
+
+        for digit in value:
+            return_value.append(subscripts[digit])
+            
+    
+    return "".join(return_value)
+
 def beziercurve(P0,P1,P2):
     return lambda t : (1-t)**2*P0+2*(1-t)*t*P1+t**2*P2
 

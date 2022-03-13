@@ -57,13 +57,16 @@ class TranslationLength:
         self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
         self.generate_combinatorial_map()
         self.chart_type.get_tk_widget().pack()
-        self.instructions = tk.Label(self.win, text="Referencing to an index of available generators shown above, write in the text box below the index and the power desired. Click \"Add String\" to multiply the string by the new generator product.")
+        self.instructions = tk.Label(self.win, text="Referencing to an index of available generators shown above, write in the text box below the index and the power desired.\nClick \"Add String\" to multiply the string by the new generator product.")
         self.instructions.pack(padx=20, pady=10)
         self.product_string_frame = ttk.Frame(self.win)
         self.gamma_equals_label = tk.Label(self.product_string_frame,text="γ = ",font=("Courier", 30))
         self.product_string = tk.StringVar()
         self.product_string_label = tk.Label(self.product_string_frame, textvariable=self.product_string, fg="blue",font=("Courier", 30))
-        self.product_string.set("α²")
+
+        self.product_string_data = [[1,2]]
+
+        self.product_string.set("(α₁)²")
         self.gamma_equals_label.pack(side="left")
         self.product_string_label.pack(side="left", pady=(0,5))
         self.product_string_frame.pack(side="top")
@@ -83,10 +86,62 @@ class TranslationLength:
         self.add_string_button = ttk.Button(self.enter_string_frame, text="Add String")
         self.add_string_button.pack(side="left", padx=25)
         self.enter_string_frame.pack()
+        self.clear_string_button = ttk.Button(self.win,text="Clear String")
+        self.compute_translation_length_button = ttk.Button(self.win, text="Compute Translation Length")
+        self.clear_string_button.pack(side="left", anchor="nw", padx=25,pady=25)
+        self.error_message_string = tk.StringVar(value="")
+        self.error_message = tk.Label(self.win,textvariable=self.error_message_string, fg="red")
+        self.error_message.pack(side="left",padx=5,pady=25)
+        self.compute_translation_length_button.pack(side="right",anchor="ne",padx=25,pady=25)
+        self.add_string_button.bind("<ButtonPress>", self.add_string)
+        self.clear_string_button.bind("<ButtonPress>", self.clear_string)
+
+
+    def clear_string(self, event):
+        self.product_string_data = []
+        total_string = ["𝟙"]
+        self.product_string.set("".join(total_string))
         
 
-
-    
+    def add_string(self,event):
+        boundary_list = [i+1 for i in range(len(self.boundary_edges))]
+        try:
+            assert int(self.enter_string_power_string.get()) == app.string_fraction_to_float(self.enter_string_power_string.get())
+            self.error_message_string.set("")
+        except:
+            self.error_message_string.set("Please ensure that the power is an integer before adding string.")
+            return
+        try:
+            assert int(self.enter_string_index_string.get()) and int(self.enter_string_index_string.get()) in boundary_list
+            self.error_message_string.set("")
+        except:
+            
+            boundary_string = f"{boundary_list}"[1:-1]
+            self.error_message_string.set(f"Please ensure that the index is valid before adding string.\n The valid indices are: {boundary_string}.")
+            return
+        
+        added_element = [int(self.enter_string_index_string.get()), int(self.enter_string_power_string.get())]
+        if len(self.product_string_data) != 0:
+            last_element = self.product_string_data[-1]
+            if last_element[0] == added_element[0]:
+                last_element[1]+=added_element[1]
+            else:
+                self.product_string_data.append(added_element)
+            if self.product_string_data[-1][1] == 0:
+                self.product_string_data.pop()
+        else:
+            self.product_string_data.append(added_element)
+        if len(self.product_string_data) == 0:
+            total_string = ["𝟙"]
+        else:
+            total_string = []
+            for data in self.product_string_data:
+                if data[1] == 1:
+                    total_string.append(f"(α{integer_to_script(data[0],False)})")
+                else:
+                    total_string.append(f"(α{integer_to_script(data[0],False)}){integer_to_script(data[1],True)}")
+        
+        self.product_string.set("".join(total_string))
 
         
     
