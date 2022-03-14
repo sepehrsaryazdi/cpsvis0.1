@@ -2,12 +2,12 @@ import numpy as np
 
 
 def edge_matrix(q_plus,q_minus):
-    coefficient = np.power((q_plus)/(q_minus), 1/3)
+    coefficient = np.power((q_plus/q_minus), (1/3))
     matrix = np.array([[0,0,q_minus],[0,-1,0],[1/q_plus, 0, 1]])
     return coefficient*matrix
 
 def triangle_matrix(t):
-    coefficient = 1/np.power(t, 1/3)
+    coefficient = 1/np.power(t, (1/3))
     matrix = np.array([[0,0,1],[0,-1,-1],[t,t+1,1]])
     return coefficient*matrix
 

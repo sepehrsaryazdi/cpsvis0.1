@@ -128,10 +128,10 @@ class TranslationLength:
                 
                 if (current_edge_index+1) % 3 == intersecting_edge_index:
                     product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
-                    product_terms.append(f"{current_triangle.index}, not inverted")
+                    product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, not inverted")
                 elif (current_edge_index-1) % 3 == intersecting_edge_index:
                     product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
-                    product_terms.append(f"{current_triangle.index}, inverted")
+                    product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
 
                     
                 if intersecting_edge.index != '02':
@@ -164,10 +164,10 @@ class TranslationLength:
                 
                 if (current_edge_index+1) % 3 == intersecting_edge_index:
                     product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
-                    product_terms.append(f"{current_triangle.index}, not inverted")
+                    product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, not inverted")
                 elif (current_edge_index-1) % 3 == intersecting_edge_index:
                     product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
-                    product_terms.append(f"{current_triangle.index}, inverted")
+                    product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
                 
                 if intersecting_edge.index != '02':
                     product = np.matmul(edge_matrix(intersecting_edge.ea, intersecting_edge.eb), product)
@@ -191,11 +191,11 @@ class TranslationLength:
                     final_edge_index = index
             if (current_edge_index + 1)%3 == final_edge_index:
                 product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
-                product_terms.append(f"{current_triangle.index}, not inverted")
+                product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, not inverted")
             elif (current_edge_index-1) % 3 == final_edge_index:
                 product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
-                product_terms.append(f"{current_triangle.index}, inverted")
-        #print(product_terms)
+                product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
+        print(product_terms)
         return (product, final_edge)
     
     
@@ -206,25 +206,42 @@ class TranslationLength:
         
         self.representations = []
         
-        for edge in self.boundary_edges:
+        for edge in self.boundary_edges[1:]:
             edge_to_reach = edge.edge_glued[2]
-            first_matrix, intermediate_intersecting_edge = self.compute_matrix_path(edge, edge.triangle, centre_triangle, centre_triangle.edges[1])
-            #print(intermediate_intersecting_edge.index, intermediate_intersecting_edge.triangle.index)
-            second_matrix, last_intersecting_edge = self.compute_matrix_path(intermediate_intersecting_edge, centre_triangle,edge_to_reach.triangle, edge_to_reach)
-            #print(intermediate_intersecting_edge.index, intermediate_intersecting_edge.triangle.index)
+            
+            central_edge = centre_triangle.edges[1]
+
+            first_matrix, _  = self.compute_matrix_path(central_edge, centre_triangle,edge_to_reach.triangle, edge_to_reach)
             
             if edge.index != '02':
                 final_edge_matrix = edge_matrix(edge.eb, edge.ea)
+                print('edges params: ',edge.eb,edge.ea)
             else:
+                print('edges params: ',edge.eb,edge.ea)
                 final_edge_matrix = edge_matrix(edge.ea, edge.eb)
-            
-            
-            #print(edge_to_reach.index, edge_to_reach.triangle.index)
 
-            product = np.matmul(first_matrix,np.matmul(final_edge_matrix,second_matrix))
+            second_matrix, _ = self.compute_matrix_path(edge, edge.triangle, centre_triangle, central_edge)
+            
+            
+
+            product = second_matrix @ final_edge_matrix @ first_matrix
             self.representations.append(product)
+
+
+            print(product)
+
+            t_matrix = triangle_matrix(1)
+            e_matrix = edge_matrix(1,1)
+            first_expected = t_matrix @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix
+            second_expected = np.linalg.inv(t_matrix) @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix
+            print(second_expected @ e_matrix @ first_expected)
+            #print(np.linalg.inv(t_matrix) @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix)
+            #print(product)
+            
+            break
+            
             product = np.matmul(final_edge_matrix,np.matmul(second_matrix,first_matrix))
-            print(np.sort(np.absolute(np.linalg.eigvals(self.representations[-1]))), np.sort(np.absolute(np.linalg.eigvals(product))))
+            #print(np.sort(np.absolute(np.linalg.eigvals(self.representations[-1]))), np.sort(np.absolute(np.linalg.eigvals(product))))
 
      
 
@@ -244,6 +261,7 @@ class TranslationLength:
         largest_eigenvalue = absolute_eigenvalues[-1]
 
         length = np.log(largest_eigenvalue/smallest_eigenvalue)
+        print(length)
         self.error_message_string.set(f"Length: {length}")
 
         
