@@ -5,8 +5,6 @@ import tkinter as tk
 from tkinter import ttk
 from numpy import arctan2
 
-from pyparsing import col
-from sqlalchemy import intersect
 from triangle_class.abstract_triangle import AbstractSurface, AbstractVertex, AbstractEdge
 from triangle_class.decorated_triangle import *
 from visualise.surface_vis import SurfaceVisual
