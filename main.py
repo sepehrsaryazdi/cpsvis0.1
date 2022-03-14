@@ -109,14 +109,15 @@ class TranslationLength:
         product_terms = ['identity']
         intersecting_edge = None
         while current_triangle != final_triangle:
-            if final_triangle_list_index < current_triangle_list_index:
+            orientation = np.linalg.det([[v.coord[0],v.coord[1],1] for v in current_triangle.vertices])
+            if final_triangle_list_index < current_triangle_list_index:            
+                
                 product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
-                product_terms.append(f"{current_triangle.index}, not inverted")
+                product_terms.append(f"{current_triangle.index}, not inverted")                
                 for edge in current_triangle.edges:
                     other_edge = edge.edge_glued[2]
                     if other_edge.triangle == triangle_list[current_triangle_list_index-1] and ((np.all(edge.v0.coord == other_edge.v0.coord) and np.all(edge.v1.coord == other_edge.v1.coord)) or (np.all(edge.v0.coord == other_edge.v1.coord) and np.all(edge.v1.coord == other_edge.v0.coord))):
                         intersecting_edge = edge
-                
                 if intersecting_edge.index != '02':
                     product = np.matmul(edge_matrix(intersecting_edge.ea, intersecting_edge.eb), product)
                     product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.ea, intersecting_edge.eb}")
@@ -144,7 +145,7 @@ class TranslationLength:
                 
                 current_triangle = triangle_list[current_triangle_list_index+1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
-        #print(product_terms)
+        print(product_terms)
         return (product, intersecting_edge)
     
     
@@ -152,7 +153,7 @@ class TranslationLength:
         middle_index = int(np.median(np.linspace(1,len(self.abstract_plotting_surface.triangles))))-1
         triangle_list = self.abstract_plotting_surface.triangles
         centre_triangle = triangle_list[middle_index]
-
+        
         self.representations = []
         
         for edge in self.boundary_edges:
@@ -161,6 +162,7 @@ class TranslationLength:
             second_matrix, last_intersecting_edge = self.compute_matrix_path(centre_triangle,edge_to_reach.triangle)
             if last_intersecting_edge == None:
                 last_intersecting_edge = intermediate_intersecting_edge
+            
             if edge.index != '02':
                 final_edge_matrix = edge_matrix(edge.eb, edge.ea)
             else:
@@ -179,11 +181,19 @@ class TranslationLength:
                 if last_intersecting_edge_on_final_triangle == edge_to_reach.triangle.edges[index]:
                     last_intersecting_edge_index = index
             
+            print(last_intersecting_edge.index, last_intersecting_edge.triangle.index)
+            orientation = np.linalg.det([[v.coord[0],v.coord[1],1] for v in edge_to_reach.triangle.vertices])
             if (last_intersecting_edge_index + 1)%3 == edge_to_reach_index:
+                
                 final_triangle_matrix = triangle_matrix(edge_to_reach.triangle.triangle_parameter)
+                print(edge_to_reach.triangle.index, 'not inverted')
             else:
                 final_triangle_matrix = np.linalg.inv(triangle_matrix(edge_to_reach.triangle.triangle_parameter))
-        
+                print(edge_to_reach.triangle.index, 'inverted')
+                
+
+            
+            print(edge_to_reach.index, edge_to_reach.triangle.index)
 
             product = np.matmul(np.matmul(final_edge_matrix, final_triangle_matrix),np.matmul(second_matrix,first_matrix))
             self.representations.append(product)
@@ -566,6 +576,16 @@ class TranslationLength:
         
         self.vertex_traversed_list = []
         self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
+        orientation_first_triangle = np.linalg.det([[v.coord[0], v.coord[1], 1] for v in self.abstract_plotting_surface.triangles[0].vertices])
+        if orientation_first_triangle < 0:
+            unique_vertices = []
+            for triangle in self.abstract_plotting_surface.triangles:
+                for vertex in triangle.vertices:
+                    if vertex not in unique_vertices:
+                        unique_vertices.append(vertex)
+            for vertex in unique_vertices:
+                vertex.coord = vertex.coord[::-1]
+            self.abstract_plotting_surface.triangles = self.abstract_plotting_surface.triangles[::-1]
 
 
         vertex_angles = []
@@ -2401,6 +2421,19 @@ class CombinatorialImport:
         self.glue_plotting_surface_edges()
 
         self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
+
+        orientation_first_triangle = np.linalg.det([[v.coord[0], v.coord[1], 1] for v in self.abstract_plotting_surface.triangles[0].vertices])
+        if orientation_first_triangle < 0:
+            unique_vertices = []
+            for triangle in self.abstract_plotting_surface.triangles:
+                for vertex in triangle.vertices:
+                    if vertex not in unique_vertices:
+                        unique_vertices.append(vertex)
+            for vertex in unique_vertices:
+                vertex.coord = vertex.coord[::-1]
+                
+            self.abstract_plotting_surface.triangles = self.abstract_plotting_surface.triangles[::-1]
+
         self.give_edge_identification_color_and_arrow()
 
         if len(self.input_parameters):
