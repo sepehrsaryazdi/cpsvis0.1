@@ -100,7 +100,7 @@ class TranslationLength:
         self.compute_translation_length_button.bind("<ButtonPress>", self.compute_translation_length)
 
 
-    def compute_matrix_path(self, initial_triangle, final_triangle):
+    def compute_matrix_path(self, edge_starting, initial_triangle, final_triangle):
         triangle_list = np.array(self.abstract_plotting_surface.triangles)
         final_triangle_list_index = np.where(triangle_list == final_triangle)[0][0]
         current_triangle = initial_triangle
@@ -108,16 +108,32 @@ class TranslationLength:
         product = np.identity(3)
         product_terms = ['identity']
         intersecting_edge = None
+        current_edge = edge_starting
         while current_triangle != final_triangle:
-            orientation = np.linalg.det([[v.coord[0],v.coord[1],1] for v in current_triangle.vertices])
+            
             if final_triangle_list_index < current_triangle_list_index:            
-                
-                product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
-                product_terms.append(f"{current_triangle.index}, not inverted")                
+                    
                 for edge in current_triangle.edges:
                     other_edge = edge.edge_glued[2]
                     if other_edge.triangle == triangle_list[current_triangle_list_index-1] and ((np.all(edge.v0.coord == other_edge.v0.coord) and np.all(edge.v1.coord == other_edge.v1.coord)) or (np.all(edge.v0.coord == other_edge.v1.coord) and np.all(edge.v1.coord == other_edge.v0.coord))):
                         intersecting_edge = edge
+
+                current_edge_index = 0
+                intersecting_edge_index = 0
+                for index in range(3):
+                    if current_edge == current_edge.triangle.edges[index]:
+                        current_edge_index = index
+                    if intersecting_edge == current_edge.triangle.edges[index]:
+                        intersecting_edge_index = index
+                
+                if (current_edge_index+1) % 3 == intersecting_edge_index:
+                    product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
+                    product_terms.append(f"{current_triangle.index}, not inverted")
+                else:
+                    product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
+                    product_terms.append(f"{current_triangle.index}, inverted")
+
+                    
                 if intersecting_edge.index != '02':
                     product = np.matmul(edge_matrix(intersecting_edge.ea, intersecting_edge.eb), product)
                     product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.ea, intersecting_edge.eb}")
@@ -127,14 +143,31 @@ class TranslationLength:
                 
                 current_triangle = triangle_list[current_triangle_list_index-1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
+                for edge in current_triangle.edges:
+                    if edge.index == intersecting_edge.index:
+                        current_edge = edge
 
             else:
-                product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
-                product_terms.append(f"{current_triangle.index}, inverted")
+                
                 for edge in current_triangle.edges:
                     other_edge = edge.edge_glued[2]
                     if other_edge.triangle == triangle_list[current_triangle_list_index+1] and ((np.all(edge.v0.coord == other_edge.v0.coord) and np.all(edge.v1.coord == other_edge.v1.coord)) or (np.all(edge.v0.coord == other_edge.v1.coord) and np.all(edge.v1.coord == other_edge.v0.coord))):
                         intersecting_edge = edge
+
+                current_edge_index = 0
+                intersecting_edge_index = 0
+                for index in range(3):
+                    if current_edge == current_edge.triangle.edges[index]:
+                        current_edge_index = index
+                    if intersecting_edge == current_edge.triangle.edges[index]:
+                        intersecting_edge_index = index
+                
+                if (current_edge_index+1) % 3 == intersecting_edge_index:
+                    product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
+                    product_terms.append(f"{current_triangle.index}, not inverted")
+                else:
+                    product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
+                    product_terms.append(f"{current_triangle.index}, inverted")
                 
                 if intersecting_edge.index != '02':
                     product = np.matmul(edge_matrix(intersecting_edge.ea, intersecting_edge.eb), product)
@@ -145,8 +178,11 @@ class TranslationLength:
                 
                 current_triangle = triangle_list[current_triangle_list_index+1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
+                for edge in current_triangle.edges:
+                    if edge.index == intersecting_edge.index:
+                        current_edge = edge
         print(product_terms)
-        return (product, intersecting_edge)
+        return (product, current_edge)
     
     
     def compute_translation_matrices(self):
@@ -158,8 +194,9 @@ class TranslationLength:
         
         for edge in self.boundary_edges:
             edge_to_reach = edge.edge_glued[2]
-            first_matrix, intermediate_intersecting_edge = self.compute_matrix_path(edge.triangle, centre_triangle)
-            second_matrix, last_intersecting_edge = self.compute_matrix_path(centre_triangle,edge_to_reach.triangle)
+            first_matrix, intermediate_intersecting_edge = self.compute_matrix_path(edge, edge.triangle, centre_triangle)
+            
+            second_matrix, last_intersecting_edge = self.compute_matrix_path(intermediate_intersecting_edge, centre_triangle,edge_to_reach.triangle)
             if last_intersecting_edge == None:
                 last_intersecting_edge = intermediate_intersecting_edge
             
