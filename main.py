@@ -206,7 +206,7 @@ class TranslationLength:
         
         self.representations = []
         
-        for edge in self.boundary_edges[1:]:
+        for edge in self.boundary_edges:
             edge_to_reach = edge.edge_glued[2]
             
             central_edge = centre_triangle.edges[1]
@@ -238,7 +238,6 @@ class TranslationLength:
             #print(np.linalg.inv(t_matrix) @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix)
             #print(product)
             
-            break
             
             product = np.matmul(final_edge_matrix,np.matmul(second_matrix,first_matrix))
             #print(np.sort(np.absolute(np.linalg.eigvals(self.representations[-1]))), np.sort(np.absolute(np.linalg.eigvals(product))))
