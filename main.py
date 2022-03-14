@@ -100,7 +100,7 @@ class TranslationLength:
         self.compute_translation_length_button.bind("<ButtonPress>", self.compute_translation_length)
 
 
-    def compute_matrix_path(self, edge_starting, initial_triangle, final_triangle):
+    def compute_matrix_path(self, edge_starting, initial_triangle, final_triangle, final_edge):
         triangle_list = np.array(self.abstract_plotting_surface.triangles)
         final_triangle_list_index = np.where(triangle_list == final_triangle)[0][0]
         current_triangle = initial_triangle
@@ -129,7 +129,7 @@ class TranslationLength:
                 if (current_edge_index+1) % 3 == intersecting_edge_index:
                     product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
                     product_terms.append(f"{current_triangle.index}, not inverted")
-                else:
+                elif (current_edge_index-1) % 3 == intersecting_edge_index:
                     product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
                     product_terms.append(f"{current_triangle.index}, inverted")
 
@@ -144,7 +144,7 @@ class TranslationLength:
                 current_triangle = triangle_list[current_triangle_list_index-1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
                 for edge in current_triangle.edges:
-                    if edge.index == intersecting_edge.index:
+                    if edge.index == intersecting_edge.edge_glued[2].index:
                         current_edge = edge
 
             else:
@@ -165,7 +165,7 @@ class TranslationLength:
                 if (current_edge_index+1) % 3 == intersecting_edge_index:
                     product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
                     product_terms.append(f"{current_triangle.index}, not inverted")
-                else:
+                elif (current_edge_index-1) % 3 == intersecting_edge_index:
                     product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
                     product_terms.append(f"{current_triangle.index}, inverted")
                 
@@ -179,10 +179,24 @@ class TranslationLength:
                 current_triangle = triangle_list[current_triangle_list_index+1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
                 for edge in current_triangle.edges:
-                    if edge.index == intersecting_edge.index:
+                    if edge.index == intersecting_edge.edge_glued[2].index:
                         current_edge = edge
-        print(product_terms)
-        return (product, current_edge)
+        
+        if current_edge != final_edge:
+            for index in range(3):
+                edge = current_triangle.edges[index]
+                if edge == current_edge:
+                    current_edge_index = index
+                if edge == final_edge:
+                    final_edge_index = index
+            if (current_edge_index + 1)%3 == final_edge_index:
+                product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
+                product_terms.append(f"{current_triangle.index}, not inverted")
+            elif (current_edge_index-1) % 3 == final_edge_index:
+                product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
+                product_terms.append(f"{current_triangle.index}, inverted")
+        #print(product_terms)
+        return (product, final_edge)
     
     
     def compute_translation_matrices(self):
@@ -194,11 +208,10 @@ class TranslationLength:
         
         for edge in self.boundary_edges:
             edge_to_reach = edge.edge_glued[2]
-            first_matrix, intermediate_intersecting_edge = self.compute_matrix_path(edge, edge.triangle, centre_triangle)
-            
-            second_matrix, last_intersecting_edge = self.compute_matrix_path(intermediate_intersecting_edge, centre_triangle,edge_to_reach.triangle)
-            if last_intersecting_edge == None:
-                last_intersecting_edge = intermediate_intersecting_edge
+            first_matrix, intermediate_intersecting_edge = self.compute_matrix_path(edge, edge.triangle, centre_triangle, centre_triangle.edges[1])
+            #print(intermediate_intersecting_edge.index, intermediate_intersecting_edge.triangle.index)
+            second_matrix, last_intersecting_edge = self.compute_matrix_path(intermediate_intersecting_edge, centre_triangle,edge_to_reach.triangle, edge_to_reach)
+            #print(intermediate_intersecting_edge.index, intermediate_intersecting_edge.triangle.index)
             
             if edge.index != '02':
                 final_edge_matrix = edge_matrix(edge.eb, edge.ea)
@@ -206,34 +219,13 @@ class TranslationLength:
                 final_edge_matrix = edge_matrix(edge.ea, edge.eb)
             
             
-            for edge in edge_to_reach.triangle.edges:
-                if (np.all(edge.v0.coord == last_intersecting_edge.v0.coord) and np.all(edge.v1.coord == last_intersecting_edge.v1.coord) or (np.all(edge.v0.coord == last_intersecting_edge.v1.coord) and np.all(edge.v1.coord == last_intersecting_edge.v0.coord))):
-                    last_intersecting_edge_on_final_triangle = edge
-            
-            edge_to_reach_index = 0
-            last_intersecting_edge_index = 0
-            for index in range(3):
-                if edge_to_reach == edge_to_reach.triangle.edges[index]:
-                    edge_to_reach_index = index
-                if last_intersecting_edge_on_final_triangle == edge_to_reach.triangle.edges[index]:
-                    last_intersecting_edge_index = index
-            
-            print(last_intersecting_edge.index, last_intersecting_edge.triangle.index)
-            orientation = np.linalg.det([[v.coord[0],v.coord[1],1] for v in edge_to_reach.triangle.vertices])
-            if (last_intersecting_edge_index + 1)%3 == edge_to_reach_index:
-                
-                final_triangle_matrix = triangle_matrix(edge_to_reach.triangle.triangle_parameter)
-                print(edge_to_reach.triangle.index, 'not inverted')
-            else:
-                final_triangle_matrix = np.linalg.inv(triangle_matrix(edge_to_reach.triangle.triangle_parameter))
-                print(edge_to_reach.triangle.index, 'inverted')
-                
+            #print(edge_to_reach.index, edge_to_reach.triangle.index)
 
-            
-            print(edge_to_reach.index, edge_to_reach.triangle.index)
-
-            product = np.matmul(np.matmul(final_edge_matrix, final_triangle_matrix),np.matmul(second_matrix,first_matrix))
+            product = np.matmul(first_matrix,np.matmul(final_edge_matrix,second_matrix))
             self.representations.append(product)
+            product = np.matmul(final_edge_matrix,np.matmul(second_matrix,first_matrix))
+            print(np.sort(np.absolute(np.linalg.eigvals(self.representations[-1]))), np.sort(np.absolute(np.linalg.eigvals(product))))
+
      
 
     def compute_translation_length(self, event):
@@ -252,7 +244,7 @@ class TranslationLength:
         largest_eigenvalue = absolute_eigenvalues[-1]
 
         length = np.log(largest_eigenvalue/smallest_eigenvalue)
-        print(length)
+        self.error_message_string.set(f"Length: {length}")
 
         
 
