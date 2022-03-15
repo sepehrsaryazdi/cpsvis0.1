@@ -2671,18 +2671,18 @@ def slr3r():
         cancel.pack(side='right', padx=25, pady=5)
 
 def translatelength():
-    translatelength_window = TranslationLength()
-    # try:
-    #     assert app.abstract_surface
-    #     translatelength_window = TranslationLength()
-    # except:
-    #     win = tk.Toplevel()
-    #     win.wm_title("No Uploaded Surface")
-    #     l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
-    #     l.pack(padx=20, pady=10)
-    #     #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-    #     cancel = ttk.Button(win, text="Close", command=win.destroy)
-    #     cancel.pack(side='right', padx=25, pady=5)
+    #translatelength_window = TranslationLength()
+    try:
+        assert app.abstract_surface
+        translatelength_window = TranslationLength()
+    except:
+        win = tk.Toplevel()
+        win.wm_title("No Uploaded Surface")
+        l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
+        l.pack(padx=20, pady=10)
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        cancel = ttk.Button(win, text="Close", command=win.destroy)
+        cancel.pack(side='right', padx=25, pady=5)
 
 
 
