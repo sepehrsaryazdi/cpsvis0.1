@@ -213,9 +213,9 @@ class TranslationLength:
             
             if edge.index != '02':
                 final_edge_matrix = edge_matrix(edge.eb, edge.ea)
-                print('edges params: ',edge.eb,edge.ea)
+                #print('edges params: ',edge.eb,edge.ea)
             else:
-                print('edges params: ',edge.eb,edge.ea)
+                #print('edges params: ',edge.eb,edge.ea)
                 final_edge_matrix = edge_matrix(edge.ea, edge.eb)
 
             second_matrix, _ = self.compute_matrix_path(edge, edge.triangle, centre_triangle, central_edge)
@@ -225,7 +225,7 @@ class TranslationLength:
             product = second_matrix @ final_edge_matrix @ first_matrix
             self.representations.append(product)
 
-
+            #print(np.linalg.det(product))
             #print(product)
 
             #t_matrix = triangle_matrix(1)
@@ -258,8 +258,9 @@ class TranslationLength:
         largest_eigenvalue = absolute_eigenvalues[-1]
 
         length = np.log(largest_eigenvalue/smallest_eigenvalue)
-        print(length)
-        self.error_message_string.set(f"Length: {length}")
+        #print(length)
+        eigenvalues_string = f"{absolute_eigenvalues}"[1:-1]
+        self.error_message_string.set(f"Length: {length}\nAbsolute Eigenvalues: {''.join(eigenvalues_string)}.")
 
         
 
