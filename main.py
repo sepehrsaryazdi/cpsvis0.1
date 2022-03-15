@@ -56,7 +56,7 @@ class TranslationLength:
         self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
         self.generate_combinatorial_map()
         self.chart_type.get_tk_widget().pack()
-        self.instructions = tk.Label(self.win, text="Referencing to an index of available generators shown above, write in the text box below the index and the power desired.\nClick \"Add String\" to multiply the string by the new generator product on the right.")
+        self.instructions = tk.Label(self.win, text="Referencing to an index of available generators shown above, write in the text box below the index and the power desired.\nClick \"Add String\" to multiply the string by the new generator product on the right. The string is interpreted as being ordered from left to right.")
         self.instructions.pack(padx=20, pady=10)
         self.product_string_frame = ttk.Frame(self.win)
         self.gamma_equals_label = tk.Label(self.product_string_frame,text="γ = ",font=("Courier", 30))
@@ -193,7 +193,7 @@ class TranslationLength:
             elif (current_edge_index-1) % 3 == final_edge_index:
                 product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
                 product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
-        print(product_terms)
+        #print(product_terms)
         return (product, final_edge)
     
     
@@ -226,19 +226,19 @@ class TranslationLength:
             self.representations.append(product)
 
 
-            print(product)
+            #print(product)
 
-            t_matrix = triangle_matrix(1)
-            e_matrix = edge_matrix(1,1)
-            first_expected = t_matrix @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix
-            second_expected = np.linalg.inv(t_matrix) @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix
-            print(second_expected @ e_matrix @ first_expected)
+            #t_matrix = triangle_matrix(1)
+            #e_matrix = edge_matrix(1,1)
+            #first_expected = t_matrix @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix
+            #second_expected = np.linalg.inv(t_matrix) @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix
+            #print(second_expected @ e_matrix @ first_expected)
             #print(np.linalg.inv(t_matrix) @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix @ np.linalg.inv(t_matrix) @ e_matrix @ t_matrix @ e_matrix)
             #print(product)
             
             
-            product = np.matmul(final_edge_matrix,np.matmul(second_matrix,first_matrix))
-            #print(np.sort(np.absolute(np.linalg.eigvals(self.representations[-1]))), np.sort(np.absolute(np.linalg.eigvals(product))))
+            #product = np.matmul(final_edge_matrix,np.matmul(first_matrix,second_matrix))
+            #rint(np.sort(np.absolute(np.linalg.eigvals(self.representations[-1]))), np.sort(np.absolute(np.linalg.eigvals(product))))
 
      
 
