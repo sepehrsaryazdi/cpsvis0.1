@@ -261,7 +261,7 @@ class TranslationLength:
         #print(length)
         eigenvalues_string = f"{absolute_eigenvalues}"[1:-1].split(' ')
         eigenvalues_string = ', '.join(eigenvalues_string)
-        self.error_message_string.set(f"Length: {length}\nAbsolute Eigenvalues: {eigenvalues_string}.")
+        self.error_message_string.set(f"Length: {length}\nModulus of Eigenvalues: {eigenvalues_string}.")
 
         
 
