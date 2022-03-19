@@ -842,6 +842,8 @@ class App(tk.Frame):
         self.half_edge_param_label = ttk.Label(self.create_surface_frame,justify='left', text='Set Initial Half-Edge eij Parameters [e01,e10, e02, e20, e12, e21] (Must be positive)')
         self.half_edge_param_label.pack(side='top', anchor='nw', padx=25, pady=10)
         self.half_edge_param_entries = []
+        self.coordinate_variable = tk.StringVar()
+        self.coordinate_variable.set("𝒜-coordinates")
         for i in range(6):
             self.half_edge_param_entries.append(ttk.Entry(self.create_surface_frame,width=5))
         for half_edge_param_entry in self.half_edge_param_entries:
@@ -1463,7 +1465,8 @@ class App(tk.Frame):
 
 
     def canonical_cell_decomp(self, event):
-        if self.canonical_cell_decomp_button["state"] != "enabled":
+        
+        if self.canonical_cell_decomp_button["state"] == "disabled":
             return
         try:
             found_no_edges = False
@@ -1528,7 +1531,7 @@ class App(tk.Frame):
 
 
     def generate_surface_s3_function(self, event):
-        if self.generate_surface_s3["state"] != "enabled":
+        if self.generate_surface_s3["state"] == "disabled":
             return
         try:
             self.generate_surface_error_text.set("")
@@ -1724,7 +1727,7 @@ class App(tk.Frame):
 
 
     def generate_surface_visual(self, event):
-        if self.generate_surface_s3["state"] != "enabled":
+        if self.generate_surface_s3["state"] == "disabled":
             return
         try:
             self.generate_surface_error_text.set("")
@@ -1778,7 +1781,7 @@ class CombinatorialImport:
 
             self.coordinate_text=  tk.Label(self.win, text="Coordinates: ")
             self.coordinate_text.pack(side="left",padx=10,pady=5)
-            self.coordinate_variable = tk.StringVar()
+            
             self.toggle_coordinates = ttk.OptionMenu(self.win, self.coordinate_variable, "𝒜-coordinates", "𝒜-coordinates", "𝒳-coordinates")
             self.toggle_coordinates.pack(side="left", anchor="nw", padx=5, pady=25)
 
@@ -1874,14 +1877,14 @@ class CombinatorialImport:
             self.error_text.set("Please enter a valid non-negative integer value for depth.")
             return
 
-        if self.coordinate_variable.get()[0] != "𝒜":
+        if app.coordinate_variable.get()[0] != "𝒜":
             app.canonical_cell_decomp_button["state"] = "disabled"
             app.generate_surface["state"] = "disabled"
             app.generate_surface_s3["state"]  = "disabled"
         else:
-            app.canonical_cell_decomp_button["state"] = "enabled"
-            app.generate_surface["state"] = "enabled"
-            app.generate_surface_s3["state"] = "enabled"
+            app.canonical_cell_decomp_button["state"] = "normal"
+            app.generate_surface["state"] = "normal"
+            app.generate_surface_s3["state"] = "normal"
 
         coord0 = self.abstract_plotting_surface.triangles[0].vertices[0].coord
         coord1 = self.abstract_plotting_surface.triangles[0].vertices[1].coord
@@ -2005,6 +2008,43 @@ class CombinatorialImport:
                                   distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
 
         return
+    
+    def generate_x_coordinates(self):
+        for triangle in self.abstract_surface.triangles:
+            a_minus = triangle.edges[0].ea
+            b_minus = triangle.edges[2].ea
+            c_minus = triangle.edges[0].eb
+            a_plus = triangle.edges[1].ea
+            b_plus = triangle.edges[2].eb
+            c_plus = triangle.edges[1].eb
+            triangle.x_triangle_parameter = compute_t(a_minus, b_minus, c_minus, a_plus, b_plus, c_plus)
+            for edge in triangle.edges:
+                A = edge.edge_glued[2].triangle.triangle_parameter
+                B = edge.triangle.triangle_parameter
+                edge_glued = edge.edge_glued[2]
+                if edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].index != '02':
+                    a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].ea
+                else:
+                    a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].eb
+                if edge.triangle.edges[(edge.triangle_edges_index-1)%3].index != '02':
+                    d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].eb
+                else:
+                    d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].ea
+                if edge.triangle.edges[(edge.triangle_edges_index+1)%3].index != '02':
+                    a_minus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
+                else:
+                    a_minus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].eb
+                if edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].index != '02':
+                    c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].eb
+                else:
+                    c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].ea
+                
+                if edge.index != '02':
+                    edge.x_ea = compute_q_plus(A, d_minus, B, a_minus)
+                    edge.x_eb = compute_q_plus(B, b_plus, A, c_plus)
+                else:
+                    edge.x_eb = compute_q_plus(A, d_minus, B, a_minus)
+                    edge.x_ea = compute_q_plus(B, b_plus, A, c_plus)
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
@@ -2015,42 +2055,8 @@ class CombinatorialImport:
             if triangle.index == initial_triangle_index:
                 initial_abstract_triangle = triangle
         
-        if self.coordinate_variable.get()[0] == "𝒜":
-            for triangle in self.abstract_surface.triangles:
-                a_minus = triangle.edges[0].ea
-                b_minus = triangle.edges[2].ea
-                c_minus = triangle.edges[0].eb
-                a_plus = triangle.edges[1].ea
-                b_plus = triangle.edges[2].eb
-                c_plus = triangle.edges[1].eb
-                triangle.x_triangle_parameter = compute_t(a_minus, b_minus, c_minus, a_plus, b_plus, c_plus)
-                for edge in triangle.edges:
-                    A = edge.edge_glued[2].triangle.triangle_parameter
-                    B = edge.triangle.triangle_parameter
-                    edge_glued = edge.edge_glued[2]
-                    if edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].index != '02':
-                        a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].ea
-                    else:
-                        a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].eb
-                    if edge.triangle.edges[(edge.triangle_edges_index-1)%3].index != '02':
-                        d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].eb
-                    else:
-                        d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].ea
-                    if edge.triangle.edges[(edge.triangle_edges_index+1)%3].index != '02':
-                        a_minus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
-                    else:
-                        a_minus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].eb
-                    if edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].index != '02':
-                        c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].eb
-                    else:
-                        c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].ea
-                    
-                    if edge.index != '02':
-                        edge.x_ea = compute_q_plus(A, d_minus, B, a_minus)
-                        edge.x_eb = compute_q_plus(B, b_plus, A, c_plus)
-                    else:
-                        edge.x_eb = compute_q_plus(A, d_minus, B, a_minus)
-                        edge.x_ea = compute_q_plus(B, b_plus, A, c_plus)
+        if app.coordinate_variable.get()[0] == "𝒜":
+            self.generate_x_coordinates()
                     
         
         t = initial_abstract_triangle.triangle_parameter
@@ -2068,8 +2074,7 @@ class CombinatorialImport:
         r0 = [0, e01 / cube_root_a_coord_t, e02 / cube_root_a_coord_t]
         r1 = [e10 / cube_root_a_coord_t, 0, e12 / cube_root_a_coord_t]
         r2 = [e20 / cube_root_a_coord_t, e21 / cube_root_a_coord_t, 0]
-
-
+        
         c0_clover = [1, 0, 0]
         c1_clover = [0, 1, 0]
         c2_clover = [0, 0, 1]
