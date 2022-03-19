@@ -69,8 +69,11 @@ def compute_outitude_sign(c0,c1,c2,c3):
     return np.linalg.det(D) + np.linalg.det(D_prime) - np.linalg.det(C) - np.linalg.det(C_prime)
 
 
-def compute_t(e01, e12, e20, e10, e21, e02):
-    return e01*e12*e20/(e10*e21*e02)
+def compute_t(a_minus, b_minus, e_minus, a_plus, b_plus, e_plus):
+    return a_minus*b_minus*e_minus/(a_plus*b_plus*e_plus)
+
+def compute_q_plus(A, d_minus, B, a_minus):
+    return A*d_minus/(B*a_minus)
 
 def compute_all_until_r3c3(r0, r2, c0, c2, e03, e23, e30, e32, A023):
     m_inverse = compute_m_inverse(r0, r2, c0, c2, e03, e23)

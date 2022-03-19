@@ -2014,7 +2014,45 @@ class CombinatorialImport:
         for triangle in self.abstract_surface.triangles:
             if triangle.index == initial_triangle_index:
                 initial_abstract_triangle = triangle
-
+        
+        if self.coordinate_variable.get()[0] == "𝒜":
+            for triangle in self.abstract_surface.triangles:
+                a_minus = triangle.edges[0].ea
+                b_minus = triangle.edges[2].ea
+                c_minus = triangle.edges[0].eb
+                a_plus = triangle.edges[1].ea
+                b_plus = triangle.edges[2].eb
+                c_plus = triangle.edges[1].eb
+                triangle.x_triangle_parameter = compute_t(a_minus, b_minus, c_minus, a_plus, b_plus, c_plus)
+                for edge in triangle.edges:
+                    A = edge.edge_glued[2].triangle.triangle_parameter
+                    B = edge.triangle.triangle_parameter
+                    edge_glued = edge.edge_glued[2]
+                    if edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].index != '02':
+                        a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].ea
+                    else:
+                        a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].eb
+                    if edge.triangle.edges[(edge.triangle_edges_index-1)%3].index != '02':
+                        d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].eb
+                    else:
+                        d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].ea
+                    if edge.triangle.edges[(edge.triangle_edges_index+1)%3].index != '02':
+                        a_minus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
+                    else:
+                        a_minus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].eb
+                    if edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].index != '02':
+                        c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].eb
+                    else:
+                        c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].ea
+                    
+                    if edge.index != '02':
+                        edge.x_ea = compute_q_plus(A, d_minus, B, a_minus)
+                        edge.x_eb = compute_q_plus(B, b_plus, A, c_plus)
+                    else:
+                        edge.x_eb = compute_q_plus(A, d_minus, B, a_minus)
+                        edge.x_ea = compute_q_plus(B, b_plus, A, c_plus)
+                    
+        
         t = initial_abstract_triangle.triangle_parameter
         e01 = initial_abstract_triangle.edges[0].ea
         e02 = initial_abstract_triangle.edges[2].ea
