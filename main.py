@@ -1463,7 +1463,8 @@ class App(tk.Frame):
 
 
     def canonical_cell_decomp(self, event):
-        
+        if self.canonical_cell_decomp_button["state"] != "enabled":
+            return
         try:
             found_no_edges = False
             while not found_no_edges:
@@ -1527,7 +1528,8 @@ class App(tk.Frame):
 
 
     def generate_surface_s3_function(self, event):
-
+        if self.generate_surface_s3["state"] != "enabled":
+            return
         try:
             self.generate_surface_error_text.set("")
             surface_vis = SurfaceVisual(self.main_surface)
@@ -1722,6 +1724,8 @@ class App(tk.Frame):
 
 
     def generate_surface_visual(self, event):
+        if self.generate_surface_s3["state"] != "enabled":
+            return
         try:
             self.generate_surface_error_text.set("")
             surface_vis = SurfaceVisual(self.main_surface)
@@ -1742,7 +1746,7 @@ class CombinatorialImport:
             self.win.resizable(width=False, height=False)
             self.win.wm_title("Uploaded Surface")
             self.l = tk.Label(self.win,
-                         text="The uploaded gluing table is visualised as a combinatorial map below. You can change 𝒜-coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
+                         text="The uploaded gluing table is visualised as a combinatorial map below. You can change coordinate edge and triangle parameters by selecting a triangle. Once you're done, press continue.")
             self.l.pack(padx=20, pady=10)
             #self.win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
             self.figure = plt.Figure(figsize=(7, 5), dpi=100)
@@ -1862,13 +1866,22 @@ class CombinatorialImport:
                             self.abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v1)
 
     def generate_developing_map(self):
-        print(self.coordinate_variable.get())
+        
         try:
             assert int(self.depth_string.get()) >=0
             self.error_text.set("")
         except:
             self.error_text.set("Please enter a valid non-negative integer value for depth.")
             return
+
+        if self.coordinate_variable.get()[0] != "𝒜":
+            app.canonical_cell_decomp_button["state"] = "disabled"
+            app.generate_surface["state"] = "disabled"
+            app.generate_surface_s3["state"]  = "disabled"
+        else:
+            app.canonical_cell_decomp_button["state"] = "enabled"
+            app.generate_surface["state"] = "enabled"
+            app.generate_surface_s3["state"] = "enabled"
 
         coord0 = self.abstract_plotting_surface.triangles[0].vertices[0].coord
         coord1 = self.abstract_plotting_surface.triangles[0].vertices[1].coord
