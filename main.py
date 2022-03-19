@@ -603,7 +603,7 @@ class TranslationLength:
         edge_list = [first_triangle.edges[first_edge_index]]
         edge_list, top_bottom_list = self.triangle_order_generator(edge_list, 'top', len(self.abstract_surface.triangles), ['top'])
 
-        triangle_indices = [edge.triangle.index for edge in edge_list]
+        triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
 
 
         vertex_points = []
@@ -2526,7 +2526,7 @@ class CombinatorialImport:
         edge_list = [first_triangle.edges[first_edge_index]]
         edge_list, top_bottom_list = self.triangle_order_generator(edge_list, 'top', len(self.abstract_surface.triangles), ['top'])
 
-        triangle_indices = [edge.triangle.index for edge in edge_list]
+        triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
 
 
         vertex_points = []
