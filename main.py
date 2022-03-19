@@ -1782,7 +1782,7 @@ class CombinatorialImport:
             self.coordinate_text=  tk.Label(self.win, text="Coordinates: ")
             self.coordinate_text.pack(side="left",padx=10,pady=5)
             
-            self.toggle_coordinates = ttk.OptionMenu(self.win, self.coordinate_variable, "𝒜-coordinates", "𝒜-coordinates", "𝒳-coordinates")
+            self.toggle_coordinates = ttk.OptionMenu(self.win, app.coordinate_variable, "𝒜-coordinates", "𝒜-coordinates", "𝒳-coordinates")
             self.toggle_coordinates.pack(side="left", anchor="nw", padx=5, pady=25)
 
             
@@ -1957,11 +1957,11 @@ class CombinatorialImport:
         v0, v1, flipped = app.correct_edge_orientation(current_edge)
 
         r3, c3 = compute_all_until_r3c3(v0.r, v1.r, v0.c,
-                                              v1.c, e03, e23,  e30, e32, A023)
+                                              v1.c, e03[0], e23[0],  e30[0], e32[0], A023[0])
 
 
         r3_clover, c3_clover = compute_all_until_r3c3(v0.r_clover, v1.r_clover, v0.c_clover,
-                                              v1.c_clover, e03, e23,  e30, e32, A023)
+                                              v1.c_clover, e03[1], e23[1],  e30[1], e32[1], A023[1])
 
         new_triangle = self.main_surface.add_triangle(current_edge, v0, v1, Vertex(c3, r3, c3_clover, r3_clover))
 
@@ -1992,18 +1992,18 @@ class CombinatorialImport:
             edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
 
             if edge_backward.index == '02':
-                e03 = edge_backward.ea
-                e30 = edge_backward.eb
+                e03 = [edge_backward.ea, edge_backward.x_ea]
+                e30 = [edge_backward.eb, edge_backward.x_eb]
             else:
-                e03 = edge_backward.eb
-                e30 = edge_backward.ea
+                e03 = [edge_backward.eb, edge_backward.x_eb]
+                e30 = [edge_backward.ea, edge_backward.x_ea]
             if edge_forward.index == '02':
-                e32 = edge_forward.ea
-                e23 = edge_forward.eb
+                e32 = [edge_forward.ea, edge_backward.x_ea]
+                e23 = [edge_forward.eb ,edge_forward.x_eb]
             else:
-                e32 = edge_forward.eb
-                e23 = edge_forward.ea
-            A023 = edge_glued.triangle.triangle_parameter
+                e32 = [edge_forward.eb, edge_forward.x_eb]
+                e23 = [edge_forward.ea, edge_forward.x_ea]
+            A023 = [edge_glued.triangle.triangle_parameter, edge_glued.triangle.x_triangle_parameter]
             self.generate_new_triangle(next_surface_edge, next_abstract_edge,
                                   distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
 
@@ -2057,6 +2057,12 @@ class CombinatorialImport:
         
         if app.coordinate_variable.get()[0] == "𝒜":
             self.generate_x_coordinates()
+        else:
+            for triangle in self.abstract_surface.triangles:
+                triangle.x_triangle_parameter = triangle.triangle_parameter
+                for edge in triangle.edges:
+                    edge.x_ea = edge.ea
+                    edge.x_eb = edge.eb
                     
         
         t = initial_abstract_triangle.triangle_parameter
@@ -2074,19 +2080,24 @@ class CombinatorialImport:
         r0 = [0, e01 / cube_root_a_coord_t, e02 / cube_root_a_coord_t]
         r1 = [e10 / cube_root_a_coord_t, 0, e12 / cube_root_a_coord_t]
         r2 = [e20 / cube_root_a_coord_t, e21 / cube_root_a_coord_t, 0]
+
+        x_coord_t = initial_abstract_triangle.x_triangle_parameter
+        e01 = initial_abstract_triangle.edges[0].x_ea
+        e02 = initial_abstract_triangle.edges[2].x_ea
+        e10 = initial_abstract_triangle.edges[0].x_eb
+        e12 = initial_abstract_triangle.edges[1].x_ea
+        e20 = initial_abstract_triangle.edges[2].x_eb
+        e21 = initial_abstract_triangle.edges[1].x_eb
         
         c0_clover = [1, 0, 0]
         c1_clover = [0, 1, 0]
         c2_clover = [0, 0, 1]
 
-        x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
         cube_root_x_coord_t = np.power(x_coord_t, 1/3)
 
         r0_clover = [0, cube_root_x_coord_t, 1]
         r1_clover = [1, 0, cube_root_x_coord_t]
         r2_clover = [cube_root_x_coord_t, 1, 0]
-
-
 
 
         self.main_surface = Surface(c0, c1, c2, r0, r1, r2, c0_clover, c1_clover , c2_clover, r0_clover, r1_clover, r2_clover)
@@ -2106,19 +2117,19 @@ class CombinatorialImport:
             edge_backward = edge_glued.triangle.edges[(edge_glued_index-1)%3]
 
             if edge_backward.index == '02':
-                e03 = edge_backward.ea
-                e30 = edge_backward.eb
+                e03 = [edge_backward.ea,edge_backward.x_ea]
+                e30 = [edge_backward.eb,edge_backward.x_eb]
             else:
-                e03 = edge_backward.eb
-                e30 = edge_backward.ea
+                e03 = [edge_backward.eb, edge_backward.x_eb]
+                e30 = [edge_backward.ea, edge_backward.x_ea]
             if edge_forward.index == '02':
-                e32 = edge_forward.ea
-                e23 = edge_forward.eb
+                e32 = [edge_forward.ea, edge_forward.x_ea]
+                e23 = [edge_forward.eb, edge_forward.x_eb]
             else:
-                e32 = edge_forward.eb
-                e23 = edge_forward.ea
+                e32 = [edge_forward.eb, edge_forward.x_eb]
+                e23 = [edge_forward.ea, edge_forward.x_ea]
 
-            A023 = edge_glued.triangle.triangle_parameter
+            A023 = [edge_glued.triangle.triangle_parameter, edge_glued.triangle.x_triangle_parameter]
 
             self.generate_new_triangle(self.main_surface.triangles[0].edges[edge_index],  edge, 0, e03, e30, e23, e32, A023, max_distance)
 
