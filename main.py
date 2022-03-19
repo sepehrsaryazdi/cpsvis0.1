@@ -133,11 +133,11 @@ class TranslationLength:
 
                     
                 if intersecting_edge.index != '02':
-                    product = np.matmul(edge_matrix(intersecting_edge.ea, intersecting_edge.eb), product)
-                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.ea, intersecting_edge.eb}")
+                    product = np.matmul(edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb), product)
+                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_ea, intersecting_edge.x_eb}")
                 else:
-                    product = np.matmul(edge_matrix(intersecting_edge.eb, intersecting_edge.ea), product)
-                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.eb, intersecting_edge.ea}")
+                    product = np.matmul(edge_matrix(intersecting_edge.x_eb, intersecting_edge.x_ea), product)
+                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_eb, intersecting_edge.x_ea}")
                 
                 current_triangle = triangle_list[current_triangle_list_index-1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
@@ -168,11 +168,11 @@ class TranslationLength:
                     product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
                 
                 if intersecting_edge.index != '02':
-                    product = np.matmul(edge_matrix(intersecting_edge.ea, intersecting_edge.eb), product)
-                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.ea, intersecting_edge.eb}")
+                    product = np.matmul(edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb), product)
+                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_ea, intersecting_edge.x_eb}")
                 else:
-                    product = np.matmul(edge_matrix(intersecting_edge.eb, intersecting_edge.ea), product)
-                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.eb, intersecting_edge.ea}")
+                    product = np.matmul(edge_matrix(intersecting_edge.x_eb, intersecting_edge.x_ea), product)
+                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_eb, intersecting_edge.x_ea}")
                 
                 current_triangle = triangle_list[current_triangle_list_index+1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
@@ -212,11 +212,11 @@ class TranslationLength:
             first_matrix, _  = self.compute_matrix_path(central_edge, centre_triangle,edge_to_reach.triangle, edge_to_reach)
             
             if edge.index != '02':
-                final_edge_matrix = edge_matrix(edge.eb, edge.ea)
+                final_edge_matrix = edge_matrix(edge.x_eb, edge.x_ea)
                 #print('edges params: ',edge.eb,edge.ea)
             else:
                 #print('edges params: ',edge.eb,edge.ea)
-                final_edge_matrix = edge_matrix(edge.ea, edge.eb)
+                final_edge_matrix = edge_matrix(edge.x_ea, edge.x_eb)
 
             second_matrix, _ = self.compute_matrix_path(edge, edge.triangle, centre_triangle, central_edge)
             
@@ -345,8 +345,8 @@ class TranslationLength:
                     for edge in plotting_triangle.edges:
                         if edge.index == abstract_edge.index:
                             edge_to_glue = edge
-                            edge_to_glue.ea = abstract_edge.ea
-                            edge_to_glue.eb = abstract_edge.eb
+                            edge_to_glue.x_ea = abstract_edge.x_ea
+                            edge_to_glue.x_eb = abstract_edge.x_eb
 
                     abstract_other_edge = abstract_edge.edge_glued[2]
                     other_edge_to_glue = None
@@ -354,8 +354,8 @@ class TranslationLength:
                         for edge in other_triangle.edges:
                             if edge.index == abstract_other_edge.index and other_triangle.index == abstract_other_edge.triangle.index:
                                 other_edge_to_glue = edge
-                                other_edge_to_glue.ea = abstract_other_edge.ea
-                                other_edge_to_glue.eb = abstract_other_edge.eb
+                                other_edge_to_glue.x_ea = abstract_other_edge.x_ea
+                                other_edge_to_glue.x_eb = abstract_other_edge.x_eb
                     if not flipped:
                         self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0,
                                                              other_edge_to_glue.v0)
