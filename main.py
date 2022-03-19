@@ -1456,7 +1456,7 @@ class App(tk.Frame):
                 "")
         except:
             self.generate_surface_error_text.set(
-                "Please import a gluing table in 𝒜-coordinates before computing centre coordinates of canonical cell decomposition.")
+                "Please import a gluing table in 𝒜-coordinates before computing \ncentre coordinates of canonical cell decomposition.")
 
 
         pass
