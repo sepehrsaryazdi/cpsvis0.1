@@ -1760,17 +1760,25 @@ class CombinatorialImport:
             self.continue_button.pack(side='right', padx=10, pady=5)
             self.randomise_button = ttk.Button(self.win, text="Randomise Parameters", command=self.randomise_parameters)
             self.randomise_button.pack(side="left", padx=10, pady=5)
+            
 
             self.depth_text=  tk.Label(self.win, text="Max Depth: ")
             self.depth_text.pack(side="left",padx=10,pady=5)
             self.depth_string = tk.StringVar()
             self.depth_string.set("5")
-            
 
+            
             self.depth_input = ttk.Entry(self.win, textvariable=self.depth_string, width=5)
             self.depth_input.pack(side="left", anchor="nw",padx=5,pady=25)
             
 
+            self.coordinate_text=  tk.Label(self.win, text="Coordinates: ")
+            self.coordinate_text.pack(side="left",padx=10,pady=5)
+            self.coordinate_variable = tk.StringVar()
+            self.toggle_coordinates = ttk.OptionMenu(self.win, self.coordinate_variable, "𝒜-coordinates", "𝒜-coordinates", "𝒳-coordinates")
+            self.toggle_coordinates.pack(side="left", anchor="nw", padx=5, pady=25)
+
+            
 
             self.error_text = tk.StringVar()
             self.error_text.set("")
@@ -1854,7 +1862,7 @@ class CombinatorialImport:
                             self.abstract_surface.glue_edges(current_edge, other_edge,current_edge.v0, other_edge.v1)
 
     def generate_developing_map(self):
-
+        print(self.coordinate_variable.get())
         try:
             assert int(self.depth_string.get()) >=0
             self.error_text.set("")
