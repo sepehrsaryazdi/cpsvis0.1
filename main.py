@@ -979,7 +979,7 @@ class App(tk.Frame):
     def generate_new_triangle(self,current_edge, current_abstract_edge, distance_from_initial_triangle, e03, e30, e23, e32, A023, max_distance):
 
         
-
+        
 
         if distance_from_initial_triangle > max_distance:
             return
@@ -1071,7 +1071,9 @@ class App(tk.Frame):
 
 
     def compute_centre_cell_decomp(self):
+        
         try:
+            assert self.coordinate_variable.get()[0] == "𝒜"
             initial_triangle_index = 0
             max_distance = len(self.abstract_surface.triangles)
 
@@ -1454,7 +1456,7 @@ class App(tk.Frame):
                 "")
         except:
             self.generate_surface_error_text.set(
-                "Please import a gluing table before computing centre coordinates of canonical cell decomposition.")
+                "Please import a gluing table in 𝒜-coordinates before computing centre coordinates of canonical cell decomposition.")
 
 
         pass
