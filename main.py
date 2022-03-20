@@ -5,9 +5,11 @@ from re import U
 import tkinter as tk
 from tkinter import ttk
 from numpy import arctan2
+from sympy import poly
 
-from triangle_class.abstract_triangle import AbstractSurface, AbstractVertex, AbstractEdge
+from triangle_class.abstract_triangle import *
 from triangle_class.decorated_triangle import *
+from triangle_class.polygon import *
 from visualise.surface_vis import SurfaceVisual
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
@@ -52,6 +54,117 @@ class GenerateGluingTable:
         self.win.wm_title("Configure Triangulation")
         self.l = tk.Label(self.win, text='Select an interior edge by clicking on it and selecting "Flip Edge" to flip it and configure the triangulation. \nClick submit when finished.')
         self.l.pack(padx=20, pady=10)
+        generic_polygon = Polygon(g,n)
+        for first_torus_generator_index in range(g):
+            i=4*first_torus_generator_index
+            a = generic_polygon.edges[i]
+            b = generic_polygon.edges[i+1]
+            a_inv = generic_polygon.edges[i+2]
+            b_inv = generic_polygon.edges[i+3]
+            generic_polygon.glue_edges(a,a_inv, a.v0, a_inv.v1)
+            generic_polygon.glue_edges(b,b_inv, b.v0, b_inv.v1)
+        self.abstract_surface = AbstractSurface()
+        
+        if n >= 2:
+
+            for i in range(len(generic_polygon.edges)):
+                self.abstract_surface.add_triangle()
+            
+            for polygon_edge in generic_polygon.edges:
+                glued_polygon_edge = polygon_edge.edge_glued[2]
+                triangle_edge = self.abstract_surface.triangles[polygon_edge.index].edges[0]
+                triangle_polygon_edge = self.abstract_surface.triangles[glued_polygon_edge.index].edges[0]
+                flipped = (polygon_edge.edge_glued[1] != polygon_edge.edge_glued[2].v0)
+                if not flipped:
+                    self.abstract_surface.glue_edges(triangle_edge, triangle_polygon_edge, triangle_edge.v0, triangle_polygon_edge.v0)
+                else:
+                    self.abstract_surface.glue_edges(triangle_edge, triangle_polygon_edge, triangle_edge.v0, triangle_polygon_edge.v1)
+
+
+            
+            for i in range(len(generic_polygon.edges)):
+
+                current_triangle = self.abstract_surface.triangles[i]
+                forward_triangle = self.abstract_surface.triangles[(i-1)%len(self.abstract_surface.triangles)]
+                backward_triangle = self.abstract_surface.triangles[(i+1)%len(self.abstract_surface.triangles)]
+
+                edge_current = current_triangle.edges[0]
+                edge_current_forward = current_triangle.edges[1]
+                edge_current_backward = current_triangle.edges[-1]
+
+                edge_forward = forward_triangle.edges[0]
+                edge_forward_forward = forward_triangle.edges[1]
+                edge_forward_backward = forward_triangle.edges[-1]
+
+                edge_backard = backward_triangle.edges[0]
+                edge_backward_forward = backward_triangle.edges[1]
+                edge_backward_backward = backward_triangle.edges[-1]
+
+                self.abstract_surface.glue_edges(edge_current_forward, edge_forward_backward, edge_current_forward.v0, edge_forward_backward.v1)
+                self.abstract_surface.glue_edges(edge_current_backward, edge_backward_forward, edge_current_backward.v0, edge_backward_forward.v1)
+                
+            remaining_subdivisions = n-1
+            while remaining_subdivisions:
+                triangle_to_subdivide = self.abstract_surface.triangles[-1]
+                triangle1 = AbstractTriangle(triangle_to_subdivide.index)
+                triangle2 = AbstractTriangle(triangle_to_subdivide.index+1)
+                triangle3 = AbstractTriangle(triangle_to_subdivide.index+2)
+
+                triangle1.edges[0] = triangle_to_subdivide.edges[0]
+                triangle2.edges[0] = triangle_to_subdivide.edges[1]
+                triangle3.edges[0] = triangle_to_subdivide.edges[-1]
+
+
+                edge_triangle1 = triangle1.edges[0]
+                edge_triangle1_forward = triangle1.edges[1]
+                edge_triangle1_backward = triangle1.edges[-1]
+
+                edge_triangle2 = triangle2.edges[0]
+                edge_triangle2_forward = triangle2.edges[1]
+                edge_triangle2_backward = triangle2.edges[-1]
+
+                edge_triangle3 = triangle3.edges[0]
+                edge_triangle3_forward = triangle3.edges[1]
+                edge_triangle3_backward = triangle3.edges[-1]
+
+                self.abstract_surface.glue_edges(edge_triangle1_forward, edge_triangle2_backward, edge_triangle1_forward.v0, edge_triangle2_backward.v1)
+                self.abstract_surface.glue_edges(edge_triangle1_backward, edge_triangle3_forward, edge_triangle1_backward.v0, edge_triangle3_forward.v1)
+
+                self.abstract_surface.triangles[-1] = triangle1
+                self.abstract_surface.triangles.append(triangle2)
+                self.abstract_surface.triangles.append(triangle3)
+                remaining_subdivisions-=1
+
+        else:
+            for i in range(len(generic_polygon.edges)-2):
+                self.abstract_surface.add_triangle()
+            
+            exterior_edges = [self.abstract_surface.triangles[0].edges[-1]]
+            for i in range(len(self.abstract_surface.triangles)):
+                exterior_edges.append(self.abstract_surface.triangles[i].edges[0])
+            exterior_edges.append(self.abstract_surface.triangles[-1].edges[1])
+            
+            for polygon_edge in generic_polygon.edges:
+                glued_polygon_edge = polygon_edge.edge_glued[2]
+                triangle_edge = exterior_edges[polygon_edge.index]
+                triangle_glued_edge = exterior_edges[glued_polygon_edge.index]
+                flipped = (polygon_edge.edge_glued[1] != polygon_edge.edge_glued[2].v0)
+                if not flipped:
+                    self.abstract_surface.glue_edges(triangle_edge, triangle_glued_edge, triangle_edge.v0, triangle_glued_edge.v0)
+                else:
+                    self.abstract_surface.glue_edges(triangle_edge, triangle_glued_edge, triangle_edge.v0, triangle_glued_edge.v1)
+            for i in range(len(self.abstract_surface.triangles)-1):
+                triangle = self.abstract_surface.triangles[i]
+                next_triangle = self.abstract_surface.triangles[i+1]
+                edge_triangle_forward = triangle.edges[1]
+                edge_next_triangle_backward = next_triangle.edges[-1]
+                self.abstract_surface.glue_edges(edge_triangle_forward, edge_next_triangle_backward, edge_triangle_forward.v0, edge_next_triangle_backward.v1)
+
+        #combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface)
+
+
+
+
 
 
 class TranslationLength:
@@ -1751,13 +1864,16 @@ class App(tk.Frame):
             self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface.")
 
 class CombinatorialImport:
-    def __init__(self, tk, filename, create_window=True):
+    def __init__(self, tk, filename, create_window=True, abstract_surface=None):
         if create_window:
             self.tk = tk
             self.parameter_entries = {}
             self.triangle_parameter_entry = None
             self.input_parameters = []
-            self.convert_gluing_table_to_surface(filename)
+            if not abstract_surface:
+                self.convert_gluing_table_to_surface(filename)
+            else:
+                self.abstract_surface = abstract_surface
             self.win = self.tk.Toplevel()
             self.win.resizable(width=False, height=False)
             self.win.wm_title("Uploaded Surface")
