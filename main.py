@@ -2166,9 +2166,9 @@ class CombinatorialImport:
                 else:
                     d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].ea
                 if edge.triangle.edges[(edge.triangle_edges_index+1)%3].index != '02':
-                    a_minus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
+                    b_plus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
                 else:
-                    a_minus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].eb
+                    b_plus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].eb
                 if edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].index != '02':
                     c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].eb
                 else:
