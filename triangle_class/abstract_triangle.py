@@ -17,6 +17,7 @@ class AbstractVertex:
         self.index = index
         self.edges = []
         self.coord = []
+        self.identification_index = None
 
 class AbstractTriangle:
     def __init__(self, index):

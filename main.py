@@ -1,6 +1,7 @@
 from enum import unique
 from fnmatch import translate
 from math import gamma
+from re import U
 import tkinter as tk
 from tkinter import ttk
 from numpy import arctan2
@@ -41,6 +42,16 @@ def clover_position(x, t):
 
     return [x,y]
 
+
+class GenerateGluingTable:
+    def __init__(self, g,n):
+        self.g = g
+        self.n = n
+        self.tk = tk
+        self.win = self.tk.Toplevel()
+        self.win.wm_title("Configure Triangulation")
+        self.l = tk.Label(self.win, text='Select an interior edge by clicking on it and selecting "Flip Edge" to flip it and configure the triangulation. \nClick submit when finished.')
+        self.l.pack(padx=20, pady=10)
 
 
 class TranslationLength:
@@ -2047,15 +2058,42 @@ class CombinatorialImport:
                 else:
                     edge.x_eb = compute_q_plus(A, d_minus, B, a_minus)
                     edge.x_ea = compute_q_plus(B, b_plus, A, c_plus)
+    
+    def give_vertex_identification(self):
+        identification_index = -1
+        for triangle in self.abstract_surface.triangles:
+            for vertex in triangle.vertices:
+                if vertex.identification_index == None:
+                    identification_index+=1
+                    vertex.identification_index = identification_index
+                    for t_search in self.abstract_surface.triangles:
+                        if t_search == triangle:
+                            continue
+                        for e_search in t_search.edges:
+                            if self.get_dual_vertex(e_search.v0, e_search) == vertex:
+                                e_search.v0.identification_index = vertex.identification_index
+                            if self.get_dual_vertex(e_search.v1, e_search) == vertex:
+                                e_search.v1.identification_index = vertex.identification_index
+                    break
+       
+        for triangle in self.abstract_surface.triangles:
+            for v in triangle.vertices:
+                print(v.identification_index)
+        
+        
 
     def generate_real_surface_map(self):
         initial_triangle_index = 0
         max_distance = int(self.depth_string.get())-1
 
+        self.give_vertex_identification()
+
         initial_abstract_triangle = self.abstract_surface.triangles[0]
         for triangle in self.abstract_surface.triangles:
             if triangle.index == initial_triangle_index:
                 initial_abstract_triangle = triangle
+        
+
         
         if app.coordinate_variable.get()[0] == "𝒜":
             self.generate_x_coordinates()
@@ -2764,6 +2802,56 @@ def translatelength():
         cancel.pack(side='right', padx=25, pady=5)
 
 
+def generate_gluing_table():
+
+    win = tk.Toplevel()
+    win.wm_title("Generate Gluing Table")
+    l = tk.Label(win, text="Enter the desired genus g and number of punctures n for the surface Sg,n below.")
+    l.pack(padx=20, pady=10)
+    g_input_frame = tk.Frame(win)
+    g_text = tk.Label(g_input_frame, text="g = ")
+    g_text.pack(side="left",padx=5)
+    g_variable = tk.StringVar()
+    g_variable.set("1")
+    g_input = tk.Entry(g_input_frame,textvariable=g_variable, width=5)
+    g_input.pack(side="left")
+    g_input_frame.pack(side="top")
+    n_input_frame = tk.Label(win)
+    n_text = tk.Label(n_input_frame, text="n = ")
+    n_text.pack(side="left",padx=5)
+    n_variable = tk.StringVar()
+    n_variable.set("1")
+    n_input = tk.Entry(n_input_frame,textvariable=n_variable, width=5)
+    n_input.pack(side="left")
+    n_input_frame.pack(side="top")
+    error_variable = tk.StringVar()
+    error_variable.set("")
+    error_text = tk.Label(win,textvariable=error_variable, fg="red")
+    error_text.pack(side="left", padx=25, pady=5)
+    def generate_gluing_table_submit():
+        
+        try:
+            assert int(g_variable.get()) == app.string_fraction_to_float(g_variable.get()) and int(g_variable.get()) > 0
+            assert int(n_variable.get()) == app.string_fraction_to_float(n_variable.get()) and int(n_variable.get()) > 0
+            
+        except:
+            error_variable.set("Please ensure that both values \nare positive integers.")
+            return
+        
+        generate_gluing_table_class = GenerateGluingTable(int(g_variable.get()),int(n_variable.get()))
+        win.destroy()
+            
+            
+    #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    submit = ttk.Button(win, text="Submit", command=generate_gluing_table_submit)
+    submit.pack(side='right', padx=25, pady=10)
+    cancel = ttk.Button(win, text="Cancel", command=win.destroy)
+    cancel.pack(side='right', padx=5, pady=10)
+    
+
+
+
+
 
 root = tk.Tk()
 root.title('Convex Projective Structure Visualisation Tool')
@@ -2775,6 +2863,7 @@ filemenu = tk.Menu(menubar, tearoff=0)
 transformmenu = tk.Menu(menubar, tearoff=0)
 computemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import Gluing Table (CSV)", command =import_file )
+filemenu.add_command(label="Generate Gluing Table", command = generate_gluing_table)
 filemenu.add_command(label="Save Imported Parameters", command =export_file )
 filemenu.add_command(label="Restart Program", command=restart_popup)
 filemenu.add_command(label="Exit", command=exit_popup)
