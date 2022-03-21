@@ -1215,7 +1215,8 @@ class App(tk.Frame):
             c1_clover = [0, 1, 0]
             c2_clover = [0, 0, 1]
 
-            x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
+            #x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
+            x_coord_t = initial_abstract_triangle.x_triangle_parameter
             cube_root_x_coord_t = np.power(x_coord_t, 1 / 3)
 
             r0_clover = [0, cube_root_x_coord_t, 1]
@@ -2097,6 +2098,11 @@ class CombinatorialImport:
                 edge.x_eb = compute_q_plus(B, b_plus, A, c_plus)
                 #edge.x_ea = edge.ea
                 #edge.x_eb = edge.eb
+        
+        for triangle in self.abstract_surface.triangles:
+            print('triangle: ', triangle.index, 't: ', triangle.x_triangle_parameter)
+            for edge in triangle.edges:
+                print('edge: ', edge.index, 'ea: ', edge.x_ea, 'eb: ', edge.x_eb)
                 
     
     def give_vertex_identification(self):
