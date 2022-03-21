@@ -158,11 +158,9 @@ class GenerateGluingTable:
                 next_triangle = self.abstract_surface.triangles[i+1]
                 edge_triangle_forward = triangle.edges[1]
                 edge_next_triangle_backward = next_triangle.edges[-1]
-                if not True:
-                    self.abstract_surface.glue_edges(edge_triangle_forward, edge_next_triangle_backward, edge_triangle_forward.v0, edge_next_triangle_backward.v1)
-                else:
-                    self.abstract_surface.glue_edges(edge_triangle_forward, edge_next_triangle_backward, edge_triangle_forward.v0, edge_next_triangle_backward.v0)
-        
+                
+                self.abstract_surface.glue_edges(edge_triangle_forward, edge_next_triangle_backward, edge_triangle_forward.v0, edge_next_triangle_backward.v1)
+                
         #app.abstract_surface = self.abstract_surface
         combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface)
         # for triangle in self.abstract_surface.triangles:
