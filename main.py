@@ -1533,7 +1533,7 @@ class App(tk.Frame):
 
     def canonical_cell_decomp(self, event):
         
-        if self.canonical_cell_decomp_button["state"] == "disabled":
+        if str(self.canonical_cell_decomp_button["state"]) == "disabled":
             return
         try:
             found_no_edges = False
@@ -1598,7 +1598,8 @@ class App(tk.Frame):
 
 
     def generate_surface_s3_function(self, event):
-        if self.generate_surface_s3["state"] == "disabled":
+        
+        if str(self.generate_surface_s3["state"]) == "disabled":
             return
         try:
             self.generate_surface_error_text.set("")
@@ -1794,7 +1795,7 @@ class App(tk.Frame):
 
 
     def generate_surface_visual(self, event):
-        if self.generate_surface_s3["state"] == "disabled":
+        if str(self.generate_surface_s3["state"]) == "disabled":
             return
         try:
             self.generate_surface_error_text.set("")
