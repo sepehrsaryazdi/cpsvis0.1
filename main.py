@@ -262,12 +262,9 @@ class TranslationLength:
                     product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
 
                     
-                if intersecting_edge.index != '02':
-                    product = np.matmul(edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb), product)
-                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_ea, intersecting_edge.x_eb}")
-                else:
-                    product = np.matmul(edge_matrix(intersecting_edge.x_eb, intersecting_edge.x_ea), product)
-                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_eb, intersecting_edge.x_ea}")
+                
+                product = np.matmul(edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb), product)
+                product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_ea, intersecting_edge.x_eb}")
                 
                 current_triangle = triangle_list[current_triangle_list_index-1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
@@ -297,12 +294,9 @@ class TranslationLength:
                     product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
                     product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
                 
-                if intersecting_edge.index != '02':
-                    product = np.matmul(edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb), product)
-                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_ea, intersecting_edge.x_eb}")
-                else:
-                    product = np.matmul(edge_matrix(intersecting_edge.x_eb, intersecting_edge.x_ea), product)
-                    product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_eb, intersecting_edge.x_ea}")
+                
+                product = np.matmul(edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb), product)
+                product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_ea, intersecting_edge.x_eb}")
                 
                 current_triangle = triangle_list[current_triangle_list_index+1]
                 current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
@@ -341,13 +335,10 @@ class TranslationLength:
 
             first_matrix, _  = self.compute_matrix_path(central_edge, centre_triangle,edge_to_reach.triangle, edge_to_reach)
             
-            if edge.index != '02':
-                final_edge_matrix = edge_matrix(edge.x_eb, edge.x_ea)
-                #print('edges params: ',edge.eb,edge.ea)
-            else:
-                #print('edges params: ',edge.eb,edge.ea)
-                final_edge_matrix = edge_matrix(edge.x_ea, edge.x_eb)
-
+            
+            final_edge_matrix = edge_matrix(edge.x_eb, edge.x_ea)
+            #print('edges params: ',edge.eb,edge.ea)
+            
             second_matrix, _ = self.compute_matrix_path(edge, edge.triangle, centre_triangle, central_edge)
             
             
@@ -1161,18 +1152,12 @@ class App(tk.Frame):
             edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
             edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
 
-            if edge_backward.index == '02':
-                e03 = edge_backward.ea
-                e30 = edge_backward.eb
-            else:
-                e03 = edge_backward.eb
-                e30 = edge_backward.ea
-            if edge_forward.index == '02':
-                e32 = edge_forward.ea
-                e23 = edge_forward.eb
-            else:
-                e32 = edge_forward.eb
-                e23 = edge_forward.ea
+            
+            e03 = edge_backward.eb
+            e30 = edge_backward.ea
+
+            e32 = edge_forward.eb
+            e23 = edge_forward.ea
             A023 = edge_glued.triangle.triangle_parameter
 
             next_surface_edge.abstract_index = next_abstract_edge.index
@@ -1256,18 +1241,12 @@ class App(tk.Frame):
                 edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
                 edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
 
-                if edge_backward.index == '02':
-                    e03 = edge_backward.ea
-                    e30 = edge_backward.eb
-                else:
-                    e03 = edge_backward.eb
-                    e30 = edge_backward.ea
-                if edge_forward.index == '02':
-                    e32 = edge_forward.ea
-                    e23 = edge_forward.eb
-                else:
-                    e32 = edge_forward.eb
-                    e23 = edge_forward.ea
+                
+                e03 = edge_backward.eb
+                e30 = edge_backward.ea
+               
+                e32 = edge_forward.eb
+                e23 = edge_forward.ea
 
                 A023 = edge_glued.triangle.triangle_parameter
 
@@ -1291,18 +1270,12 @@ class App(tk.Frame):
                                 edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
                                 edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
 
-                                if edge_backward.index == '02':
-                                    e03 = edge_backward.ea
-                                    e30 = edge_backward.eb
-                                else:
-                                    e03 = edge_backward.eb
-                                    e30 = edge_backward.ea
-                                if edge_forward.index == '02':
-                                    e32 = edge_forward.ea
-                                    e23 = edge_forward.eb
-                                else:
-                                    e32 = edge_forward.eb
-                                    e23 = edge_forward.ea
+                                
+                                e03 = edge_backward.eb
+                                e30 = edge_backward.ea
+                                
+                                e32 = edge_forward.eb
+                                e23 = edge_forward.ea
                                 
                                 current_edge = edge
 
@@ -1361,40 +1334,24 @@ class App(tk.Frame):
                                     e_prime_forward = e_prime.triangle.edges[(e_prime.index+1)%3]
                                     e_prime_backward = e_prime.triangle.edges[(e_prime.index-1)%3]
                                     
-                                    if e_prime_backward.abstract_index != '02':
-                                        forward_sorted = np.sort([(int(e_prime_backward.abstract_index[0])-1)%3,int(e_prime_backward.abstract_index[0])])
-                                    else:
-                                        forward_sorted = np.sort([(int(e_prime_backward.abstract_index[1])-1)%3,int(e_prime_backward.abstract_index[1])])
+                                    
+                                    forward_sorted = np.sort([(int(e_prime_backward.abstract_index[0])-1)%3,int(e_prime_backward.abstract_index[0])])
                                     e_prime_forward.abstract_index = f'{forward_sorted[0]}{forward_sorted[1]}'
                                     prime_sorted = []
-                                    if e_prime_backward.abstract_index != '02':
-                                        prime_sorted.append(e_prime_backward.abstract_index[1])
-                                    else:
-                                        prime_sorted.append(e_prime_backward.abstract_index[0])
-                                    if e_prime_forward.abstract_index != '02':
-                                        prime_sorted.append(e_prime_forward.abstract_index[0])
-                                    else:
-                                        prime_sorted.append(e_prime_forward.abstract_index[1])
+                                    
+                                    prime_sorted.append(e_prime_backward.abstract_index[1])
+                                    prime_sorted.append(e_prime_forward.abstract_index[0])
                                     prime_sorted = np.sort(prime_sorted)
                                     e_prime.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                                     e_prime_connected = e_prime.edge_connected
                                     e_prime_connected_forward = e_prime_connected.triangle.edges[(e_prime_connected.index+1)%3]
                                     e_prime_connected_backward = e_prime_connected.triangle.edges[(e_prime_connected.index-1)%3]
                                     
-                                    if e_prime_connected_backward.abstract_index != '02':
-                                        forward_sorted = np.sort([(int(e_prime_connected_backward.abstract_index[0])-1)%3,int(e_prime_connected_backward.abstract_index[0])])
-                                    else:
-                                        forward_sorted = np.sort([(int(e_prime_connected_backward.abstract_index[1])-1)%3,int(e_prime_connected_backward.abstract_index[1])])
+                                    forward_sorted = np.sort([(int(e_prime_connected_backward.abstract_index[0])-1)%3,int(e_prime_connected_backward.abstract_index[0])])
                                     e_prime_connected_forward.abstract_index = f'{forward_sorted[0]}{forward_sorted[1]}'
                                     prime_sorted = []
-                                    if e_prime_connected_backward.abstract_index != '02':
-                                        prime_sorted.append(e_prime_connected_backward.abstract_index[1])
-                                    else:
-                                        prime_sorted.append(e_prime_connected_backward.abstract_index[0])
-                                    if e_prime_connected_forward.abstract_index != '02':
-                                        prime_sorted.append(e_prime_connected_forward.abstract_index[0])
-                                    else:
-                                        prime_sorted.append(e_prime_connected_forward.abstract_index[1])
+                                    prime_sorted.append(e_prime_connected_backward.abstract_index[1])
+                                    prime_sorted.append(e_prime_connected_forward.abstract_index[0])
                                     prime_sorted = np.sort(prime_sorted)
                                     e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                                     edge_flip_sequence.append((edge,e_prime))
@@ -1430,39 +1387,21 @@ class App(tk.Frame):
                 e_prime = self.reduced_main_surface.flip_edge(next_flip_edge.edge_connected)                                                     
                 e_prime_forward = e_prime.triangle.edges[(e_prime.index+1)%3]
                 e_prime_backward = e_prime.triangle.edges[(e_prime.index-1)%3]   
-                if e_prime_forward.abstract_index != '02':
-                    backward_sorted = np.sort([(int(e_prime_forward.abstract_index[0])-1)%3,int(e_prime_forward.abstract_index[1])])
-                else:
-                    backward_sorted = np.sort([(int(e_prime_forward.abstract_index[1])-1)%3,int(e_prime_forward.abstract_index[0])])
+                backward_sorted = np.sort([(int(e_prime_forward.abstract_index[0])-1)%3,int(e_prime_forward.abstract_index[1])])
                 e_prime_backward.abstract_index = f'{backward_sorted[0]}{backward_sorted[1]}'
                 prime_sorted = []
-                if e_prime_forward.abstract_index != '02':
-                    prime_sorted.append(e_prime_forward.abstract_index[0])
-                else:
-                    prime_sorted.append(e_prime_forward.abstract_index[1])
-                if e_prime_backward.abstract_index != '02':
-                    prime_sorted.append(e_prime_backward.abstract_index[1])
-                else:
-                    prime_sorted.append(e_prime_backward.abstract_index[0])
+                prime_sorted.append(e_prime_forward.abstract_index[0])
+                prime_sorted.append(e_prime_backward.abstract_index[1])
                 prime_sorted = np.sort(prime_sorted)
                 e_prime.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                 e_prime_connected = e_prime.edge_connected
                 e_prime_connected_forward = e_prime_connected.triangle.edges[(e_prime_connected.index+1)%3]
                 e_prime_connected_backward = e_prime_connected.triangle.edges[(e_prime_connected.index-1)%3]
-                if e_prime_connected_forward.abstract_index != '02':
-                    backward_sorted = np.sort([(int(e_prime_connected_forward.abstract_index[0])-1)%3,int(e_prime_connected_forward.abstract_index[1])])
-                else:
-                    backward_sorted = np.sort([(int(e_prime_connected_forward.abstract_index[1])-1)%3,int(e_prime_connected_forward.abstract_index[0])])
+                backward_sorted = np.sort([(int(e_prime_connected_forward.abstract_index[0])-1)%3,int(e_prime_connected_forward.abstract_index[1])])
                 e_prime_connected_backward.abstract_index = f'{backward_sorted[0]}{backward_sorted[1]}'
                 prime_sorted = []
-                if e_prime_connected_forward.abstract_index != '02':
-                    prime_sorted.append(e_prime_connected_forward.abstract_index[0])
-                else:
-                    prime_sorted.append(e_prime_connected_forward.abstract_index[1])
-                if e_prime_connected_backward.abstract_index != '02':
-                    prime_sorted.append(e_prime_connected_backward.abstract_index[1])
-                else:
-                    prime_sorted.append(e_prime_connected_backward.abstract_index[0])
+                prime_sorted.append(e_prime_connected_forward.abstract_index[0])
+                prime_sorted.append(e_prime_connected_backward.abstract_index[1])
                 prime_sorted = np.sort(prime_sorted)
                 e_prime_connected.abstract_index = f'{prime_sorted[0]}{prime_sorted[1]}'
                 [e_prime.triangle.index,e_prime_connected.triangle.index] = [e_prime_connected.triangle.index, e_prime.triangle.index]
@@ -1562,10 +1501,8 @@ class App(tk.Frame):
             for triangle in self.canonical_abstract_surface.triangles:
                 row = [triangle.triangle_parameter]
                 for edge in triangle.edges:
-                    if edge.index != '02':
-                        row.append(edge.ea)
-                    else:
-                        row.append(edge.eb)
+                    row.append(edge.ea)
+                    
                 parameter_table_data.append(row)
             
             parameter_table_data = np.array(parameter_table_data)
@@ -1982,7 +1919,6 @@ class CombinatorialImport:
             triangle_row = triangle_row[1:]
             for edge_index in range(len(edges)):
                 current_edge = edges[edge_index].rsplit(' ')[1]
-
                 for edge in triangle.edges:
                     if current_edge == edge.index:
                         current_edge = edge
@@ -1993,10 +1929,10 @@ class CombinatorialImport:
                     continue
                 other_edge_index = other_edge_index[1:-1]
                 other_triangle = self.abstract_surface.triangles[int(other_triangle_index)]
-
-                if int(other_edge_index[0]) < int(other_edge_index[1]):
+                if other_edge_index in ['01', '12', '20']:
                     for other_edge in other_triangle.edges:
                         if other_edge.index == other_edge_index:
+                            
                             self.abstract_surface.glue_edges(current_edge, other_edge, current_edge.v0, other_edge.v0)
                 else:
                     for other_edge in other_triangle.edges:
@@ -2126,18 +2062,12 @@ class CombinatorialImport:
             edge_forward = edge_glued.triangle.edges[(edge_glued_index + 1) % 3]
             edge_backward = edge_glued.triangle.edges[(edge_glued_index - 1) % 3]
 
-            if edge_backward.index == '02':
-                e03 = [edge_backward.ea, edge_backward.x_ea]
-                e30 = [edge_backward.eb, edge_backward.x_eb]
-            else:
-                e03 = [edge_backward.eb, edge_backward.x_eb]
-                e30 = [edge_backward.ea, edge_backward.x_ea]
-            if edge_forward.index == '02':
-                e32 = [edge_forward.ea, edge_backward.x_ea]
-                e23 = [edge_forward.eb ,edge_forward.x_eb]
-            else:
-                e32 = [edge_forward.eb, edge_forward.x_eb]
-                e23 = [edge_forward.ea, edge_forward.x_ea]
+            
+            e03 = [edge_backward.eb, edge_backward.x_eb]
+            e30 = [edge_backward.ea, edge_backward.x_ea]
+            
+            e32 = [edge_forward.eb, edge_forward.x_eb]
+            e23 = [edge_forward.ea, edge_forward.x_ea]
             A023 = [edge_glued.triangle.triangle_parameter, edge_glued.triangle.x_triangle_parameter]
             self.generate_new_triangle(next_surface_edge, next_abstract_edge,
                                   distance_from_initial_triangle+1, e03, e30, e23, e32, A023, max_distance)
@@ -2157,29 +2087,18 @@ class CombinatorialImport:
                 A = edge.edge_glued[2].triangle.triangle_parameter
                 B = edge.triangle.triangle_parameter
                 edge_glued = edge.edge_glued[2]
-                if edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].index != '02':
-                    a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].ea
-                else:
-                    a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].eb
-                if edge.triangle.edges[(edge.triangle_edges_index-1)%3].index != '02':
-                    d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].eb
-                else:
-                    d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].ea
-                if edge.triangle.edges[(edge.triangle_edges_index+1)%3].index != '02':
-                    b_plus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
-                else:
-                    b_plus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].eb
-                if edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].index != '02':
-                    c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].eb
-                else:
-                    c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].ea
+                a_minus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index+1)%3].ea
                 
-                if edge.index != '02':
-                    edge.x_ea = compute_q_plus(A, d_minus, B, a_minus)
-                    edge.x_eb = compute_q_plus(B, b_plus, A, c_plus)
-                else:
-                    edge.x_eb = compute_q_plus(A, d_minus, B, a_minus)
-                    edge.x_ea = compute_q_plus(B, b_plus, A, c_plus)
+                d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].eb
+                
+                b_plus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
+                
+                c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].eb
+                
+                
+                edge.x_ea = compute_q_plus(A, d_minus, B, a_minus)
+                edge.x_eb = compute_q_plus(B, b_plus, A, c_plus)
+                
     
     def give_vertex_identification(self):
         identification_index = -1
@@ -2198,9 +2117,9 @@ class CombinatorialImport:
                                 e_search.v1.identification_index = vertex.identification_index
                     break
        
-        for triangle in self.abstract_surface.triangles:
-            for v in triangle.vertices:
-                print(v.identification_index)
+        # for triangle in self.abstract_surface.triangles:
+        #     for v in triangle.vertices:
+        #         print(v.identification_index)
         
         
 
@@ -2278,18 +2197,11 @@ class CombinatorialImport:
             edge_forward = edge_glued.triangle.edges[(edge_glued_index+1)%3]
             edge_backward = edge_glued.triangle.edges[(edge_glued_index-1)%3]
 
-            if edge_backward.index == '02':
-                e03 = [edge_backward.ea,edge_backward.x_ea]
-                e30 = [edge_backward.eb,edge_backward.x_eb]
-            else:
-                e03 = [edge_backward.eb, edge_backward.x_eb]
-                e30 = [edge_backward.ea, edge_backward.x_ea]
-            if edge_forward.index == '02':
-                e32 = [edge_forward.ea, edge_forward.x_ea]
-                e23 = [edge_forward.eb, edge_forward.x_eb]
-            else:
-                e32 = [edge_forward.eb, edge_forward.x_eb]
-                e23 = [edge_forward.ea, edge_forward.x_ea]
+            e03 = [edge_backward.eb, edge_backward.x_eb]
+            e30 = [edge_backward.ea, edge_backward.x_ea]
+            
+            e32 = [edge_forward.eb, edge_forward.x_eb]
+            e23 = [edge_forward.ea, edge_forward.x_ea]
 
             A023 = [edge_glued.triangle.triangle_parameter, edge_glued.triangle.x_triangle_parameter]
 
@@ -2716,9 +2628,9 @@ class CombinatorialImport:
                 vertex.coord = vertex.coord[::-1]
             self.abstract_plotting_surface.triangles = self.abstract_plotting_surface.triangles[::-1]
         
-        for triangle in self.abstract_surface.triangles:
-            for vertex in triangle.vertices:
-                print(vertex.coord)
+        # for triangle in self.abstract_surface.triangles:
+        #     for vertex in triangle.vertices:
+        #         print(vertex.coord)
 
 
         self.give_edge_identification_color_and_arrow()
@@ -2729,10 +2641,7 @@ class CombinatorialImport:
                 triangle.triangle_parameter = tk.StringVar(value=self.input_parameters[triangle.index,0])
                 for edge_index in range(3):
                     edge = triangle.edges[edge_index]
-                    if edge.index != '02':
-                        edge.ea = tk.StringVar(value=self.input_parameters[triangle.index, edge_index+1])
-                    else:
-                        edge.eb = tk.StringVar(value=self.input_parameters[triangle.index, edge_index+1])
+                    edge.ea = tk.StringVar(value=self.input_parameters[triangle.index, edge_index+1])
                     flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
                     if not flipped:
                         try:
@@ -2777,23 +2686,24 @@ def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
     if not filename:
         return
-    try:
-        gluing_table = pd.read_table(filename)
-        columns = gluing_table.columns
-        for row in np.array(gluing_table):
-            for element in row[0].rsplit(','):
-                assert element
-        combinatorial_plot_window = CombinatorialImport(tk, filename)
-    except:
-        win = tk.Toplevel()
-        win.wm_title("Gluing Table Invalid")
-        l = tk.Label(win, text="There was an error uploading this gluing table. Please ensure you have a valid gluing table before continuing.")
-        l.pack(side="top",padx=20, pady=10)
-        l2 = tk.Label(win, text="Explicit examples of the required structure are available in the 'example_gluing_tables' folder. Note that every edge on all triangles must be glued.")
-        l2.pack(side="top",padx=20,pady=(0,10))
-        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-        cancel = ttk.Button(win, text="Close", command=win.destroy)
-        cancel.pack(side='right', padx=25, pady=5)
+    combinatorial_plot_window = CombinatorialImport(tk, filename)
+    # try:
+    #     gluing_table = pd.read_table(filename)
+    #     columns = gluing_table.columns
+    #     for row in np.array(gluing_table):
+    #         for element in row[0].rsplit(','):
+    #             assert element
+    #     combinatorial_plot_window = CombinatorialImport(tk, filename)
+    # except:
+    #     win = tk.Toplevel()
+    #     win.wm_title("Gluing Table Invalid")
+    #     l = tk.Label(win, text="There was an error uploading this gluing table. Please ensure you have a valid gluing table before continuing.")
+    #     l.pack(side="top",padx=20, pady=10)
+    #     l2 = tk.Label(win, text="Explicit examples of the required structure are available in the 'example_gluing_tables' folder. Note that every edge on all triangles must be glued.")
+    #     l2.pack(side="top",padx=20,pady=(0,10))
+    #     #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    #     cancel = ttk.Button(win, text="Close", command=win.destroy)
+    #     cancel.pack(side='right', padx=25, pady=5)
 
 
 def convert_surface_to_gluing_table(self):
@@ -2844,10 +2754,9 @@ def export_file():
     for triangle in app.abstract_surface.triangles:
         row = [triangle.triangle_parameter]
         for edge in triangle.edges:
-            if edge.index != '02':
-                row.append(edge.ea)
-            else:
-                row.append(edge.eb)
+            
+            row.append(edge.ea)
+            
         parameter_table_data.append(row)
     
     parameter_table_data = np.array(parameter_table_data)

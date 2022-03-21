@@ -23,7 +23,7 @@ class AbstractTriangle:
     def __init__(self, index):
         self.index = index
         self.vertices = [AbstractVertex(0), AbstractVertex(1),AbstractVertex(2)]
-        self.edges = [AbstractEdge(self.vertices[0],self.vertices[1]),AbstractEdge(self.vertices[1],self.vertices[2]),AbstractEdge(self.vertices[0],self.vertices[2])]
+        self.edges = [AbstractEdge(self.vertices[0],self.vertices[1]),AbstractEdge(self.vertices[1],self.vertices[2]),AbstractEdge(self.vertices[2],self.vertices[0])]
         i=0
         for edge in self.edges:
             edge.triangle_edges_index = i

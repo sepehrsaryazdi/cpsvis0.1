@@ -1,0 +1,45 @@
+2022-03-21 10:04:13.515 AEDT [25727] LOG:  starting PostgreSQL 14.2 on x86_64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.30), 64-bit
+2022-03-21 10:04:13.516 AEDT [25727] LOG:  listening on IPv6 address "::1", port 5432
+2022-03-21 10:04:13.516 AEDT [25727] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2022-03-21 10:04:13.517 AEDT [25727] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2022-03-21 10:04:13.521 AEDT [25728] LOG:  database system was shut down at 2022-03-21 10:04:06 AEDT
+2022-03-21 10:04:13.526 AEDT [25727] LOG:  database system is ready to accept connections
+2022-03-21 10:04:26.345 AEDT [25749] FATAL:  role "postgres" does not exist
+2022-03-21 10:05:13.540 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:14.224 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:14.224 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:14.904 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:14.904 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:15.593 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:15.593 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:16.280 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:16.280 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:16.961 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:16.961 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:17.645 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:17.645 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:18.334 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:18.334 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:19.026 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:19.026 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:19.708 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:19.709 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:20.386 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:20.386 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:21.058 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:21.058 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:21.740 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:21.740 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:22.428 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:22.428 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:23.115 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:23.115 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:23.802 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:23.802 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat_tmp/global.tmp": No such file or directory
+2022-03-21 10:05:24.228 AEDT [25732] LOG:  using stale statistics instead of current ones because stats collector is not responding
+2022-03-21 10:05:26.354 AEDT [25727] LOG:  could not open file "postmaster.pid": No such file or directory
+2022-03-21 10:05:26.354 AEDT [25727] LOG:  performing immediate shutdown because data directory lock file is invalid
+2022-03-21 10:05:26.354 AEDT [25727] LOG:  received immediate shutdown request
+2022-03-21 10:05:26.354 AEDT [25727] LOG:  could not open file "postmaster.pid": No such file or directory
+2022-03-21 10:05:26.354 AEDT [25733] LOG:  could not open temporary statistics file "pg_stat/global.tmp": No such file or directory
+2022-03-21 10:05:26.358 AEDT [25727] LOG:  database system is shut down
