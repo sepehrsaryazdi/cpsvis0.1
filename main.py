@@ -63,6 +63,8 @@ class GenerateGluingTable:
             b_inv = generic_polygon.edges[i+3]
             generic_polygon.glue_edges(a,a_inv, a.v0, a_inv.v1)
             generic_polygon.glue_edges(b,b_inv, b.v0, b_inv.v1)
+        print([e.index for e in generic_polygon.edges])
+        print([e.edge_glued[2].index for e in generic_polygon.edges])
         self.abstract_surface = AbstractSurface()
         
         if n >= 2:
@@ -153,6 +155,7 @@ class GenerateGluingTable:
                     self.abstract_surface.glue_edges(triangle_edge, triangle_glued_edge, triangle_edge.v0, triangle_glued_edge.v0)
                 else:
                     self.abstract_surface.glue_edges(triangle_edge, triangle_glued_edge, triangle_edge.v0, triangle_glued_edge.v1)
+                
             for i in range(len(self.abstract_surface.triangles)-1):
                 triangle = self.abstract_surface.triangles[i]
                 next_triangle = self.abstract_surface.triangles[i+1]
@@ -160,12 +163,13 @@ class GenerateGluingTable:
                 edge_next_triangle_backward = next_triangle.edges[-1]
                 
                 self.abstract_surface.glue_edges(edge_triangle_forward, edge_next_triangle_backward, edge_triangle_forward.v0, edge_next_triangle_backward.v1)
-                
-        #app.abstract_surface = self.abstract_surface
+
+            print([(e.triangle.index, e.index, e.edge_glued[2].triangle.index,e.edge_glued[2].index) for e in exterior_edges])
+        #app.abstract_surface = self.abstract_surfasce
         combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface)
         # for triangle in self.abstract_surface.triangles:
         #     for edge in triangle.edges:
-        #         print(edge.edge_glued)
+        #         print(triangle.index, edge.index,edge.edge_glued[2].triangle.index, edge.edge_glued[2].index)
 
 
 
