@@ -195,9 +195,9 @@ class TranslationLength:
         self.product_string = tk.StringVar()
         self.product_string_label = tk.Label(self.product_string_frame, textvariable=self.product_string, fg="blue",font=("Courier", 30))
 
-        self.product_string_data = [[1,2]]
+        self.product_string_data = [[0,0]]
 
-        self.product_string.set("(α₁)²")
+        self.product_string.set("𝟙")
         self.gamma_equals_label.pack(side="left")
         self.product_string_label.pack(side="left", pady=(0,5))
         self.product_string_frame.pack(side="top")
