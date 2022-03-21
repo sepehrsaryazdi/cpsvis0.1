@@ -1197,10 +1197,10 @@ class App(tk.Frame):
 
             t = initial_abstract_triangle.triangle_parameter
             e01 = initial_abstract_triangle.edges[0].ea
-            e02 = initial_abstract_triangle.edges[2].ea
+            e02 = initial_abstract_triangle.edges[2].eb
             e10 = initial_abstract_triangle.edges[0].eb
             e12 = initial_abstract_triangle.edges[1].ea
-            e20 = initial_abstract_triangle.edges[2].eb
+            e20 = initial_abstract_triangle.edges[2].ea
             e21 = initial_abstract_triangle.edges[1].eb
 
             cube_root_a_coord_t = np.power(t, (1 / 3))
@@ -2075,12 +2075,13 @@ class CombinatorialImport:
     def generate_x_coordinates(self):
         for triangle in self.abstract_surface.triangles:
             a_minus = triangle.edges[0].ea
-            b_minus = triangle.edges[2].ea
-            c_minus = triangle.edges[0].eb
-            a_plus = triangle.edges[1].ea
-            b_plus = triangle.edges[2].eb
-            c_plus = triangle.edges[1].eb
-            triangle.x_triangle_parameter = compute_t(a_minus, b_minus, c_minus, a_plus, b_plus, c_plus)
+            b_minus = triangle.edges[1].ea
+            e_minus = triangle.edges[2].ea
+            a_plus = triangle.edges[0].eb
+            b_plus = triangle.edges[1].eb
+            e_plus = triangle.edges[2].eb
+            triangle.x_triangle_parameter = compute_t(a_minus, b_minus, e_minus, a_plus, b_plus, e_plus)
+            #triangle.x_triangle_parameter = triangle.triangle_parameter
             for edge in triangle.edges:
                 A = edge.edge_glued[2].triangle.triangle_parameter
                 B = edge.triangle.triangle_parameter
@@ -2089,13 +2090,15 @@ class CombinatorialImport:
                 
                 d_minus = edge.triangle.edges[(edge.triangle_edges_index-1)%3].eb
                 
-                b_plus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
+                c_plus = edge.triangle.edges[(edge.triangle_edges_index+1)%3].ea
                 
-                c_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].eb
+                b_plus = edge_glued.triangle.edges[(edge_glued.triangle_edges_index-1)%3].eb
                 
                 
                 edge.x_ea = compute_q_plus(A, d_minus, B, a_minus)
                 edge.x_eb = compute_q_plus(B, b_plus, A, c_plus)
+                #edge.x_ea = edge.ea
+                #edge.x_eb = edge.eb
                 
     
     def give_vertex_identification(self):
@@ -2146,10 +2149,10 @@ class CombinatorialImport:
         
         t = initial_abstract_triangle.triangle_parameter
         e01 = initial_abstract_triangle.edges[0].ea
-        e02 = initial_abstract_triangle.edges[2].ea
-        e10 = initial_abstract_triangle.edges[0].eb
         e12 = initial_abstract_triangle.edges[1].ea
-        e20 = initial_abstract_triangle.edges[2].eb
+        e20 = initial_abstract_triangle.edges[2].ea
+        e10 = initial_abstract_triangle.edges[0].eb
+        e02 = initial_abstract_triangle.edges[2].eb
         e21 = initial_abstract_triangle.edges[1].eb
 
         cube_root_a_coord_t = np.power(t, (1 / 3))
@@ -2160,13 +2163,14 @@ class CombinatorialImport:
         r1 = [e10 / cube_root_a_coord_t, 0, e12 / cube_root_a_coord_t]
         r2 = [e20 / cube_root_a_coord_t, e21 / cube_root_a_coord_t, 0]
 
-        x_coord_t = initial_abstract_triangle.x_triangle_parameter
+        #x_coord_t = compute_t(e01, e12, e20, e10, e21, e02)
         e01 = initial_abstract_triangle.edges[0].x_ea
-        e02 = initial_abstract_triangle.edges[2].x_ea
+        e02 = initial_abstract_triangle.edges[2].x_eb
         e10 = initial_abstract_triangle.edges[0].x_eb
         e12 = initial_abstract_triangle.edges[1].x_ea
-        e20 = initial_abstract_triangle.edges[2].x_eb
+        e20 = initial_abstract_triangle.edges[2].x_ea
         e21 = initial_abstract_triangle.edges[1].x_eb
+        x_coord_t = initial_abstract_triangle.x_triangle_parameter
         
         c0_clover = [1, 0, 0]
         c1_clover = [0, 1, 0]
