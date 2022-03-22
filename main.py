@@ -195,7 +195,7 @@ class TranslationLength:
         self.product_string = tk.StringVar()
         self.product_string_label = tk.Label(self.product_string_frame, textvariable=self.product_string, fg="blue",font=("Courier", 30))
 
-        self.product_string_data = [[0,0]]
+        self.product_string_data = []
 
         self.product_string.set("𝟙")
         self.gamma_equals_label.pack(side="left")
@@ -257,11 +257,11 @@ class TranslationLength:
                         intersecting_edge_index = index
                 
                 if (current_edge_index+1) % 3 == intersecting_edge_index:
-                    product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
-                    product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, not inverted")
+                    product = np.matmul(triangle_matrix(current_triangle.x_triangle_parameter),product)
+                    product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, not inverted")
                 elif (current_edge_index-1) % 3 == intersecting_edge_index:
-                    product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
-                    product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
+                    product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.x_triangle_parameter)),product)
+                    product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, inverted")
 
                     
                 
@@ -290,11 +290,11 @@ class TranslationLength:
                         intersecting_edge_index = index
                 
                 if (current_edge_index+1) % 3 == intersecting_edge_index:
-                    product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
-                    product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, not inverted")
+                    product = np.matmul(triangle_matrix(current_triangle.x_triangle_parameter),product)
+                    product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, not inverted")
                 elif (current_edge_index-1) % 3 == intersecting_edge_index:
-                    product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
-                    product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
+                    product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.x_triangle_parameter)),product)
+                    product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, inverted")
                 
                 
                 product = np.matmul(edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb), product)
@@ -314,11 +314,11 @@ class TranslationLength:
                 if edge == final_edge:
                     final_edge_index = index
             if (current_edge_index + 1)%3 == final_edge_index:
-                product = np.matmul(triangle_matrix(current_triangle.triangle_parameter),product)
-                product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, not inverted")
+                product = np.matmul(triangle_matrix(current_triangle.x_triangle_parameter),product)
+                product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, not inverted")
             elif (current_edge_index-1) % 3 == final_edge_index:
-                product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.triangle_parameter)),product)
-                product_terms.append(f"{current_triangle.index, current_triangle.triangle_parameter}, inverted")
+                product = np.matmul(np.linalg.inv(triangle_matrix(current_triangle.x_triangle_parameter)),product)
+                product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, inverted")
         #print(product_terms)
         return (product, final_edge)
     
@@ -460,6 +460,7 @@ class TranslationLength:
         for plotting_triangle in self.abstract_plotting_surface.triangles:
             abstract_triangle = self.abstract_surface.triangles[plotting_triangle.index]
             plotting_triangle.triangle_parameter = abstract_triangle.triangle_parameter
+            plotting_triangle.x_triangle_parameter = abstract_triangle.x_triangle_parameter
             for abstract_edge in abstract_triangle.edges:
                 try:
                     abstract_edge.edge_glued[2]
@@ -2153,7 +2154,7 @@ class CombinatorialImport:
                 for edge in triangle.edges:
                     edge.x_ea = edge.ea
                     edge.x_eb = edge.eb
-                    
+                
         
         t = initial_abstract_triangle.triangle_parameter
         e01 = initial_abstract_triangle.edges[0].ea
@@ -2824,18 +2825,18 @@ def slr3r():
         cancel.pack(side='right', padx=25, pady=5)
 
 def translatelength():
-    #translatelength_window = TranslationLength()
-    try:
-        assert app.abstract_surface
-        translatelength_window = TranslationLength()
-    except:
-        win = tk.Toplevel()
-        win.wm_title("No Uploaded Surface")
-        l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
-        l.pack(padx=20, pady=10)
-        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-        cancel = ttk.Button(win, text="Close", command=win.destroy)
-        cancel.pack(side='right', padx=25, pady=5)
+    translatelength_window = TranslationLength()
+    # try:
+    #     assert app.abstract_surface
+    #     translatelength_window = TranslationLength()
+    # except:
+    #     win = tk.Toplevel()
+    #     win.wm_title("No Uploaded Surface")
+    #     l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
+    #     l.pack(padx=20, pady=10)
+    #     #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    #     cancel = ttk.Button(win, text="Close", command=win.destroy)
+    #     cancel.pack(side='right', padx=25, pady=5)
 
 
 def generate_gluing_table():
