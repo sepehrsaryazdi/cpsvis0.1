@@ -3,7 +3,7 @@ import numpy as np
 
 def edge_matrix(q_plus,q_minus):
     coefficient = np.power((q_plus/q_minus), (1/3))
-    matrix = np.array([[0,0,q_minus],[0,-1,0],[1/q_plus, 0, 1]])
+    matrix = np.array([[0,0,q_minus],[0,-1,0],[1/q_plus, 0, 0]])
     return coefficient*matrix
 
 def triangle_matrix(t):
