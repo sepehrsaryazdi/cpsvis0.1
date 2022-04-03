@@ -216,6 +216,10 @@ class GenerateGluingTable:
         #     for edge in triangle.edges:
         #         print(triangle.index, edge.index,edge.edge_glued[2].triangle.index, edge.edge_glued[2].index)
 
+    def edge_flip_interface(self):
+        
+        pass
+
 
 
 
@@ -2363,6 +2367,7 @@ class CombinatorialImport:
             for edge in self.abstract_plotting_surface.triangles[index+1].edges:
                 if edge.index == other_edge_index:
                     other_edge_to_glue = edge
+            
             if not flipped:
                 self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v0)
             else:
@@ -2802,7 +2807,7 @@ def slr3r():
 def translatelength():
     #translatelength_window = TranslationLength()
     try:
-        assert app.abstract_surface
+        assert app.abstract_surface != None
         translatelength_window = TranslationLength()
     except:
         win = tk.Toplevel()
