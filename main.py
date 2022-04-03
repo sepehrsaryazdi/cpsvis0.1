@@ -609,63 +609,26 @@ class TranslationLength:
         edge_list.append(next_edge_on_new_triangle)
         return self.triangle_order_generator(edge_list, new_prev_state, n, top_bottom_list)
     
-    def vertex_traversal(self,vertex, vertex_points):
+    def vertex_traversal(self,starting_vertex,vertex, vertex_points):
 
-        try:
+        if not len(vertex.coord):
             self.abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
-            self.vertex_traversed_list.append(vertex)
-        except:
-            return
-
-        count = 0
-        for edge in vertex.edges:
-            if edge.edge_glued:
-                count+=1
-
-        triangle_belongs_to = vertex.edges[0].triangle
-        if count == 0:
-            for other_vertex_index in [(vertex.index-1)%3,(vertex.index+1)%3]:
-                coord = triangle_belongs_to.vertices[other_vertex_index].coord
-                if not len(coord):
-                    vertex = triangle_belongs_to.vertices[other_vertex_index]
-                    break
-        elif count == 1:
-
-            other_vertex_to_consider = None
-            non_glued_edge = None
-            for edge in vertex.edges:
-                if not edge.edge_glued:
-                    non_glued_edge = edge
-            for other_vertex in [non_glued_edge.v0, non_glued_edge.v1]:
-                if other_vertex != vertex:
-                    other_vertex_to_consider = other_vertex
-            if not len(other_vertex_to_consider.coord):
-                vertex = other_vertex_to_consider
-            else:
-                glued_edge_belonging_to = None
-                for edge in vertex.edges:
-                    if edge.edge_glued:
-                        glued_edge_belonging_to = edge
-                other_vertex_to_consider = self.get_dual_vertex(vertex, glued_edge_belonging_to)
-                other_count = 0
-                for edge in other_vertex_to_consider.edges:
-                    if edge.edge_glued:
-                        other_count+=1
-
-                if other_count == 1:
-                    for other_other_vertex_index in [(other_vertex_to_consider.index - 1) % 3, (other_vertex_to_consider.index + 1) % 3]:
-                        coord = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index].coord
-                        if not len(coord):
-                            vertex = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index]
-                            break
-                else:
-                    other_vertex_to_consider, glued_edge_belonging_to = self.find_last_vertex(vertex, glued_edge_belonging_to)
-                    for other_other_vertex_index in [(other_vertex_to_consider.index - 1) % 3, (other_vertex_to_consider.index + 1) % 3]:
-                        coord = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index].coord
-                        if not len(coord):
-                            vertex = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index]
-                            break
-        return self.vertex_traversal(vertex, vertex_points)
+        else:
+            if starting_vertex == vertex:
+                return
+            
+        vertex_edges = [vertex.edges[0],vertex.edges[1]]
+        if (vertex_edges[0].triangle_edges_index-1)%3 != vertex_edges[1].triangle_edges_index:
+            vertex_edges = vertex_edges[::-1]
+        edge_in_front = vertex_edges[0]
+        
+        if not edge_in_front.edge_glued:
+            next_vertex = edge_in_front.v1
+        
+        else:
+            next_vertex = self.get_dual_vertex(vertex, edge_in_front)
+        
+        return self.vertex_traversal(starting_vertex,next_vertex, vertex_points)
 
     def plot_combinatorial_map(self):
         self.ax.clear()
@@ -766,7 +729,8 @@ class TranslationLength:
         self.glue_plotting_surface_edges()
         
         self.vertex_traversed_list = []
-        self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
+        starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[0]
+        self.vertex_traversal(starting_vertex,starting_vertex, vertex_points)
         orientation_first_triangle = np.linalg.det([[v.coord[0], v.coord[1], 1] for v in self.abstract_plotting_surface.triangles[0].vertices])
         if orientation_first_triangle < 0:
             unique_vertices = []
@@ -2271,63 +2235,25 @@ class CombinatorialImport:
         return vertex, glued_edge_belonging_to
 
 
-    def vertex_traversal(self,vertex, vertex_points):
-
-        try:
+    def vertex_traversal(self,starting_vertex,vertex, vertex_points):
+        if not len(vertex.coord):
             self.abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
-        except:
-            return
-
-        count = 0
-        for edge in vertex.edges:
-            if edge.edge_glued:
-                count+=1
-
-        triangle_belongs_to = vertex.edges[0].triangle
-        if count == 0:
-            for other_vertex_index in [(vertex.index-1)%3,(vertex.index+1)%3]:
-                coord = triangle_belongs_to.vertices[other_vertex_index].coord
-                if not len(coord):
-                    vertex = triangle_belongs_to.vertices[other_vertex_index]
-                    break
-        elif count == 1:
-
-            other_vertex_to_consider = None
-            non_glued_edge = None
-            for edge in vertex.edges:
-                if not edge.edge_glued:
-                    non_glued_edge = edge
-            for other_vertex in [non_glued_edge.v0, non_glued_edge.v1]:
-                if other_vertex != vertex:
-                    other_vertex_to_consider = other_vertex
-            if not len(other_vertex_to_consider.coord):
-                vertex = other_vertex_to_consider
-            else:
-                glued_edge_belonging_to = None
-                for edge in vertex.edges:
-                    if edge.edge_glued:
-                        glued_edge_belonging_to = edge
-                other_vertex_to_consider = self.get_dual_vertex(vertex, glued_edge_belonging_to)
-                other_count = 0
-                for edge in other_vertex_to_consider.edges:
-                    if edge.edge_glued:
-                        other_count+=1
-
-                if other_count == 1:
-                    for other_other_vertex_index in [(other_vertex_to_consider.index - 1) % 3, (other_vertex_to_consider.index + 1) % 3]:
-                        coord = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index].coord
-                        if not len(coord):
-                            vertex = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index]
-                            break
-                else:
-                    other_vertex_to_consider, glued_edge_belonging_to = self.find_last_vertex(vertex, glued_edge_belonging_to)
-                    for other_other_vertex_index in [(other_vertex_to_consider.index - 1) % 3, (other_vertex_to_consider.index + 1) % 3]:
-                        coord = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index].coord
-                        if not len(coord):
-                            vertex = other_vertex_to_consider.edges[0].triangle.vertices[other_other_vertex_index]
-                            break
-        return self.vertex_traversal(vertex, vertex_points)
-
+        else:
+            if starting_vertex == vertex:
+                return
+            
+        vertex_edges = [vertex.edges[0],vertex.edges[1]]
+        if (vertex_edges[0].triangle_edges_index-1)%3 != vertex_edges[1].triangle_edges_index:
+            vertex_edges = vertex_edges[::-1]
+        edge_in_front = vertex_edges[0]
+        
+        if not edge_in_front.edge_glued:
+            next_vertex = edge_in_front.v1
+        
+        else:
+            next_vertex = self.get_dual_vertex(vertex, edge_in_front)
+        
+        return self.vertex_traversal(starting_vertex,next_vertex, vertex_points)
 
     def give_edge_identification_color_and_arrow(self):
 
@@ -2646,8 +2572,8 @@ class CombinatorialImport:
             self.abstract_plotting_surface.triangles[-1].index = triangle_index
 
         self.glue_plotting_surface_edges()
-
-        self.vertex_traversal(self.abstract_plotting_surface.triangles[0].vertices[0], vertex_points)
+        starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[0]
+        self.vertex_traversal(starting_vertex, starting_vertex, vertex_points)
 
         orientation_first_triangle = np.linalg.det([[v.coord[0], v.coord[1], 1] for v in self.abstract_plotting_surface.triangles[0].vertices])
         if orientation_first_triangle < 0:
