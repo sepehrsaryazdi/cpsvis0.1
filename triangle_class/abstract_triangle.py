@@ -46,6 +46,67 @@ class AbstractSurface:
                 other_edge.edge_glued = [other_edge.v0, edge.v1, edge]
             else:
                 other_edge.edge_glued = [other_edge.v0, edge.v0, edge]
+    
+    def flip_edge(self,edge):
+        
+        new_triangle = AbstractTriangle(edge.triangle.index)
+        new_triangle_glued = AbstractTriangle(edge.edge_glued[2].triangle.index)
+        self.glue_edges(new_triangle.edges[0],new_triangle_glued.edges[0],new_triangle.edges[0].v0,new_triangle_glued.edges[0].v1)
+
+        # new_triangle.edges[1] = edge.triangle.edges[(edge.triangle_edges_index-1)%3]
+        # new_triangle.edges[1].triangle = new_triangle
+        # new_triangle.edges[1].v0 = new_triangle.vertices[1]
+        # new_triangle.edges[1].v1 = new_triangle.vertices[2]
+
+        # new_triangle.edges[-1] = edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3]
+        # new_triangle.edges[-1].triangle = new_triangle
+        # new_triangle.edges[-1].v0 = new_triangle.vertices[2]
+        # new_triangle.edges[-1].v1 = new_triangle.vertices[0]
+
+        # new_triangle_glued.edges[1] = edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3]
+        # new_triangle_glued.edges[1].triangle = new_triangle_glued
+        # new_triangle_glued.edges[1].v0 = new_triangle_glued.vertices[1]
+        # new_triangle_glued.edges[1].v1 = new_triangle_glued.vertices[2]
+
+        # new_triangle_glued.edges[-1] = edge.triangle.edges[(edge.triangle_edges_index+1)%3]
+        # new_triangle_glued.edges[-1].triangle = new_triangle_glued
+        # new_triangle_glued.edges[-1].v0 = new_triangle_glued.vertices[2]
+        # new_triangle_glued.edges[-1].v1 = new_triangle_glued.vertices[0]
+            
+        self.glue_edges(new_triangle.edges[1],edge.triangle.edges[(edge.triangle_edges_index-1)%3],new_triangle.edges[1].v0,edge.triangle.edges[(edge.triangle_edges_index-1)%3].v1)
+
+        self.glue_edges(new_triangle_glued.edges[-1], edge.triangle.edges[(edge.triangle_edges_index+1)%3], new_triangle_glued.edges[-1].v0, edge.triangle.edges[(edge.triangle_edges_index+1)%3].v1)
+        
+        self.glue_edges(new_triangle.edges[-1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3],new_triangle.edges[-1].v0, edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].v1)
+
+        self.glue_edges(new_triangle_glued.edges[1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3], new_triangle_glued.edges[1].v0,  edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].v1)
+
+        self.triangles[edge.triangle.index] = new_triangle
+        self.triangles[edge.edge_glued[2].triangle.index] = new_triangle_glued
+
+        if len(edge.v0.coord):
+            self.give_vertex_coordinates(new_triangle.edges[0].v0, edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].v1.coord)
+            self.give_vertex_coordinates(new_triangle.edges[0].v1, edge.triangle.edges[(edge.triangle_edges_index-1)%3].v0.coord)
+            self.give_vertex_coordinates(new_triangle.edges[1].v1, edge.v0.coord)
+            self.give_vertex_coordinates(new_triangle_glued.edges[1].v1, edge.v1.coord)
+        
+        try:
+            new_triangle.edges[0].color = edge.color
+            new_triangle.edges[0].arrow_strokes = edge.arrow_strokes
+            new_triangle_glued.edges[0].color = edge.edge_glued[2].color
+            new_triangle_glued.edges[0].arrow_strokes = edge.edge_glued[2].arrow_strokes
+            new_triangle.edges[1].color = edge.triangle.edges[(edge.triangle_edges_index-1)%3].color
+            new_triangle.edges[1].arrow_strokes = edge.triangle.edges[(edge.triangle_edges_index-1)%3].arrow_strokes
+            new_triangle.edges[-1].color = edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].color
+            new_triangle.edges[-1].arrow_strokes = edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].arrow_strokes
+            new_triangle_glued.edges[1].color = edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].color
+            new_triangle_glued.edges[1].arrow_strokes = edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].arrow_strokes
+            new_triangle_glued.edges[-1].color = edge.triangle.edges[(edge.triangle_edges_index+1)%3].color
+            new_triangle_glued.edges[-1].arrow_strokes = edge.triangle.edges[(edge.triangle_edges_index+1)%3].arrow_strokes
+        except:
+            pass
+
+        
 
     def give_vertex_coordinates(self, vertex, coord):
         if not len(vertex.coord):

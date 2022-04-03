@@ -4,6 +4,7 @@ from math import gamma
 from re import U
 import tkinter as tk
 from tkinter import ttk
+from venv import create
 from numpy import arctan2
 from sympy import poly
 
@@ -51,9 +52,25 @@ class GenerateGluingTable:
         self.n = n
         self.tk = tk
         self.win = self.tk.Toplevel()
+        self.edge_selected = None
         self.win.wm_title("Configure Triangulation")
         self.l = tk.Label(self.win, text='Select an interior edge by clicking on it and selecting "Flip Edge" to flip it and configure the triangulation. \nClick submit when finished.')
         self.l.pack(padx=20, pady=10)
+        self.figure = plt.Figure(figsize=(7, 5), dpi=100)
+        self.figure.canvas.mpl_connect('button_press_event', lambda e: self.flip_edge_select(e))
+        self.ax = self.figure.add_subplot(111)
+        self.chart_type = FigureCanvasTkAgg(self.figure, self.win)
+        self.chart_type.get_tk_widget().pack()
+        
+        self.continue_button= tk.Button(self.win, text="Submit Triangulation")
+        self.continue_button.pack(side="right",padx=(5,25),pady=25)
+        self.flip_edge_button = tk.Button(self.win, text="Flip Edge")
+        self.flip_edge_button.pack(side="right",padx=(0,5),pady=25)
+
+        self.flip_edge_button.bind("<ButtonPress>",  self.flip_edge)
+        
+
+       
         generic_polygon = Polygon(g,n)
         for first_torus_generator_index in range(g):
             i=4*first_torus_generator_index
@@ -197,12 +214,12 @@ class GenerateGluingTable:
         #     for edge in triangle.edges:
         #         print(triangle.index,edge.index,edge.edge_glued != None)
 
-        # for triangle in self.abstract_surface.triangles:
-        #     triangle.triangle_parameter = 1
-        #     for edge in triangle.edges:
-        #         edge.ea = 1
-        #         edge.eb = 1
-        #         #print('e:', edge.index, 'e.t:',triangle.index, "e':",edge.edge_glued[2].index,"e'.t:",edge.edge_glued[2].triangle.index, 'flipped: ', edge.edge_glued[1] != edge.edge_glued[2].v0)
+        for triangle in self.abstract_surface.triangles:
+            triangle.triangle_parameter = 1
+            for edge in triangle.edges:
+                edge.ea = 1
+                edge.eb = 1
+                #print('e:', edge.index, 'e.t:',triangle.index, "e':",edge.edge_glued[2].index,"e'.t:",edge.edge_glued[2].triangle.index, 'flipped: ', edge.edge_glued[1] != edge.edge_glued[2].v0)
         # for triangle in self.abstract_surface.triangles:
         #     print(triangle.triangle_parameter)
         # app.abstract_surface = self.abstract_surface
@@ -210,14 +227,117 @@ class GenerateGluingTable:
         # export_file()
 
 
-
-        combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface)
+        
+        combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface,create_window=False)
+        self.boundary_edges = combinatorial_import.boundary_edges
+        self.abstract_plotting_surface = combinatorial_import.abstract_plotting_surface
+        
+        self.edge_flip_interface()
+        
+        
         # for triangle in self.abstract_surface.triangles:
         #     for edge in triangle.edges:
         #         print(triangle.index, edge.index,edge.edge_glued[2].triangle.index, edge.edge_glued[2].index)
 
+    def flip_edge(self,e):
+
+        self.abstract_plotting_surface.flip_edge(self.edge_selected)
+        
+        for triangle in self.abstract_surface.triangles:
+            if triangle.index == self.edge_selected.triangle.index:
+                for edge in triangle.edges:
+                    if edge.index == self.edge_selected.index:
+                        self.abstract_surface.flip_edge(edge)
+
+        self.edge_selected = self.abstract_plotting_surface.triangles[self.edge_selected.triangle.index].edges[0]
+        self.edge_flip_interface()
+
+
+    def flip_edge_select(self,event):
+
+    
+        coord = np.array([event.xdata,event.ydata])
+        
+        interior_edges = []
+        for triangle in self.abstract_plotting_surface.triangles:
+            for edge in triangle.edges:
+                if edge not in interior_edges and edge.edge_glued[2] not in interior_edges and edge not in self.boundary_edges:
+                    interior_edges.append(edge)
+
+        distances = []
+        for edge in interior_edges:
+            edge_vector = np.array(edge.v1.coord) - np.array(edge.v0.coord)
+            tail_to_coord = np.array(coord) - np.array(edge.v0.coord)
+            perp_vector = tail_to_coord - np.dot(tail_to_coord,edge_vector)/(np.linalg.norm(edge_vector)**2)*edge_vector
+            distances.append(np.linalg.norm(perp_vector))
+        distances = np.array(distances)
+
+        
+        next_choice=  np.array(interior_edges)[np.argsort(distances)][0]
+        if next_choice != self.edge_selected:
+            self.edge_selected = next_choice
+            self.edge_flip_interface()
+
+        
+
+
     def edge_flip_interface(self):
         
+        self.ax.clear()
+        self.ax.remove()
+        self.ax.set_axis_off()
+
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_title('Test')
+        self.ax.set_axis_off()
+        
+        
+        plotted_edges = []
+        for triangle in self.abstract_plotting_surface.triangles:
+            for edge in triangle.edges:
+                [x1, y1] = edge.v0.coord
+                [x2, y2] = edge.v1.coord
+                x = [x1, x2]
+                y = [y1, y2]
+                self.ax.plot(x, y, c=edge.color)
+                plotted_edges.append(edge)
+                if edge.arrow_strokes > 0:
+                    try:
+                        flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+                        for i in range(edge.arrow_strokes):
+                            if flipped and edge.edge_glued[2] in plotted_edges:
+                                [x1, y1] = edge.v1.coord
+                                [x2, y2] = edge.v0.coord
+                            self.ax.arrow(x1, y1, (i + 4) * (x2 - x1) / (edge.arrow_strokes + 7),
+                                     (i + 4) * (y2 - y1) / (edge.arrow_strokes + 7), head_width=0.3, color=edge.color)
+                    except:
+                        pass
+
+        for triangle in self.abstract_plotting_surface.triangles:
+            [x1, y1] = triangle.vertices[0].coord
+            [x2, y2] = triangle.vertices[1].coord
+            [x3, y3] = triangle.vertices[2].coord
+            x = [x1, x2, x3, x1]
+            y = [y1, y2, y3, y1]
+            if triangle.selected:
+                self.ax.fill(x,y, "b", alpha=0.2)
+            self.ax.annotate(triangle.index, [np.mean(x[:-1]), np.mean(y[:-1])])
+            coord0 = np.array([x1, y1])
+            coord1 = np.array([x2, y2])
+            coord2 = np.array([x3, y3])
+            self.ax.annotate(0, 9 * coord0 / 10 + 1 / 10 * (coord1 + coord2), color='grey')
+            self.ax.annotate(1, 9 * coord1 / 10 + 1 / 10 * (coord0 + coord2), color='grey')
+            self.ax.annotate(2, 9 * coord2 / 10 + 1 / 10 * (coord1 + coord0), color='grey')
+
+        if self.edge_selected:
+            [x1,y1]=self.edge_selected.v0.coord
+            [x2,y2]=self.edge_selected.v1.coord
+            self.ax.plot([x1,x2],[y1,y2],color='red')
+        
+        self.chart_type.draw()
+        
+
+
         pass
 
 
@@ -1829,11 +1949,19 @@ class App(tk.Frame):
 
 class CombinatorialImport:
     def __init__(self, tk, filename, create_window=True, abstract_surface=None):
+        self.create_window = create_window
+        self.input_parameters = []
+        if not create_window and abstract_surface:
+            self.abstract_surface = abstract_surface
+            self.generate_combinatorial_map()
+            return
+
+
         if create_window:
             self.tk = tk
             self.parameter_entries = {}
             self.triangle_parameter_entry = None
-            self.input_parameters = []
+            
             if not abstract_surface:
                 self.convert_gluing_table_to_surface(filename)
             else:
@@ -2268,6 +2396,7 @@ class CombinatorialImport:
 
     def vertex_traversal(self,starting_vertex,vertex, vertex_points):
         if not len(vertex.coord):
+            self.vertex_traversed_list.append(vertex)
             self.abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
         else:
             if starting_vertex == vertex:
@@ -2605,6 +2734,7 @@ class CombinatorialImport:
 
         self.glue_plotting_surface_edges()
         starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[1]
+        self.vertex_traversed_list=[]
         self.vertex_traversal(starting_vertex, starting_vertex, vertex_points)
 
         orientation_first_triangle = np.linalg.det([[v.coord[0], v.coord[1], 1] for v in self.abstract_plotting_surface.triangles[0].vertices])
@@ -2621,6 +2751,23 @@ class CombinatorialImport:
         # for triangle in self.abstract_surface.triangles:
         #     for vertex in triangle.vertices:
         #         print(vertex.coord)
+        vertex_angles = []
+        for vertex in self.vertex_traversed_list:
+            vertex_angles.append(arctan2(vertex.coord[1],vertex.coord[0]))
+        self.vertex_traversed_list = np.array(self.vertex_traversed_list)[np.argsort(vertex_angles)]
+
+        
+
+        self.boundary_edges = []
+        for i in range(len(self.vertex_traversed_list)):
+            self.boundary_edges.append(0)
+        for triangle in self.abstract_plotting_surface.triangles:
+            for edge in triangle.edges:
+                for vertex_index in range(len(self.vertex_traversed_list)):
+                    vertex = self.vertex_traversed_list[vertex_index]
+                    next_vertex = self.vertex_traversed_list[(vertex_index+1)%len(self.vertex_traversed_list)]
+                    if (np.all(edge.v0.coord == vertex.coord) and np.all(edge.v1.coord == next_vertex.coord)) or (np.all(edge.v1.coord == vertex.coord) and np.all(edge.v0.coord == next_vertex.coord)):
+                        self.boundary_edges[vertex_index] = edge
 
 
         self.give_edge_identification_color_and_arrow()
@@ -2666,8 +2813,8 @@ class CombinatorialImport:
                     else:
                         edge.edge_glued[2].ea = edge.eb
                         edge.edge_glued[2].eb = edge.ea
-
-        self.plot_combinatorial_map()
+        if self.create_window:
+            self.plot_combinatorial_map()
 
 
 
