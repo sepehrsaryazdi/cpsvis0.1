@@ -2671,24 +2671,24 @@ def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
     if not filename:
         return
-    combinatorial_plot_window = CombinatorialImport(tk, filename)
-    # try:
-    #     gluing_table = pd.read_table(filename)
-    #     columns = gluing_table.columns
-    #     for row in np.array(gluing_table):
-    #         for element in row[0].rsplit(','):
-    #             assert element
+    #combinatorial_plot_window = CombinatorialImport(tk, filename)
+    try:
+        gluing_table = pd.read_table(filename)
+        columns = gluing_table.columns
+        for row in np.array(gluing_table):
+            for element in row[0].rsplit(','):
+                assert element
         
-    # except:
-    #     win = tk.Toplevel()
-    #     win.wm_title("Gluing Table Invalid")
-    #     l = tk.Label(win, text="There was an error uploading this gluing table. Please ensure you have a valid gluing table before continuing.")
-    #     l.pack(side="top",padx=20, pady=10)
-    #     l2 = tk.Label(win, text="Explicit examples of the required structure are available in the 'example_gluing_tables' folder. Note that every edge on all triangles must be glued.")
-    #     l2.pack(side="top",padx=20,pady=(0,10))
-    #     #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-    #     cancel = ttk.Button(win, text="Close", command=win.destroy)
-    #     cancel.pack(side='right', padx=25, pady=5)
+    except:
+        win = tk.Toplevel()
+        win.wm_title("Gluing Table Invalid")
+        l = tk.Label(win, text="There was an error uploading this gluing table. Please ensure you have a valid gluing table before continuing.")
+        l.pack(side="top",padx=20, pady=10)
+        l2 = tk.Label(win, text="Explicit examples of the required structure are available in the 'example_gluing_tables' folder. Note that every edge on all triangles must be glued.")
+        l2.pack(side="top",padx=20,pady=(0,10))
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        cancel = ttk.Button(win, text="Close", command=win.destroy)
+        cancel.pack(side='right', padx=25, pady=5)
 
 
 def convert_surface_to_gluing_table(self):
@@ -2800,18 +2800,18 @@ def slr3r():
         cancel.pack(side='right', padx=25, pady=5)
 
 def translatelength():
-    translatelength_window = TranslationLength()
-    # try:
-    #     assert app.abstract_surface
-    #     translatelength_window = TranslationLength()
-    # except:
-    #     win = tk.Toplevel()
-    #     win.wm_title("No Uploaded Surface")
-    #     l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
-    #     l.pack(padx=20, pady=10)
-    #     #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-    #     cancel = ttk.Button(win, text="Close", command=win.destroy)
-    #     cancel.pack(side='right', padx=25, pady=5)
+    #translatelength_window = TranslationLength()
+    try:
+        assert app.abstract_surface
+        translatelength_window = TranslationLength()
+    except:
+        win = tk.Toplevel()
+        win.wm_title("No Uploaded Surface")
+        l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
+        l.pack(padx=20, pady=10)
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        cancel = ttk.Button(win, text="Close", command=win.destroy)
+        cancel.pack(side='right', padx=25, pady=5)
 
 
 def generate_gluing_table():
