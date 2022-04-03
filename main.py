@@ -63,32 +63,34 @@ class GenerateGluingTable:
             b_inv = generic_polygon.edges[i+3]
             generic_polygon.glue_edges(a,a_inv, a.v0, a_inv.v1)
             generic_polygon.glue_edges(b,b_inv, b.v0, b_inv.v1)
-        print([e.index for e in generic_polygon.edges])
-        print([e.edge_glued[2].index for e in generic_polygon.edges])
+        #print([e.index for e in generic_polygon.edges])
+        #print([e.edge_glued[2].index for e in generic_polygon.edges])
         self.abstract_surface = AbstractSurface()
         
         if n >= 2:
 
             for i in range(len(generic_polygon.edges)):
                 self.abstract_surface.add_triangle()
-            
+
+            exterior_edges=[]
+            for i in range(len(self.abstract_surface.triangles)):
+                exterior_edges.append(self.abstract_surface.triangles[i].edges[0])
+
             for polygon_edge in generic_polygon.edges:
                 glued_polygon_edge = polygon_edge.edge_glued[2]
-                triangle_edge = self.abstract_surface.triangles[polygon_edge.index].edges[0]
-                triangle_polygon_edge = self.abstract_surface.triangles[glued_polygon_edge.index].edges[0]
+                triangle_edge = exterior_edges[polygon_edge.index]
+                triangle_glued_edge = exterior_edges[glued_polygon_edge.index]
                 flipped = (polygon_edge.edge_glued[1] != polygon_edge.edge_glued[2].v0)
                 if not flipped:
-                    self.abstract_surface.glue_edges(triangle_edge, triangle_polygon_edge, triangle_edge.v0, triangle_polygon_edge.v0)
+                    self.abstract_surface.glue_edges(triangle_edge, triangle_glued_edge, triangle_edge.v0, triangle_glued_edge.v0)
                 else:
-                    self.abstract_surface.glue_edges(triangle_edge, triangle_polygon_edge, triangle_edge.v0, triangle_polygon_edge.v1)
-
-
+                    self.abstract_surface.glue_edges(triangle_edge, triangle_glued_edge, triangle_edge.v0, triangle_glued_edge.v1)
             
             for i in range(len(generic_polygon.edges)):
 
                 current_triangle = self.abstract_surface.triangles[i]
-                forward_triangle = self.abstract_surface.triangles[(i-1)%len(self.abstract_surface.triangles)]
-                backward_triangle = self.abstract_surface.triangles[(i+1)%len(self.abstract_surface.triangles)]
+                forward_triangle = self.abstract_surface.triangles[(i+1)%len(self.abstract_surface.triangles)]
+                backward_triangle = self.abstract_surface.triangles[(i-1)%len(self.abstract_surface.triangles)]
 
                 edge_current = current_triangle.edges[0]
                 edge_current_forward = current_triangle.edges[1]
@@ -105,17 +107,33 @@ class GenerateGluingTable:
                 self.abstract_surface.glue_edges(edge_current_forward, edge_forward_backward, edge_current_forward.v0, edge_forward_backward.v1)
                 self.abstract_surface.glue_edges(edge_current_backward, edge_backward_forward, edge_current_backward.v0, edge_backward_forward.v1)
                 
-            remaining_subdivisions = n-1
+            remaining_subdivisions = n-2
             while remaining_subdivisions:
                 triangle_to_subdivide = self.abstract_surface.triangles[-1]
                 triangle1 = AbstractTriangle(triangle_to_subdivide.index)
                 triangle2 = AbstractTriangle(triangle_to_subdivide.index+1)
                 triangle3 = AbstractTriangle(triangle_to_subdivide.index+2)
 
-                triangle1.edges[0] = triangle_to_subdivide.edges[0]
-                triangle2.edges[0] = triangle_to_subdivide.edges[1]
-                triangle3.edges[0] = triangle_to_subdivide.edges[-1]
-
+                #triangle1.edges[0] = triangle_to_subdivide.edges[-1]
+                triangle1_inheritance = triangle_to_subdivide.edges[-1]
+                triangle2_inheritance = triangle_to_subdivide.edges[0]
+                triangle3_inheritance = triangle_to_subdivide.edges[1]
+                triangle1_edge_glued_flipped = (triangle1_inheritance.edge_glued[1] != triangle1_inheritance.edge_glued[2])
+                if not triangle1_edge_glued_flipped:
+                    self.abstract_surface.glue_edges(triangle1.edges[0], triangle1_inheritance.edge_glued[2], triangle1.edges[0].v0, triangle1_inheritance.edge_glued[2].v0)
+                else:
+                    self.abstract_surface.glue_edges(triangle1.edges[0], triangle1_inheritance.edge_glued[2], triangle1.edges[0].v0, triangle1_inheritance.edge_glued[2].v1)
+                triangle2_edge_glued_flipped = (triangle2_inheritance.edge_glued[1] != triangle2_inheritance.edge_glued[2])
+                if not triangle2_edge_glued_flipped:
+                    self.abstract_surface.glue_edges(triangle2.edges[0], triangle2_inheritance.edge_glued[2], triangle2.edges[0].v0, triangle2_inheritance.edge_glued[2].v0)
+                else:
+                    self.abstract_surface.glue_edges(triangle2.edges[0], triangle2_inheritance.edge_glued[2], triangle2.edges[0].v0, triangle2_inheritance.edge_glued[2].v1)
+                triangle3_edge_glued_flipped = (triangle3_inheritance.edge_glued[1] != triangle3_inheritance.edge_glued[2])
+                if not triangle3_edge_glued_flipped:
+                    self.abstract_surface.glue_edges(triangle3.edges[0], triangle3_inheritance.edge_glued[2], triangle3.edges[0].v0, triangle3_inheritance.edge_glued[2].v0)
+                else:
+                    self.abstract_surface.glue_edges(triangle3.edges[0], triangle3_inheritance.edge_glued[2], triangle3.edges[0].v0, triangle3_inheritance.edge_glued[2].v1)
+                
 
                 edge_triangle1 = triangle1.edges[0]
                 edge_triangle1_forward = triangle1.edges[1]
@@ -131,6 +149,7 @@ class GenerateGluingTable:
 
                 self.abstract_surface.glue_edges(edge_triangle1_forward, edge_triangle2_backward, edge_triangle1_forward.v0, edge_triangle2_backward.v1)
                 self.abstract_surface.glue_edges(edge_triangle1_backward, edge_triangle3_forward, edge_triangle1_backward.v0, edge_triangle3_forward.v1)
+                self.abstract_surface.glue_edges(edge_triangle2_forward, edge_triangle3_backward, edge_triangle1_forward.v0, edge_triangle3_backward.v1)
 
                 self.abstract_surface.triangles[-1] = triangle1
                 self.abstract_surface.triangles.append(triangle2)
@@ -174,7 +193,10 @@ class GenerateGluingTable:
         #     for vertex_index in range(3):
         #         triangle.vertices[vertex_index].index = (vertex_index+1)%3
         
-        
+        # for triangle in self.abstract_surface.triangles:
+        #     for edge in triangle.edges:
+        #         print(triangle.index,edge.index,edge.edge_glued != None)
+
         # for triangle in self.abstract_surface.triangles:
         #     triangle.triangle_parameter = 1
         #     for edge in triangle.edges:
@@ -184,7 +206,11 @@ class GenerateGluingTable:
         # for triangle in self.abstract_surface.triangles:
         #     print(triangle.triangle_parameter)
         # app.abstract_surface = self.abstract_surface
+        
         # export_file()
+
+
+
         combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface)
         # for triangle in self.abstract_surface.triangles:
         #     for edge in triangle.edges:
@@ -612,6 +638,7 @@ class TranslationLength:
     def vertex_traversal(self,starting_vertex,vertex, vertex_points):
 
         if not len(vertex.coord):
+            self.vertex_traversed_list.append(vertex)
             self.abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
         else:
             if starting_vertex == vertex:
@@ -2572,7 +2599,7 @@ class CombinatorialImport:
             self.abstract_plotting_surface.triangles[-1].index = triangle_index
 
         self.glue_plotting_surface_edges()
-        starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[0]
+        starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[1]
         self.vertex_traversal(starting_vertex, starting_vertex, vertex_points)
 
         orientation_first_triangle = np.linalg.det([[v.coord[0], v.coord[1], 1] for v in self.abstract_plotting_surface.triangles[0].vertices])
@@ -2644,23 +2671,24 @@ def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
     if not filename:
         return
-    try:
-        gluing_table = pd.read_table(filename)
-        columns = gluing_table.columns
-        for row in np.array(gluing_table):
-            for element in row[0].rsplit(','):
-                assert element
-        combinatorial_plot_window = CombinatorialImport(tk, filename)
-    except:
-        win = tk.Toplevel()
-        win.wm_title("Gluing Table Invalid")
-        l = tk.Label(win, text="There was an error uploading this gluing table. Please ensure you have a valid gluing table before continuing.")
-        l.pack(side="top",padx=20, pady=10)
-        l2 = tk.Label(win, text="Explicit examples of the required structure are available in the 'example_gluing_tables' folder. Note that every edge on all triangles must be glued.")
-        l2.pack(side="top",padx=20,pady=(0,10))
-        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-        cancel = ttk.Button(win, text="Close", command=win.destroy)
-        cancel.pack(side='right', padx=25, pady=5)
+    combinatorial_plot_window = CombinatorialImport(tk, filename)
+    # try:
+    #     gluing_table = pd.read_table(filename)
+    #     columns = gluing_table.columns
+    #     for row in np.array(gluing_table):
+    #         for element in row[0].rsplit(','):
+    #             assert element
+        
+    # except:
+    #     win = tk.Toplevel()
+    #     win.wm_title("Gluing Table Invalid")
+    #     l = tk.Label(win, text="There was an error uploading this gluing table. Please ensure you have a valid gluing table before continuing.")
+    #     l.pack(side="top",padx=20, pady=10)
+    #     l2 = tk.Label(win, text="Explicit examples of the required structure are available in the 'example_gluing_tables' folder. Note that every edge on all triangles must be glued.")
+    #     l2.pack(side="top",padx=20,pady=(0,10))
+    #     #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    #     cancel = ttk.Button(win, text="Close", command=win.destroy)
+    #     cancel.pack(side='right', padx=25, pady=5)
 
 
 def convert_surface_to_gluing_table(self):
