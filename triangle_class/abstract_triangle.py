@@ -72,15 +72,30 @@ class AbstractSurface:
         # new_triangle_glued.edges[-1].triangle = new_triangle_glued
         # new_triangle_glued.edges[-1].v0 = new_triangle_glued.vertices[2]
         # new_triangle_glued.edges[-1].v1 = new_triangle_glued.vertices[0]
-            
-        self.glue_edges(new_triangle.edges[1],edge.triangle.edges[(edge.triangle_edges_index-1)%3],new_triangle.edges[1].v0,edge.triangle.edges[(edge.triangle_edges_index-1)%3].v1)
-
-        self.glue_edges(new_triangle_glued.edges[-1], edge.triangle.edges[(edge.triangle_edges_index+1)%3], new_triangle_glued.edges[-1].v0, edge.triangle.edges[(edge.triangle_edges_index+1)%3].v1)
         
-        self.glue_edges(new_triangle.edges[-1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3],new_triangle.edges[-1].v0, edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].v1)
+        flipped = (edge.triangle.edges[(edge.triangle_edges_index-1)%3].edge_glued[1] != edge.triangle.edges[(edge.triangle_edges_index-1)%3].edge_glued[2].v0)
+        if flipped:
+            self.glue_edges(new_triangle.edges[1],edge.triangle.edges[(edge.triangle_edges_index-1)%3],new_triangle.edges[1].v0,edge.triangle.edges[(edge.triangle_edges_index-1)%3].v0)
+        else:
+            self.glue_edges(new_triangle.edges[1],edge.triangle.edges[(edge.triangle_edges_index-1)%3],new_triangle.edges[1].v0,edge.triangle.edges[(edge.triangle_edges_index-1)%3].v1)
+        
+        flipped = (edge.triangle.edges[(edge.triangle_edges_index+1)%3].edge_glued[1] != edge.triangle.edges[(edge.triangle_edges_index+1)%3].edge_glued[2].v0)
+        if flipped:
+            self.glue_edges(new_triangle_glued.edges[-1], edge.triangle.edges[(edge.triangle_edges_index+1)%3], new_triangle_glued.edges[-1].v0, edge.triangle.edges[(edge.triangle_edges_index+1)%3].v0)
+        else:
+            self.glue_edges(new_triangle_glued.edges[-1], edge.triangle.edges[(edge.triangle_edges_index+1)%3], new_triangle_glued.edges[-1].v0, edge.triangle.edges[(edge.triangle_edges_index+1)%3].v1)
+        
+        flipped = (edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].edge_glued[1] != edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].edge_glued[2].v0)
+        if flipped:
+            self.glue_edges(new_triangle.edges[-1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3],new_triangle.edges[-1].v0, edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].v0)
+        else:
+            self.glue_edges(new_triangle.edges[-1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3],new_triangle.edges[-1].v0, edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].v1)
 
-        self.glue_edges(new_triangle_glued.edges[1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3], new_triangle_glued.edges[1].v0,  edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].v1)
-
+        flipped = (edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].edge_glued[1] != edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].edge_glued[2].v0)
+        if flipped:
+            self.glue_edges(new_triangle_glued.edges[1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3], new_triangle_glued.edges[1].v0,  edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].v0)
+        else:
+            self.glue_edges(new_triangle_glued.edges[1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3], new_triangle_glued.edges[1].v0,  edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].v1)
         self.triangles[edge.triangle.index] = new_triangle
         self.triangles[edge.edge_glued[2].triangle.index] = new_triangle_glued
 
