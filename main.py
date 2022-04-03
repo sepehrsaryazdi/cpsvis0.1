@@ -67,6 +67,7 @@ class GenerateGluingTable:
         self.flip_edge_button = tk.Button(self.win, text="Flip Edge")
         self.flip_edge_button.pack(side="right",padx=(0,5),pady=25)
 
+        self.continue_button.bind("<ButtonPress>", self.submit_triangulation)
         self.flip_edge_button.bind("<ButtonPress>",  self.flip_edge)
         
 
@@ -239,7 +240,18 @@ class GenerateGluingTable:
         #     for edge in triangle.edges:
         #         print(triangle.index, edge.index,edge.edge_glued[2].triangle.index, edge.edge_glued[2].index)
 
+    def submit_triangulation(self, e):
+        app.abstract_surface = self.abstract_surface
+        combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface)
+        
+        self.win.destroy()
+
     def flip_edge(self,e):
+
+        try:
+            assert self.edge_selected != None
+        except:
+            return
 
         self.abstract_plotting_surface.flip_edge(self.edge_selected)
         
@@ -288,7 +300,7 @@ class GenerateGluingTable:
         self.ax.set_axis_off()
 
         self.ax = self.figure.add_subplot(111)
-        self.ax.set_title('Test')
+        self.ax.set_title('Combinatorial Map')
         self.ax.set_axis_off()
         
         
@@ -2733,7 +2745,7 @@ class CombinatorialImport:
             self.abstract_plotting_surface.triangles[-1].index = triangle_index
 
         self.glue_plotting_surface_edges()
-        starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[1]
+        starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[0]
         self.vertex_traversed_list=[]
         self.vertex_traversal(starting_vertex, starting_vertex, vertex_points)
 
