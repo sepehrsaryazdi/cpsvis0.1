@@ -205,7 +205,7 @@ class GenerateGluingTable:
                 
                 self.abstract_surface.glue_edges(edge_triangle_forward, edge_next_triangle_backward, edge_triangle_forward.v0, edge_next_triangle_backward.v1)
 
-            print([(e.triangle.index, e.index, e.edge_glued[2].triangle.index,e.edge_glued[2].index) for e in exterior_edges])
+            #print([(e.triangle.index, e.index, e.edge_glued[2].triangle.index,e.edge_glued[2].index) for e in exterior_edges])
         #app.abstract_surface = self.abstract_surfasce
         # for triangle in self.abstract_surface.triangles:
         #     for vertex_index in range(3):
@@ -260,6 +260,12 @@ class GenerateGluingTable:
                 for edge in triangle.edges:
                     if edge.index == self.edge_selected.index:
                         self.abstract_surface.flip_edge(edge)
+        
+        for triangle in self.abstract_plotting_surface.triangles:
+            for edge in triangle.edges:
+                print('e.t',triangle.index,'e',edge.index,"e'.t", edge.edge_glued[2].triangle.index, "e'",edge.edge_glued[2].index)
+        
+    
 
         self.edge_selected = self.abstract_plotting_surface.triangles[self.edge_selected.triangle.index].edges[0]
         self.edge_flip_interface()
