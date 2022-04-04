@@ -243,6 +243,15 @@ class GenerateGluingTable:
     def submit_triangulation(self, e):
         app.abstract_surface = self.abstract_surface
         combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface)
+        # try:
+        #     combinatorial_import = CombinatorialImport(tk, None, abstract_surface=self.abstract_surface)
+        # except:
+        #     for triangle in self.abstract_surface.triangles:
+        #         triangle.triangle_parameter = 1
+        #         for edge in triangle.edges:
+        #             edge.ea = 1
+        #             edge.eb = 1
+        #     export_file()
         
         self.win.destroy()
 
@@ -2413,6 +2422,7 @@ class CombinatorialImport:
 
 
     def vertex_traversal(self,starting_vertex,vertex, vertex_points):
+        
         if not len(vertex.coord):
             self.vertex_traversed_list.append(vertex)
             self.abstract_plotting_surface.give_vertex_coordinates(vertex,vertex_points.pop())
@@ -2426,10 +2436,13 @@ class CombinatorialImport:
         edge_in_front = vertex_edges[0]
         
         if not edge_in_front.edge_glued:
+            
             next_vertex = edge_in_front.v1
+            print(vertex.edges[0].triangle.index, vertex.index, 'getting in front', next_vertex.edges[0].triangle.index, next_vertex.index)
         
         else:
             next_vertex = self.get_dual_vertex(vertex, edge_in_front)
+            print(vertex.edges[0].triangle.index,vertex.index,'getting_dual',next_vertex.edges[0].triangle.index,next_vertex.index)
         
         return self.vertex_traversal(starting_vertex,next_vertex, vertex_points)
 
@@ -2841,14 +2854,14 @@ def import_file():
     filename = filedialog.askopenfilename(filetypes=[("Excel files", ".csv")])
     if not filename:
         return
-    #combinatorial_plot_window = CombinatorialImport(tk, filename)
+    
     try:
         gluing_table = pd.read_table(filename)
         columns = gluing_table.columns
         for row in np.array(gluing_table):
             for element in row[0].rsplit(','):
                 assert element
-        
+        combinatorial_plot_window = CombinatorialImport(tk, filename)
     except:
         win = tk.Toplevel()
         win.wm_title("Gluing Table Invalid")
