@@ -1,5 +1,14 @@
 import numpy as np
 
+def get_length(matrix):
+    eigenvalues = np.linalg.eigvals(matrix)
+    absolute_eigenvalues = np.absolute(eigenvalues)
+    absolute_eigenvalues = np.sort(absolute_eigenvalues)
+    smallest_eigenvalue = absolute_eigenvalues[0]
+    largest_eigenvalue = absolute_eigenvalues[-1]
+    length = np.log(largest_eigenvalue/smallest_eigenvalue)
+    return length, eigenvalues
+
 
 def edge_matrix(q_plus,q_minus):
     coefficient = np.power((q_plus/q_minus), (1/3))
