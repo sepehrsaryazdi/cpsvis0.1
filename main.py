@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from venv import create
 from numpy import arctan2
+from sklearn import neighbors
 from sympy import poly
 
 from triangle_class.abstract_triangle import *
@@ -270,9 +271,9 @@ class GenerateGluingTable:
                     if edge.index == self.edge_selected.index:
                         self.abstract_surface.flip_edge(edge)
         
-        for triangle in self.abstract_plotting_surface.triangles:
-            for edge in triangle.edges:
-                print('e.t',triangle.index,'e',edge.index,"e'.t", edge.edge_glued[2].triangle.index, "e'",edge.edge_glued[2].index)
+        # for triangle in self.abstract_plotting_surface.triangles:
+        #     for edge in triangle.edges:
+        #         print('e.t',triangle.index,'e',edge.index,"e'.t", edge.edge_glued[2].triangle.index, "e'",edge.edge_glued[2].index)
         
     
 
@@ -427,7 +428,7 @@ class TranslationLength:
 
 
     def compute_matrix_path(self, edge_starting, initial_triangle, final_triangle, final_edge):
-        triangle_list = np.array(self.abstract_plotting_surface.triangles)
+        triangle_list = np.array(self.triangle_order_generator(self.abstract_plotting_surface.triangles[0],[self.abstract_plotting_surface.triangles[0]], len(self.abstract_plotting_surface.triangles)))
         final_triangle_list_index = np.where(triangle_list == final_triangle)[0][0]
         current_triangle = initial_triangle
         current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
@@ -712,31 +713,28 @@ class TranslationLength:
             if edge.arrow_strokes > 0:
                 edge.arrow_strokes = edge.arrow_strokes - min_stroke + 1
     
-    def glue_plotting_surface_edges(self):
-        for index in range(len(self.abstract_plotting_surface.triangles[:-1])):
-           
-            triangle_plotting_index = self.abstract_plotting_surface.triangles[index].index
-            self.abstract_plotting_surface.triangles[index].triangle_parameter = self.abstract_surface.triangles[triangle_plotting_index].triangle_parameter
-            next_triangle_plotting_index = self.abstract_plotting_surface.triangles[index+1].index
+    def glue_plotting_surface_edges(self, triangle_list):
+        for index in range(len(triangle_list[:-1])):
+            triangle_plotting_index = triangle_list[index].index
+            next_triangle_plotting_index = triangle_list[index+1].index
             edge_connection_index = '01'
             other_edge_index = '01'
             flipped = 0
-            for edge in self.abstract_surface.triangles[triangle_plotting_index].edges:
-                try:
-                    if edge.edge_glued[2].triangle == self.abstract_surface.triangles[next_triangle_plotting_index]:
-                        edge_connection_index = edge.index
-                        other_edge_index = edge.edge_glued[2].index
-                        flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-                except:
-                    pass
-            edge_to_glue = self.abstract_plotting_surface.triangles[index].edges[0]
+            
+            for edge in self.abstract_surface.triangles[triangle_plotting_index].edges: 
+                if edge.edge_glued[2].triangle == self.abstract_surface.triangles[next_triangle_plotting_index]:
+                    edge_connection_index = edge.index
+                    other_edge_index = edge.edge_glued[2].index
+                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+            edge_to_glue = self.abstract_surface.triangles[triangle_plotting_index].edges[0]
             other_edge_to_glue = self.abstract_surface.triangles[next_triangle_plotting_index].edges[0]
-            for edge in self.abstract_plotting_surface.triangles[index].edges:
+            for edge in self.abstract_plotting_surface.triangles[triangle_plotting_index].edges:
                 if edge.index == edge_connection_index:
                     edge_to_glue = edge
-            for edge in self.abstract_plotting_surface.triangles[index+1].edges:
+            for edge in self.abstract_plotting_surface.triangles[next_triangle_plotting_index].edges:
                 if edge.index == other_edge_index:
                     other_edge_to_glue = edge
+            
             if not flipped:
                 self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0, other_edge_to_glue.v0)
             else:
@@ -757,34 +755,22 @@ class TranslationLength:
                 other_vertex = edge.edge_glued[2].v1
         return other_vertex
 
-    def triangle_order_generator(self,edge_list, prev_state, n, top_bottom_list):
-        if len(edge_list) == n:
-            return (edge_list,top_bottom_list)
-        current_edge_on_previous_triangle = edge_list[-1]
-        current_edge_on_new_triangle = current_edge_on_previous_triangle.edge_glued[2]
-        new_triangle = current_edge_on_new_triangle.triangle
-        flipped = 0
-        if current_edge_on_previous_triangle.edge_glued[1] != current_edge_on_new_triangle.v0:
-            flipped = 1
-        for edge_index in range(3):
-            if new_triangle.edges[edge_index] == current_edge_on_new_triangle:
-                current_edge_on_new_triangle = edge_index
-                break
-        new_prev_state = 'top'
-        if prev_state == 'top':
-            next_edge_on_new_triangle = (current_edge_on_new_triangle + ((-1)**flipped)*1) % 3
-            if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
-                new_prev_state = 'bottom'
-        else:
-            next_edge_on_new_triangle = (current_edge_on_new_triangle - ((-1) ** flipped) * 1) % 3
-            if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
-                new_prev_state = 'bottom'
-
-        top_bottom_list.append(new_prev_state)
-
-        next_edge_on_new_triangle = new_triangle.edges[next_edge_on_new_triangle]
-        edge_list.append(next_edge_on_new_triangle)
-        return self.triangle_order_generator(edge_list, new_prev_state, n, top_bottom_list)
+    def triangle_order_generator(self, current_triangle, triangle_list, number_of_triangles):
+        
+        if len(triangle_list) == number_of_triangles:
+            return triangle_list
+    
+        neighbours = []
+        for edge in current_triangle.edges:
+            neighbours.append(edge.edge_glued[2].triangle)
+        neighbours = np.array(neighbours)[np.argsort([t.index for t in neighbours])]
+        for neighbour in neighbours:
+            results = []
+            if neighbour not in triangle_list:
+                triangle_list.append(neighbour)
+                results.append(self.triangle_order_generator(neighbour, triangle_list, number_of_triangles))
+            if len(results) and results[-1]:
+                return results[-1]
     
     def vertex_traversal(self,starting_vertex,vertex, vertex_points):
 
@@ -880,16 +866,9 @@ class TranslationLength:
         self.chart_type.draw()
 
     def generate_combinatorial_map(self):
-        first_triangle = self.abstract_surface.triangles[0]
-        first_edge_index = 0
-        for edge_index in range(3):
-            if not first_triangle.edges[edge_index].edge_glued:
-                first_edge_index = (edge_index - 1) % 3
-                break
-        edge_list = [first_triangle.edges[first_edge_index]]
-        edge_list, top_bottom_list = self.triangle_order_generator(edge_list, 'top', len(self.abstract_surface.triangles), ['top'])
-
+        triangle_list = self.triangle_order_generator(self.abstract_surface.triangles[0], [self.abstract_surface.triangles[0]], len(self.abstract_surface.triangles))
         triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
+        edge_list = self.abstract_surface.triangles
 
 
         vertex_points = []
@@ -904,7 +883,7 @@ class TranslationLength:
             self.abstract_plotting_surface.add_triangle()
             self.abstract_plotting_surface.triangles[-1].index = triangle_index
 
-        self.glue_plotting_surface_edges()
+        self.glue_plotting_surface_edges(triangle_list)
         
         self.vertex_traversed_list = []
         starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[0]
@@ -2163,34 +2142,24 @@ class CombinatorialImport:
         app.plot_fresh(self.main_surface.triangles[0].t)
         self.win.destroy()
 
-    def triangle_order_generator(self,edge_list, prev_state, n, top_bottom_list):
-        if len(edge_list) == n:
-            return (edge_list,top_bottom_list)
-        current_edge_on_previous_triangle = edge_list[-1]
-        current_edge_on_new_triangle = current_edge_on_previous_triangle.edge_glued[2]
-        new_triangle = current_edge_on_new_triangle.triangle
-        flipped = 0
-        if current_edge_on_previous_triangle.edge_glued[1] != current_edge_on_new_triangle.v0:
-            flipped = 1
-        for edge_index in range(3):
-            if new_triangle.edges[edge_index] == current_edge_on_new_triangle:
-                current_edge_on_new_triangle = edge_index
-                break
-        new_prev_state = 'top'
-        if prev_state == 'top':
-            next_edge_on_new_triangle = (current_edge_on_new_triangle + ((-1)**flipped)*1) % 3
-            if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
-                new_prev_state = 'bottom'
-        else:
-            next_edge_on_new_triangle = (current_edge_on_new_triangle - ((-1) ** flipped) * 1) % 3
-            if next_edge_on_new_triangle != (current_edge_on_new_triangle + 1) % 3:
-                new_prev_state = 'bottom'
-
-        top_bottom_list.append(new_prev_state)
-
-        next_edge_on_new_triangle = new_triangle.edges[next_edge_on_new_triangle]
-        edge_list.append(next_edge_on_new_triangle)
-        return self.triangle_order_generator(edge_list, new_prev_state, n, top_bottom_list)
+    def triangle_order_generator(self, current_triangle, triangle_list, number_of_triangles):
+        
+        if len(triangle_list) == number_of_triangles:
+            return triangle_list
+    
+        neighbours = []
+        for edge in current_triangle.edges:
+            neighbours.append(edge.edge_glued[2].triangle)
+        neighbours = np.array(neighbours)[np.argsort([t.index for t in neighbours])]
+        for neighbour in neighbours:
+            results = []
+            if neighbour not in triangle_list:
+                triangle_list.append(neighbour)
+                results.append(self.triangle_order_generator(neighbour, triangle_list, number_of_triangles))
+            if len(results) and results[-1]:
+                return results[-1]
+        
+        
 
     def generate_new_triangle(self,current_edge, current_abstract_edge, distance_from_initial_triangle, e03, e30, e23, e32, A023, max_distance):
 
@@ -2438,11 +2407,11 @@ class CombinatorialImport:
         if not edge_in_front.edge_glued:
             
             next_vertex = edge_in_front.v1
-            print(vertex.edges[0].triangle.index, vertex.index, 'getting in front', next_vertex.edges[0].triangle.index, next_vertex.index)
+            #print(vertex.edges[0].triangle.index, vertex.index, 'getting in front', next_vertex.edges[0].triangle.index, next_vertex.index)
         
         else:
             next_vertex = self.get_dual_vertex(vertex, edge_in_front)
-            print(vertex.edges[0].triangle.index,vertex.index,'getting_dual',next_vertex.edges[0].triangle.index,next_vertex.index)
+            #print(vertex.edges[0].triangle.index,vertex.index,'getting_dual',next_vertex.edges[0].triangle.index,next_vertex.index)
         
         return self.vertex_traversal(starting_vertex,next_vertex, vertex_points)
 
@@ -2504,27 +2473,26 @@ class CombinatorialImport:
                 edge.arrow_strokes = edge.arrow_strokes - min_stroke + 1
 
 
-    def glue_plotting_surface_edges(self):
-        for index in range(len(self.abstract_plotting_surface.triangles[:-1])):
-            triangle_plotting_index = self.abstract_plotting_surface.triangles[index].index
-            next_triangle_plotting_index = self.abstract_plotting_surface.triangles[index+1].index
+    def glue_plotting_surface_edges(self, triangle_list):
+        
+        for index in range(len(triangle_list[:-1])):
+            triangle_plotting_index = triangle_list[index].index
+            next_triangle_plotting_index = triangle_list[index+1].index
             edge_connection_index = '01'
             other_edge_index = '01'
             flipped = 0
-            for edge in self.abstract_surface.triangles[triangle_plotting_index].edges:
-                try:
-                    if edge.edge_glued[2].triangle == self.abstract_surface.triangles[next_triangle_plotting_index]:
-                        edge_connection_index = edge.index
-                        other_edge_index = edge.edge_glued[2].index
-                        flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-                except:
-                    pass
-            edge_to_glue = self.abstract_plotting_surface.triangles[index].edges[0]
+            
+            for edge in self.abstract_surface.triangles[triangle_plotting_index].edges: 
+                if edge.edge_glued[2].triangle == self.abstract_surface.triangles[next_triangle_plotting_index]:
+                    edge_connection_index = edge.index
+                    other_edge_index = edge.edge_glued[2].index
+                    flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
+            edge_to_glue = self.abstract_surface.triangles[triangle_plotting_index].edges[0]
             other_edge_to_glue = self.abstract_surface.triangles[next_triangle_plotting_index].edges[0]
-            for edge in self.abstract_plotting_surface.triangles[index].edges:
+            for edge in self.abstract_plotting_surface.triangles[triangle_plotting_index].edges:
                 if edge.index == edge_connection_index:
                     edge_to_glue = edge
-            for edge in self.abstract_plotting_surface.triangles[index+1].edges:
+            for edge in self.abstract_plotting_surface.triangles[next_triangle_plotting_index].edges:
                 if edge.index == other_edge_index:
                     other_edge_to_glue = edge
             
@@ -2730,27 +2698,11 @@ class CombinatorialImport:
 
 
     def generate_combinatorial_map(self):
-        punctured_triangles = []
-        for triangle in self.abstract_surface.triangles:
-            for edge in triangle.edges:
-                if not edge.edge_glued:
-                    punctured_triangles.append(triangle)
-                    break
-        if len(punctured_triangles):
-            first_triangle = punctured_triangles[0]
-        else:
-            first_triangle = self.abstract_surface.triangles[0]
-        first_edge_index = 0
-        for edge_index in range(3):
-            if not first_triangle.edges[edge_index].edge_glued:
-                first_edge_index = (edge_index - 1) % 3
-                break
-        edge_list = [first_triangle.edges[first_edge_index]]
-        edge_list, top_bottom_list = self.triangle_order_generator(edge_list, 'top', len(self.abstract_surface.triangles), ['top'])
+        
 
+        triangle_list = self.triangle_order_generator(self.abstract_surface.triangles[0], [self.abstract_surface.triangles[0]], len(self.abstract_surface.triangles))
         triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
-
-
+        edge_list = self.abstract_surface.triangles
         vertex_points = []
         a = 10
         b = 10
@@ -2763,7 +2715,7 @@ class CombinatorialImport:
             self.abstract_plotting_surface.add_triangle()
             self.abstract_plotting_surface.triangles[-1].index = triangle_index
 
-        self.glue_plotting_surface_edges()
+        self.glue_plotting_surface_edges(triangle_list)
         starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[0]
         self.vertex_traversed_list=[]
         self.vertex_traversal(starting_vertex, starting_vertex, vertex_points)
@@ -2983,18 +2935,18 @@ def slr3r():
         cancel.pack(side='right', padx=25, pady=5)
 
 def translatelength():
-    #translatelength_window = TranslationLength()
-    try:
-        assert app.abstract_surface != None
-        translatelength_window = TranslationLength()
-    except:
-        win = tk.Toplevel()
-        win.wm_title("No Uploaded Surface")
-        l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
-        l.pack(padx=20, pady=10)
-        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-        cancel = ttk.Button(win, text="Close", command=win.destroy)
-        cancel.pack(side='right', padx=25, pady=5)
+    translatelength_window = TranslationLength()
+    # try:
+    #     assert app.abstract_surface != None
+    #     translatelength_window = TranslationLength()
+    # except:
+    #     win = tk.Toplevel()
+    #     win.wm_title("No Uploaded Surface")
+    #     l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
+    #     l.pack(padx=20, pady=10)
+    #     #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+    #     cancel = ttk.Button(win, text="Close", command=win.destroy)
+    #     cancel.pack(side='right', padx=25, pady=5)
 
 
 def generate_gluing_table():
