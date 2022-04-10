@@ -264,14 +264,13 @@ class GenerateGluingTable:
             assert self.edge_selected != None
         except:
             return
-        
-        for triangle in self.abstract_plotting_surface.triangles:
-            for vertex in triangle.vertices:
-                print(vertex.coord)
 
-        self.abstract_plotting_surface.flip_edge(self.edge_selected)
-        
-        
+        replaced_dictionary = self.abstract_plotting_surface.flip_edge(self.edge_selected)
+
+        for key in replaced_dictionary.keys():
+            for boundary_index in range(len(self.boundary_edges)):
+                if replaced_dictionary[key] == self.boundary_edges[boundary_index]:
+                    self.boundary_edges[boundary_index] = key
         
         for triangle in self.abstract_surface.triangles:
             if triangle.index == self.edge_selected.triangle.index:
@@ -287,13 +286,14 @@ class GenerateGluingTable:
     def flip_edge_select(self,event):
 
     
-        coord = np.array([event.xdata,event.ydata])
-        
+        coord = np.array([event.xdata,event.ydata])        
         interior_edges = []
         for triangle in self.abstract_plotting_surface.triangles:
             for edge in triangle.edges:
                 if edge not in interior_edges and edge.edge_glued[2] not in interior_edges and edge not in self.boundary_edges:
                     interior_edges.append(edge)
+        
+        
 
         distances = []
         for edge in interior_edges:

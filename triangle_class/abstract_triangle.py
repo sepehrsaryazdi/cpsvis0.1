@@ -168,6 +168,9 @@ class AbstractSurface:
         except:
             pass
 
+
+        return {e_prime_forward:edge_backward, e_prime_backward:edge_glued_forward, e_prime_connected_forward:edge_glued_backward, e_prime_connected_backward:edge_forward}
+
         
 
     def give_vertex_coordinates(self, vertex, coord):
