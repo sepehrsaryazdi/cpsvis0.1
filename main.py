@@ -425,11 +425,12 @@ class TranslationLength:
         if len(self.boundary_edges) == 2:
             self.compute_length_heat_map_button = ttk.Button(self.win, text="Compute Length Heat Map")
             self.compute_length_heat_map_button.pack(side="right",anchor="nw",padx=(25,0),pady=25)
+            self.compute_length_heat_map_button.bind("<ButtonPress>", self.compute_length_heat_map)
         self.compute_translation_matrices()
         self.add_string_button.bind("<ButtonPress>", self.add_string)
         self.clear_string_button.bind("<ButtonPress>", self.clear_string)
         self.compute_translation_length_button.bind("<ButtonPress>", self.compute_translation_length)
-        self.compute_length_heat_map_button.bind("<ButtonPress>", self.compute_length_heat_map)
+        
 
     
     def compute_length_heat_map(self, event):
@@ -437,27 +438,35 @@ class TranslationLength:
         alpha2 = self.representations[1]
         self.length_heat_map_win = self.tk.Toplevel()
         self.length_heat_map_win.wm_title("Length Heat Map")
-        self.map_figure = plt.Figure(figsize=(9, 7), dpi=100)
-        self.map_ax = self.map_figure.add_subplot(111)
+        self.map_figure, (self.map_ax, self.colorbar_ax) = plt.subplots(1, 2,figsize=(10, 7), dpi=100, gridspec_kw={'width_ratios': [25, 1]})
         self.map_chart_type = FigureCanvasTkAgg(self.map_figure, self.length_heat_map_win)
         
         self.map_chart_type.get_tk_widget().pack()
         self.map_ax.set_title('Length Heat Map')
         self.map_ax.set_axis_off()
-
-        lengthheatmaptree = LengthHeatMapTree(6, 1/2, alpha1,alpha2)
+        ratio = 1/2
+        lengthheatmaptree = LengthHeatMapTree(6, ratio, alpha1,alpha2)
         lengths = [node.length for node in lengthheatmaptree.nodes]
         # for node in lengthheatmaptree.nodes:
         #     print(node.length)
+        #self.map_figure.subplots_adjust(right=0.5)
+
         norm = mpl.colors.Normalize(vmin=0, vmax=max(lengths))
         cmap = cm.hot
         m = cm.ScalarMappable(norm=norm, cmap=cmap)
+        max_distance = 1/(1-ratio)
+        self.map_ax.arrow(-max_distance,-max_distance,0.25,0, head_width=0.05,color='blue')
+        self.map_ax.arrow(-max_distance,-max_distance,0,0.25, head_width=0.05,color='blue')
+        self.map_ax.annotate('α₁',[-max_distance+0.35,-max_distance], color='blue', size=18)
+        self.map_ax.annotate('α₂', [-max_distance,-max_distance+0.35], color='blue', size=18)
         for node in lengthheatmaptree.nodes[1:]:
             self.map_ax.plot([node.coord[0],node.parent.coord[0]], [node.coord[1],node.parent.coord[1]], color='black')
             self.map_ax.scatter(node.coord[0],node.coord[1], color=m.to_rgba(node.length))
         
-        
-
+        cb1 = mpl.colorbar.ColorbarBase(self.colorbar_ax, cmap=cmap,
+                                norm=norm,
+                                orientation='vertical')
+        self.colorbar_ax.set_ylabel('Length')
         self.map_chart_type.draw()
 
 
