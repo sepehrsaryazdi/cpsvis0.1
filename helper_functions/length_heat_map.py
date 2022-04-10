@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
+from matplotlib.ticker import MaxNLocator
 import matplotlib.cm as cm
 from helper_functions.add_new_triangle_functions import *
 
@@ -54,20 +55,39 @@ class LengthHeatMapTree:
 # alpha1 = np.array([[3.5,3,0.5],[1.5,2,0.5],[1,2,1]])
 # alpha2 = np.array([[0,0,1],[0,-0.5,-2.5],[2,7,10]])
 
-# lengthheatmaptree = LengthHeatMapTree(6, 1/2, alpha1,alpha2)
+# lengthheatmaptree = LengthHeatMapTree(7, 1/2, alpha1,alpha2)
 # lengths = [node.length for node in lengthheatmaptree.nodes]
-# for node in lengthheatmaptree.nodes:
-#     print(node.length)
-# plt.figure()
+# # for node in lengthheatmaptree.nodes:
+# #     print(node.length)
+# fig = plt.figure()
 
 # norm = mpl.colors.Normalize(vmin=0, vmax=max(lengths))
 # cmap = cm.hot
 # m = cm.ScalarMappable(norm=norm, cmap=cmap)
-# for node in lengthheatmaptree.nodes[1:]:
-#     plt.plot([node.coord[0],node.parent.coord[0]], [node.coord[1],node.parent.coord[1]], color='black')
-#     plt.scatter(node.coord[0],node.coord[1], color=m.to_rgba(node.length))
-# #ax = plt.axes(projection='3d')
 # # for node in lengthheatmaptree.nodes[1:]:
-# #     ax.plot3D([node.coord[0],node.parent.coord[0]],  [node.coord[1],node.parent.coord[1]], [0,0], 'black')
-# #     ax.scatter3D(node.coord[0],node.coord[1], node.length, s=0.5)
+# #     plt.plot([node.coord[0],node.parent.coord[0]], [node.coord[1],node.parent.coord[1]], color='black')
+# #     plt.scatter(node.coord[0],node.coord[1], color=m.to_rgba(node.length))
+# ax = plt.axes(projection='3d')
+
+# coordinates = []
+
+
+# for node in lengthheatmaptree.nodes[1:]:
+#     #ax.plot3D([node.coord[0],node.parent.coord[0]],  [node.coord[1],node.parent.coord[1]], [0,0], 'black')
+#     coordinates.append([node.coord[0],node.coord[1],node.length])
+#     #ax.scatter3D(node.coord[0],node.coord[1], node.length, s=0.5, color=m.to_rgba(node.length))
+
+# coordinates = np.array(coordinates)
+# X = coordinates[:,0]
+# Y = coordinates[:,1]
+# Z = coordinates[:,2]
+
+# surf = ax.plot_trisurf(X, Y, Z, cmap=cm.jet, linewidth=0)
+# fig.colorbar(surf)
+
+# ax.xaxis.set_major_locator(MaxNLocator(5))
+# ax.yaxis.set_major_locator(MaxNLocator(6))
+# ax.zaxis.set_major_locator(MaxNLocator(5))
+
+
 # plt.show()

@@ -20,6 +20,7 @@ from helper_functions.add_new_triangle_functions import *
 from tkinter import filedialog
 import pandas as pd
 import pickle
+from matplotlib.ticker import MaxNLocator
 import sys
 import os
 from helper_functions.length_heat_map import *
@@ -423,15 +424,57 @@ class TranslationLength:
         self.error_message.pack(side="left",padx=5,pady=25)
         self.compute_translation_length_button.pack(side="right",anchor="ne",padx=25,pady=25)
         if len(self.boundary_edges) == 2:
+            
             self.compute_length_heat_map_button = ttk.Button(self.win, text="Compute Length Heat Map")
             self.compute_length_heat_map_button.pack(side="right",anchor="nw",padx=(25,0),pady=25)
             self.compute_length_heat_map_button.bind("<ButtonPress>", self.compute_length_heat_map)
+            self.compute_length_surface_button = ttk.Button(self.win, text="Compute Length Surface")
+            self.compute_length_surface_button.pack(side="right", anchor="nw", padx=(25,0), pady=25)
+            self.compute_length_surface_button.bind("<ButtonPress>", self.compute_length_surface)
         self.compute_translation_matrices()
         self.add_string_button.bind("<ButtonPress>", self.add_string)
         self.clear_string_button.bind("<ButtonPress>", self.clear_string)
         self.compute_translation_length_button.bind("<ButtonPress>", self.compute_translation_length)
         
+    def compute_length_surface(self, event):
+        alpha1 = self.representations[0]
+        alpha2= self.representations[1]
+        self.surface_figure = plt.figure(figsize=(7, 5), dpi=100)
+        self.surface_ax = self.surface_figure.add_subplot(1,1,1,projection='3d')
+        try:
+            self.lengthheatmaptree
+        except:
+            self.lengthheatmaptree = LengthHeatMapTree(6, 1/2, alpha1,alpha2)
+        
+        lengths = [node.length for node in self.lengthheatmaptree.nodes]
+        norm = mpl.colors.Normalize(vmin=0, vmax=max(lengths))
+        cmap = cm.hot
+        m = cm.ScalarMappable(norm=norm, cmap=cmap)
+        coordinates = []
+        for node in self.lengthheatmaptree.nodes[1:]:
+            self.surface_ax.plot3D([node.coord[0],node.parent.coord[0]],  [node.coord[1],node.parent.coord[1]], [0,0], 'black')
+            coordinates.append([node.coord[0],node.coord[1],node.length])
+            #ax.scatter3D(node.coord[0],node.coord[1], node.length, s=0.5, color=m.to_rgba(node.length))
+        coordinates = np.array(coordinates)
+        X = coordinates[:,0]
+        Y = coordinates[:,1]
+        Z = coordinates[:,2]
+        surf = self.surface_ax.plot_trisurf(X, Y, Z, cmap=cm.jet, linewidth=0)
+        self.surface_figure.colorbar(surf)
+        self.surface_ax.set_xlabel('α₁')
+        self.surface_ax.set_ylabel('α₂')
+        self.surface_ax.set_zlabel('Length')
+        self.surface_figure.canvas.manager.set_window_title('Length Surface')
+        self.surface_ax.xaxis.set_major_locator(MaxNLocator(5))
+        self.surface_ax.yaxis.set_major_locator(MaxNLocator(6))
+        self.surface_ax.zaxis.set_major_locator(MaxNLocator(5))
+        self.surface_ax.set_xticklabels([])
+        self.surface_ax.set_yticklabels([])
+        plt.show(block=False)
 
+        
+
+        pass
     
     def compute_length_heat_map(self, event):
         alpha1 = self.representations[0]
@@ -445,22 +488,27 @@ class TranslationLength:
         self.map_ax.set_title('Length Heat Map')
         self.map_ax.set_axis_off()
         ratio = 1/2
-        lengthheatmaptree = LengthHeatMapTree(6, ratio, alpha1,alpha2)
-        lengths = [node.length for node in lengthheatmaptree.nodes]
+        try:
+            self.lengthheatmaptree
+        except:
+            self.lengthheatmaptree = LengthHeatMapTree(6, ratio, alpha1,alpha2)
+        lengths = [node.length for node in self.lengthheatmaptree.nodes]
         # for node in lengthheatmaptree.nodes:
         #     print(node.length)
         #self.map_figure.subplots_adjust(right=0.5)
 
         norm = mpl.colors.Normalize(vmin=0, vmax=max(lengths))
-        cmap = cm.hot
+        cmap = cm.jet
         m = cm.ScalarMappable(norm=norm, cmap=cmap)
         max_distance = 1/(1-ratio)
         self.map_ax.arrow(-max_distance,-max_distance,0.25,0, head_width=0.05,color='blue')
         self.map_ax.arrow(-max_distance,-max_distance,0,0.25, head_width=0.05,color='blue')
         self.map_ax.annotate('α₁',[-max_distance+0.35,-max_distance], color='blue', size=18)
         self.map_ax.annotate('α₂', [-max_distance,-max_distance+0.35], color='blue', size=18)
-        for node in lengthheatmaptree.nodes[1:]:
+        
+        for node in self.lengthheatmaptree.nodes[1:]:
             self.map_ax.plot([node.coord[0],node.parent.coord[0]], [node.coord[1],node.parent.coord[1]], color='black')
+        for node in self.lengthheatmaptree.nodes:
             self.map_ax.scatter(node.coord[0],node.coord[1], color=m.to_rgba(node.length))
         
         cb1 = mpl.colorbar.ColorbarBase(self.colorbar_ax, cmap=cmap,
