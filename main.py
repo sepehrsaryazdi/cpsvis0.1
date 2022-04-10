@@ -470,7 +470,7 @@ class TranslationLength:
         self.surface_ax.zaxis.set_major_locator(MaxNLocator(5))
         self.surface_ax.set_xticklabels([])
         self.surface_ax.set_yticklabels([])
-        plt.show(block=False)
+        self.surface_figure.show()
 
         
 
