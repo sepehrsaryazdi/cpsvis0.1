@@ -139,17 +139,18 @@ class AbstractSurface:
         # else:
         #     self.glue_edges(new_triangle_glued.edges[1], edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3], new_triangle_glued.edges[1].v0,  edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index-1)%3].v1)
         
-        print([t.index for t in self.triangles])
         
         self.triangles[edge.triangle.index] = new_triangle
         self.triangles[edge.edge_glued[2].triangle.index] = new_triangle_glued
         
 
         if len(edge.v0.coord):
-            self.give_vertex_coordinates(new_triangle.edges[0].v0, edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].v1.coord)
-            self.give_vertex_coordinates(new_triangle.edges[0].v1, edge.triangle.edges[(edge.triangle_edges_index-1)%3].v0.coord)
-            self.give_vertex_coordinates(new_triangle.edges[1].v1, edge.v0.coord)
-            self.give_vertex_coordinates(new_triangle_glued.edges[1].v1, edge.v1.coord)
+            new_triangle.edges[0].v0.coord = edge.edge_glued[2].triangle.edges[(edge.edge_glued[2].triangle_edges_index+1)%3].v1.coord
+            new_triangle.edges[0].v1.coord = edge.triangle.edges[(edge.triangle_edges_index-1)%3].v0.coord
+            new_triangle.edges[1].v1.coord = edge.v0.coord
+            new_triangle_glued.edges[1].v1.coord = edge.v1.coord
+            new_triangle_glued.edges[0].v0.coord = new_triangle.edges[0].v1.coord
+            new_triangle_glued.edges[0].v1.coord = new_triangle.edges[0].v0.coord
         
         try:
             new_triangle.edges[0].color = edge.color

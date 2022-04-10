@@ -264,21 +264,22 @@ class GenerateGluingTable:
             assert self.edge_selected != None
         except:
             return
+        
+        for triangle in self.abstract_plotting_surface.triangles:
+            for vertex in triangle.vertices:
+                print(vertex.coord)
 
         self.abstract_plotting_surface.flip_edge(self.edge_selected)
+        
+        
         
         for triangle in self.abstract_surface.triangles:
             if triangle.index == self.edge_selected.triangle.index:
                 for edge in triangle.edges:
                     if edge.index == self.edge_selected.index:
                         self.abstract_surface.flip_edge(edge)
-        
-        # for triangle in self.abstract_plotting_surface.triangles:
-        #     for edge in triangle.edges:
-        #         print('e.t',triangle.index,'e',edge.index,"e'.t", edge.edge_glued[2].triangle.index, "e'",edge.edge_glued[2].index)
-        
     
-
+        
         self.edge_selected = self.abstract_plotting_surface.triangles[self.edge_selected.triangle.index].edges[0]
         self.edge_flip_interface()
 
@@ -473,9 +474,6 @@ class TranslationLength:
         self.surface_figure.show()
 
         
-
-        pass
-    
     def compute_length_heat_map(self, event):
         alpha1 = self.representations[0]
         alpha2 = self.representations[1]
