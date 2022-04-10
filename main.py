@@ -626,7 +626,7 @@ class TranslationLength:
             
             
             final_edge_matrix = edge_matrix(edge.x_eb, edge.x_ea)
-            print(edge.index, edge.triangle.index)
+            #print(edge.index, edge.triangle.index)
             #print('edges params: ',edge.eb,edge.ea)
             
             second_matrix, _ = self.compute_matrix_path(edge, edge.triangle, centre_triangle, central_edge)
@@ -950,6 +950,7 @@ class TranslationLength:
 
     def generate_combinatorial_map(self):
         triangle_list = self.triangle_order_generator(self.abstract_surface.triangles[0], [self.abstract_surface.triangles[0]], len(self.abstract_surface.triangles))
+        print([t.index for t in triangle_list])
         triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
         edge_list = self.abstract_surface.triangles
 
@@ -2327,10 +2328,10 @@ class CombinatorialImport:
                 #edge.x_ea = edge.ea
                 #edge.x_eb = edge.eb
         
-        for triangle in self.abstract_surface.triangles:
-            print('triangle: ', triangle.index, 't: ', triangle.x_triangle_parameter)
-            for edge in triangle.edges:
-                print('edge: ', edge.index, 'ea: ', edge.x_ea, 'eb: ', edge.x_eb)
+        # for triangle in self.abstract_surface.triangles:
+        #     print('triangle: ', triangle.index, 't: ', triangle.x_triangle_parameter)
+        #     for edge in triangle.edges:
+        #         print('edge: ', edge.index, 'ea: ', edge.x_ea, 'eb: ', edge.x_eb)
                 
     
     def give_vertex_identification(self):
@@ -2784,6 +2785,7 @@ class CombinatorialImport:
         
 
         triangle_list = self.triangle_order_generator(self.abstract_surface.triangles[0], [self.abstract_surface.triangles[0]], len(self.abstract_surface.triangles))
+    
         triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
         edge_list = self.abstract_surface.triangles
         vertex_points = []
@@ -2801,6 +2803,7 @@ class CombinatorialImport:
         self.glue_plotting_surface_edges(triangle_list)
         starting_vertex = self.abstract_plotting_surface.triangles[0].vertices[0]
         self.vertex_traversed_list=[]
+        
         self.vertex_traversal(starting_vertex, starting_vertex, vertex_points)
 
         orientation_first_triangle = np.linalg.det([[v.coord[0], v.coord[1], 1] for v in self.abstract_plotting_surface.triangles[0].vertices])
