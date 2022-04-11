@@ -1,24 +1,30 @@
 import numpy as np
+import mpmath as mp
+mp.dps = 50
+mp.mp.pretty = False
+
+
 
 def get_length(matrix):
-    eigenvalues = np.linalg.eigvals(matrix)
-    absolute_eigenvalues = np.absolute(eigenvalues)
-    absolute_eigenvalues = np.sort(absolute_eigenvalues)
+    #eigenvalues = np.linalg.eigvals(matrix)
+    eigenvalues = mp.eig(mp.matrix(matrix))[0]
+    absolute_eigenvalues = [abs(e) for e in eigenvalues]
+    absolute_eigenvalues = [absolute_eigenvalues[i] for i in np.argsort(absolute_eigenvalues)]
     smallest_eigenvalue = absolute_eigenvalues[0]
     largest_eigenvalue = absolute_eigenvalues[-1]
-    length = np.log(largest_eigenvalue/smallest_eigenvalue)
+    length = mp.log(largest_eigenvalue/smallest_eigenvalue)
     return length, eigenvalues
 
 
 def edge_matrix(q_plus,q_minus):
-    coefficient = np.power((q_plus/q_minus), (1/3))
-    matrix = np.array([[0,0,q_minus],[0,-1,0],[1/q_plus, 0, 0]])
+    coefficient = mp.power((q_plus/q_minus), (1/3))
+    matrix = mp.matrix([[0,0,q_minus],[0,-1,0],[1/q_plus, 0, 0]])
     return coefficient*matrix
 
 def triangle_matrix(t):
-    coefficient = 1/np.power(t, (1/3))
-    matrix = np.array([[0,0,1],[0,-1,-1],[t,t+1,1]])
-    return coefficient*matrix
+    coefficient = 1/mp.power(t, (1/3))
+    matrix = mp.matrix([[0,0,1],[0,-1,-1],[t,t+1,1]])
+    return matrix*coefficient
 
 
 def integer_to_script(value, up=True):

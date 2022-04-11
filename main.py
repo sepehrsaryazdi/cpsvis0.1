@@ -8,6 +8,10 @@ from venv import create
 from numpy import arctan2
 from sklearn import neighbors
 from sympy import poly
+import mpmath as mp
+mp.mp.dps = 50
+mp.mp.pretty = False
+
 
 from triangle_class.abstract_triangle import *
 from triangle_class.decorated_triangle import *
@@ -445,7 +449,7 @@ class TranslationLength:
         try:
             self.lengthheatmaptree
         except:
-            self.lengthheatmaptree = LengthHeatMapTree(10, 1/2, alpha1,alpha2)
+            self.lengthheatmaptree = LengthHeatMapTree(6, 1/2, alpha1,alpha2)
         
         lengths = [node.length for node in self.lengthheatmaptree.nodes]
         norm = mpl.colors.Normalize(vmin=0, vmax=max(lengths))
@@ -471,7 +475,7 @@ class TranslationLength:
         self.surface_ax.zaxis.set_major_locator(MaxNLocator(5))
         self.surface_ax.set_xticklabels([])
         self.surface_ax.set_yticklabels([])
-        #self.surface_figure.show()
+        self.surface_figure.show()
 
         
     def compute_length_heat_map(self, event):
@@ -522,7 +526,7 @@ class TranslationLength:
         final_triangle_list_index = np.where(triangle_list == final_triangle)[0][0]
         current_triangle = initial_triangle
         current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
-        product = np.identity(3)
+        product = mp.matrix([[1,0,0],[0,1,0],[0,0,1]])
         product_terms = ['identity']
         intersecting_edge = None
         current_edge = edge_starting
@@ -544,15 +548,15 @@ class TranslationLength:
                         intersecting_edge_index = index
                 
                 if (current_edge_index+1) % 3 == intersecting_edge_index:
-                    product = np.matmul(product, triangle_matrix(current_triangle.x_triangle_parameter))
+                    product =product*triangle_matrix(current_triangle.x_triangle_parameter)
                     product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, not inverted")
                 elif (current_edge_index-1) % 3 == intersecting_edge_index:
-                    product = np.matmul(product, np.linalg.inv(triangle_matrix(current_triangle.x_triangle_parameter)))
+                    product = product*mp.inverse(triangle_matrix(current_triangle.x_triangle_parameter))
                     product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, inverted")
 
                     
                 
-                product = np.matmul(product, edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb))
+                product = product*edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb)
                 product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_ea, intersecting_edge.x_eb}")
                 
                 current_triangle = triangle_list[current_triangle_list_index-1]
@@ -577,14 +581,14 @@ class TranslationLength:
                         intersecting_edge_index = index
                 
                 if (current_edge_index+1) % 3 == intersecting_edge_index:
-                    product = np.matmul(product,triangle_matrix(current_triangle.x_triangle_parameter))
+                    product = product*triangle_matrix(current_triangle.x_triangle_parameter)
                     product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, not inverted")
                 elif (current_edge_index-1) % 3 == intersecting_edge_index:
-                    product = np.matmul(product,np.linalg.inv(triangle_matrix(current_triangle.x_triangle_parameter)))
+                    product = product*mp.inverse(triangle_matrix(current_triangle.x_triangle_parameter))
                     product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, inverted")
                 
                 
-                product = np.matmul(product,edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb))
+                product = product*edge_matrix(intersecting_edge.x_ea, intersecting_edge.x_eb)
                 product_terms.append(f"{intersecting_edge.index, intersecting_edge.triangle.index, intersecting_edge.x_ea, intersecting_edge.x_eb}")
                 
                 current_triangle = triangle_list[current_triangle_list_index+1]
@@ -601,12 +605,12 @@ class TranslationLength:
                 if edge == final_edge:
                     final_edge_index = index
             if (current_edge_index + 1)%3 == final_edge_index:
-                product = np.matmul(product, triangle_matrix(current_triangle.x_triangle_parameter))
+                product = product*triangle_matrix(current_triangle.x_triangle_parameter)
                 product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, not inverted")
             elif (current_edge_index-1) % 3 == final_edge_index:
-                product = np.matmul(product,np.linalg.inv(triangle_matrix(current_triangle.x_triangle_parameter)))
+                product = product*mp.inverse(triangle_matrix(current_triangle.x_triangle_parameter))
                 product_terms.append(f"{current_triangle.index, current_triangle.x_triangle_parameter}, inverted")
-        print(product_terms)
+        #print(product_terms)
         return (product, final_edge)
     
     
@@ -633,7 +637,7 @@ class TranslationLength:
             
             
 
-            product = first_matrix @ final_edge_matrix @ second_matrix 
+            product = first_matrix*final_edge_matrix*second_matrix 
             self.representations.append(product)
             print(product)
 
@@ -658,15 +662,16 @@ class TranslationLength:
 
     def compute_translation_length(self, event):
         
-        product = np.identity(3)
+        product = mp.matrix([[1,0,0],[0,1,0],[0,0,1]])
         for product_data in self.product_string_data[::-1]:
             [index, power] = product_data
             if power != 0:
                 representation = self.representations[index-1]
-                product = np.matmul(product,np.linalg.matrix_power(representation, power))
+                
+                product = product*(representation**power)
         
         length, eigenvalues = get_length(product)
-        self.error_message_string.set(f"Length: {length}\nEigenvalues: {eigenvalues}.")
+        self.error_message_string.set(f"Length: {np.float16(length)}\nEigenvalues: {[np.abs(np.complex64(x)) for x in eigenvalues]}.")
 
         
 

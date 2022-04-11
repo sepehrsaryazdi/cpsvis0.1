@@ -5,6 +5,9 @@ import matplotlib as mpl
 from matplotlib.ticker import MaxNLocator
 import matplotlib.cm as cm
 from helper_functions.add_new_triangle_functions import *
+import mpmath as mp
+mp.mp.dps = 50
+mp.mp.pretty = False
 
 
 class Node:
@@ -13,7 +16,7 @@ class Node:
 
 
 class LengthHeatMapTree:
-    def __init__(self,depth, ratio=1/2, alpha1=np.identity(3), alpha2=np.identity(3), difference_precision = 0.0001):
+    def __init__(self,depth, ratio=1/2, alpha1= mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), alpha2=mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), difference_precision = 0.0001):
         self.alpha1 = alpha1
         self.alpha2 = alpha2
         self.depth = depth
@@ -21,7 +24,7 @@ class LengthHeatMapTree:
         initial_node = Node()
         initial_node.index = ''
         initial_node.coord = np.array([0,0])
-        initial_node.matrix = np.identity(3)
+        initial_node.matrix = mp.matrix([[1,0,0],[0,1,0],[0,0,1]])
         initial_node.length = 0
         self.difference_precision = difference_precision
         self.smallest_nodes = []
@@ -37,7 +40,7 @@ class LengthHeatMapTree:
         return np.array({'R':[0,1],'U':[1,0], 'L': [0,-1], 'D': [-1,0]}[move])
     
     def move_to_matrix(self, move):
-        return {'R': self.alpha1,'U': self.alpha2, 'L': np.linalg.inv(self.alpha1), 'D': np.linalg.inv(self.alpha2)}[move]
+        return {'R': self.alpha1,'U': self.alpha2, 'L': mp.inverse(self.alpha1), 'D': mp.inverse(self.alpha2)}[move]
 
     def create_nodes(self, starting_node):
         
@@ -49,12 +52,13 @@ class LengthHeatMapTree:
                 next_node = Node(starting_node)
                 next_node.index = f'{starting_node.index}{allowed_moves[move_index]}'
                 next_node.coord = self.ratio**len(starting_node.index)*self.move_to_vector(allowed_moves[move_index]) + starting_node.coord
-                next_node.matrix = np.matmul(starting_node.matrix,self.move_to_matrix(allowed_moves[move_index]))
-                next_node.length, _ = get_length(next_node.matrix)
-                if next_node.length > 0 and self.smallest_length > next_node.length + self.difference_precision:
+                next_node.matrix = starting_node.matrix*self.move_to_matrix(allowed_moves[move_index])
+                next_node.length, _ =get_length(next_node.matrix)
+                next_node.length =  np.float16(next_node.length)
+                if round(next_node.length,5) > 0 and self.smallest_length > next_node.length + self.difference_precision:
                     self.smallest_length = min(next_node.length,self.smallest_length)
                     self.smallest_nodes = [next_node]
-                elif next_node.length > 0 and abs(self.smallest_length - next_node.length) < self.difference_precision:
+                elif round(next_node.length,5) > 0 and abs(self.smallest_length - next_node.length) < self.difference_precision:
                     self.smallest_length = min(self.smallest_length, next_node.length)
                     self.smallest_nodes.append(next_node)
                 self.nodes.append(next_node)
