@@ -9,7 +9,7 @@ from numpy import arctan2
 from sklearn import neighbors
 from sympy import poly
 import mpmath as mp
-mp.mp.dps = 50
+mp.mp.dps = 100
 mp.mp.pretty = False
 
 
@@ -639,7 +639,7 @@ class TranslationLength:
 
             product = first_matrix*final_edge_matrix*second_matrix 
             self.representations.append(product)
-            print(product)
+            #print(product)
 
             #print(np.linalg.det(product))
             #print(product)

@@ -1,6 +1,6 @@
 import numpy as np
 import mpmath as mp
-mp.dps = 50
+mp.dps = 100
 mp.mp.pretty = False
 
 
