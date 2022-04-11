@@ -445,7 +445,7 @@ class TranslationLength:
         try:
             self.lengthheatmaptree
         except:
-            self.lengthheatmaptree = LengthHeatMapTree(6, 1/2, alpha1,alpha2)
+            self.lengthheatmaptree = LengthHeatMapTree(10, 1/2, alpha1,alpha2)
         
         lengths = [node.length for node in self.lengthheatmaptree.nodes]
         norm = mpl.colors.Normalize(vmin=0, vmax=max(lengths))
@@ -471,7 +471,7 @@ class TranslationLength:
         self.surface_ax.zaxis.set_major_locator(MaxNLocator(5))
         self.surface_ax.set_xticklabels([])
         self.surface_ax.set_yticklabels([])
-        self.surface_figure.show()
+        #self.surface_figure.show()
 
         
     def compute_length_heat_map(self, event):

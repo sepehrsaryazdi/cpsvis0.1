@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from more_itertools import difference
 import numpy as np
 import matplotlib as mpl
 from matplotlib.ticker import MaxNLocator
@@ -12,7 +13,7 @@ class Node:
 
 
 class LengthHeatMapTree:
-    def __init__(self,depth, ratio=1/2, alpha1=np.identity(3), alpha2=np.identity(3)):
+    def __init__(self,depth, ratio=1/2, alpha1=np.identity(3), alpha2=np.identity(3), difference_precision = 0.0001):
         self.alpha1 = alpha1
         self.alpha2 = alpha2
         self.depth = depth
@@ -22,9 +23,15 @@ class LengthHeatMapTree:
         initial_node.coord = np.array([0,0])
         initial_node.matrix = np.identity(3)
         initial_node.length = 0
+        self.difference_precision = difference_precision
+        self.smallest_nodes = []
+        self.smallest_length = np.inf
         self.nodes = [initial_node]
         if depth:
             self.create_nodes(initial_node)
+        
+        print(self.smallest_length)
+        print([n.index for n in self.smallest_nodes])
     
     def move_to_vector(self, move):
         return np.array({'R':[0,1],'U':[1,0], 'L': [0,-1], 'D': [-1,0]}[move])
@@ -33,6 +40,7 @@ class LengthHeatMapTree:
         return {'R': self.alpha1,'U': self.alpha2, 'L': np.linalg.inv(self.alpha1), 'D': np.linalg.inv(self.alpha2)}[move]
 
     def create_nodes(self, starting_node):
+        
         if len(starting_node.index) == self.depth:
             return
         allowed_moves = ['R','U','L','D']
@@ -43,6 +51,12 @@ class LengthHeatMapTree:
                 next_node.coord = self.ratio**len(starting_node.index)*self.move_to_vector(allowed_moves[move_index]) + starting_node.coord
                 next_node.matrix = np.matmul(starting_node.matrix,self.move_to_matrix(allowed_moves[move_index]))
                 next_node.length, _ = get_length(next_node.matrix)
+                if next_node.length > 0 and self.smallest_length > next_node.length + self.difference_precision:
+                    self.smallest_length = min(next_node.length,self.smallest_length)
+                    self.smallest_nodes = [next_node]
+                elif next_node.length > 0 and abs(self.smallest_length - next_node.length) < self.difference_precision:
+                    self.smallest_length = min(self.smallest_length, next_node.length)
+                    self.smallest_nodes.append(next_node)
                 self.nodes.append(next_node)
                 self.create_nodes(next_node)
 
