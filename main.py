@@ -1295,7 +1295,7 @@ class App(tk.Frame):
 
 
 
-        self.figure = plt.Figure(figsize=(6, 5), dpi=100)
+        self.figure = plt.Figure(figsize=(7, 5), dpi=100)
         self.ax = self.figure.add_subplot(111)
         self.chart_type = FigureCanvasTkAgg(self.figure, root)
         self.chart_type.get_tk_widget().pack()
@@ -3089,7 +3089,7 @@ def generate_gluing_table():
 root = tk.Tk()
 root.title('Convex Projective Structure Visualisation Tool')
 #root.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-root.geometry("1100x520")
+root.geometry("1280x520")
 menubar = tk.Menu(root)
 app = App(root)
 filemenu = tk.Menu(menubar, tearoff=0)
