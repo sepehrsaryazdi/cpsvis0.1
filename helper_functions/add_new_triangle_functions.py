@@ -3,7 +3,11 @@ import mpmath as mp
 mp.dps = 100
 mp.mp.pretty = False
 
-
+def compute_translation_matrix_torus(x):
+    [A,B,a_minus,a_plus,b_minus,b_plus,e_minus,e_plus] = x
+    alpha1 = edge_matrix(e_plus,e_minus)*mp.inverse(triangle_matrix(A))*edge_matrix(b_minus, b_plus)*triangle_matrix(B)
+    alpha2 = triangle_matrix(B)*edge_matrix(a_plus,a_minus)*mp.inverse(triangle_matrix(A))*edge_matrix(e_minus,e_plus)
+    return [alpha1,alpha2]
 
 def get_length(matrix):
     #eigenvalues = np.linalg.eigvals(matrix)

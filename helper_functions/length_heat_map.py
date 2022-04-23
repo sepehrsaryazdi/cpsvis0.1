@@ -33,20 +33,20 @@ class LengthHeatMapTree:
         if depth:
             self.create_nodes(initial_node)
         
-        #print(self.smallest_length)
-        #print([n.index for n in self.smallest_nodes])
+        #print('smallest length:',self.smallest_length)
+        #print('smallest length points:',[n.index for n in self.smallest_nodes])
     
     def move_to_vector(self, move):
-        return np.array({'R':[0,1],'U':[1,0], 'L': [0,-1], 'D': [-1,0]}[move])
+        return np.array({'A':[0,1],'B':[1,0], 'a': [0,-1], 'b': [-1,0]}[move])
     
     def move_to_matrix(self, move):
-        return {'R': self.alpha1,'U': self.alpha2, 'L': mp.inverse(self.alpha1), 'D': mp.inverse(self.alpha2)}[move]
+        return {'A': self.alpha1,'B': self.alpha2, 'a': mp.inverse(self.alpha1), 'b': mp.inverse(self.alpha2)}[move]
 
     def create_nodes(self, starting_node):
         
         if len(starting_node.index) == self.depth:
             return
-        allowed_moves = ['R','U','L','D']
+        allowed_moves = ['A','B','a','b']
         for move_index in range(4):
             if not len(starting_node.index) or starting_node.index[-1] != allowed_moves[(move_index+2)%4]:
                 next_node = Node(starting_node)
