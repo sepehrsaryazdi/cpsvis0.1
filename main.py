@@ -5,10 +5,11 @@ from re import U
 import tkinter as tk
 from tkinter import ttk
 from venv import create
-from numpy import arctan2
+from numpy import arctan2, number
 from sklearn import neighbors
 from sympy import poly
 import mpmath as mp
+from collections import deque
 mp.mp.dps = 100
 mp.mp.pretty = False
 
@@ -571,7 +572,7 @@ class TranslationLength:
 
 
     def compute_matrix_path(self, edge_starting, initial_triangle, final_triangle, final_edge):
-        triangle_list = np.array(self.triangle_order_generator(self.abstract_plotting_surface.triangles[0],[self.abstract_plotting_surface.triangles[0]], len(self.abstract_plotting_surface.triangles)))
+        triangle_list = np.array(self.triangle_order_generator(self.abstract_plotting_surface.triangles[0],self.abstract_plotting_surface))
         final_triangle_list_index = np.where(triangle_list == final_triangle)[0][0]
         current_triangle = initial_triangle
         current_triangle_list_index = np.where(triangle_list == current_triangle)[0][0]
@@ -892,22 +893,72 @@ class TranslationLength:
                 other_vertex = edge.edge_glued[2].v1
         return other_vertex
 
-    def triangle_order_generator(self, current_triangle, triangle_list, number_of_triangles):
+    def triangle_order_generator(self, current_triangle, abstract_surface):
+
+        # order_queue = deque([current_triangle])
+
+        # while len(order_queue) != number_of_triangles:
+        #     first_element = list(order_queue)[0]
+        #     last_element = list(order_queue)[-1]
+        #     first_neighbours = []
+        #     for edge in first_element.edges:
+        #         first_neighbours.append(edge.edge_glued[2].triangle)
+        #     first_neighbours = np.array(first_neighbours)[np.argsort([t.index for t in first_neighbours])]
+        #     for neighbour in first_neighbours:
+        #         if neighbour not in order_queue:
+        #             order_queue.appendleft(neighbour)
+        #     last_neighbours = []
+        #     for edge in last_element.edges:
+        #         last_neighbours.append(edge.edge_glued[2].triangle)
+        #     last_neighbours = np.array(last_neighbours)[np.argsort([t.index for t in last_neighbours])]
+        #     for neighbour in last_neighbours:
+        #         if neighbour not in order_queue:
+        #             order_queue.append(neighbour)
+            
+        # return list(order_queue)[::-1]
         
-        if len(triangle_list) == number_of_triangles:
-            return triangle_list
+        # if len(triangle_list) == number_of_triangles:
+        #     return triangle_list
     
-        neighbours = []
-        for edge in current_triangle.edges:
-            neighbours.append(edge.edge_glued[2].triangle)
-        neighbours = np.array(neighbours)[np.argsort([t.index for t in neighbours])]
-        for neighbour in neighbours:
-            results = []
-            if neighbour not in triangle_list:
-                triangle_list.append(neighbour)
-                results.append(self.triangle_order_generator(neighbour, triangle_list, number_of_triangles))
-            if len(results) and results[-1]:
-                return results[-1]
+        # neighbours = []
+        # for edge in current_triangle.edges:
+        #     neighbours.append(edge.edge_glued[2].triangle)
+        # neighbours = np.array(neighbours)[np.argsort([t.index for t in neighbours])]
+        # for neighbour in neighbours:
+        #     results = []
+        #     if neighbour not in triangle_list:
+        #         triangle_list.append(neighbour)
+        #         results.append(self.triangle_order_generator(neighbour, triangle_list, number_of_triangles))
+        #     if len(results) and results[-1]:
+        #         return results[-1]
+
+        connection_indices = [0 for i in range(len(abstract_surface.triangles))]
+        connection_indices[0] = 1
+        current_index = 1
+        while not np.all([x>0 for x in connection_indices]):
+            
+            connection_indices[current_index] = (connection_indices[current_index]+1)%(len(connection_indices)+1)
+            if connection_indices[current_index] == 0:
+                current_index-=1
+                continue
+
+            is_unique = False
+            while not is_unique:
+                is_unique = True
+                for previous_index in range(len(connection_indices[:current_index])):
+                    if connection_indices[previous_index] == connection_indices[current_index]:
+                        connection_indices[current_index] = (connection_indices[current_index]+1)%(len(connection_indices)+1)
+                        is_unique = False
+            
+            current_triangle = abstract_surface.triangles[connection_indices[current_index]-1]
+            if connection_indices[current_index-1] in [edge.edge_glued[2].triangle.index+1 for edge in current_triangle.edges]:
+                current_index+=1
+                
+            elif current_index == len(connection_indices)-1:
+                connection_indices[current_index] = 0
+                current_index=-1
+                connection_indices[current_index] +=1
+        return [abstract_surface.triangles[index-1] for index in connection_indices]
     
     def vertex_traversal(self,starting_vertex,vertex, vertex_points):
 
@@ -1003,7 +1054,7 @@ class TranslationLength:
         self.chart_type.draw()
 
     def generate_combinatorial_map(self):
-        triangle_list = self.triangle_order_generator(self.abstract_surface.triangles[0], [self.abstract_surface.triangles[0]], len(self.abstract_surface.triangles))
+        triangle_list = self.triangle_order_generator(self.abstract_surface.triangles[0], self.abstract_surface)
         print([t.index for t in triangle_list])
         triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
         edge_list = self.abstract_surface.triangles
@@ -2280,22 +2331,55 @@ class CombinatorialImport:
         app.plot_fresh(self.main_surface.triangles[0].t)
         self.win.destroy()
 
-    def triangle_order_generator(self, current_triangle, triangle_list, number_of_triangles):
+    def triangle_order_generator(self, current_triangle, abstract_surface):
         
-        if len(triangle_list) == number_of_triangles:
-            return triangle_list
+        # if len(triangle_list) == number_of_triangles:
+        #     return triangle_list
     
-        neighbours = []
-        for edge in current_triangle.edges:
-            neighbours.append(edge.edge_glued[2].triangle)
-        neighbours = np.array(neighbours)[np.argsort([t.index for t in neighbours])]
-        for neighbour in neighbours:
-            results = []
-            if neighbour not in triangle_list:
-                triangle_list.append(neighbour)
-                results.append(self.triangle_order_generator(neighbour, triangle_list, number_of_triangles))
-            if len(results) and results[-1]:
-                return results[-1]
+        # neighbours = []
+        # for edge in current_triangle.edges:
+        #     neighbours.append(edge.edge_glued[2].triangle)
+        # neighbours = np.array(neighbours)[np.argsort([t.index for t in neighbours])]
+        # for neighbour in neighbours:
+        #     results = []
+        #     if neighbour not in triangle_list:
+        #         triangle_list.append(neighbour)
+        #         results.append(self.triangle_order_generator(neighbour, triangle_list, number_of_triangles))
+        #     if len(results) and results[-1]:
+        #         return results[-1]
+
+    
+        connection_indices = [0 for i in range(len(abstract_surface.triangles))]
+        connection_indices[0] = 1
+        current_index = 1
+        while not np.all([x>0 for x in connection_indices]):
+            
+            connection_indices[current_index] = (connection_indices[current_index]+1)%(len(connection_indices)+1)
+            if connection_indices[current_index] == 0:
+                current_index-=1
+                continue
+
+            is_unique = False
+            while not is_unique:
+                is_unique = True
+                for previous_index in range(len(connection_indices[:current_index])):
+                    if connection_indices[previous_index] == connection_indices[current_index]:
+                        connection_indices[current_index] = (connection_indices[current_index]+1)%(len(connection_indices)+1)
+                        is_unique = False
+            
+            current_triangle = abstract_surface.triangles[connection_indices[current_index]-1]
+            if connection_indices[current_index-1] in [edge.edge_glued[2].triangle.index+1 for edge in current_triangle.edges]:
+                current_index+=1
+                
+            elif current_index == len(connection_indices)-1:
+                connection_indices[current_index] = 0
+                current_index=-1
+                connection_indices[current_index] +=1
+        return [abstract_surface.triangles[index-1] for index in connection_indices]
+            
+        
+
+
         
         
 
@@ -2838,7 +2922,7 @@ class CombinatorialImport:
     def generate_combinatorial_map(self):
         
 
-        triangle_list = self.triangle_order_generator(self.abstract_surface.triangles[0], [self.abstract_surface.triangles[0]], len(self.abstract_surface.triangles))
+        triangle_list = self.triangle_order_generator(self.abstract_surface.triangles[0], self.abstract_surface)
     
         triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
         edge_list = self.abstract_surface.triangles

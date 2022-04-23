@@ -17,6 +17,7 @@ class ModuliSample():
         thetas = np.pi*np.array([1,1,1,1,1,1,1,2])*np.random.random(8)
         #thetas = [1.69829298, 0.82466798, 0.08447248, 1.60624205, 2.46164864, 2.54761914, 1.24878935, 0.06283185]
         #thetas = [0.31001222, 0.4005024,  1.6318996,  1.58233146, 0.00833127, 1.71377308,3.13052548, 0.06283185]
+        #thetas = np.pi*np.array([0.96261044, 0.39903471, 0.84415479, 0.27265972, 0.0644325,  0.31693688,0.1327247,  1.03426106])
         print(thetas/np.pi)
         for i in range(len(thetas)-1):
             if thetas[i] == 0:
@@ -28,6 +29,8 @@ class ModuliSample():
             thetas[7] +=0.05
         elif thetas[7] == np.pi*2:
             thetas[7]-=0.05
+        
+        thetas = np.pi*np.array([0.31247444, 0.75, 0.99257343, 1, 0, 0,0.5, 0])
         
         for theta in theta_space:
             print(theta)
@@ -87,7 +90,7 @@ class ModuliSample():
     def get_all_x_coordinates(self,thetas):
         precision_halfs = 50
         number_of_halfs = 0
-        original_h = self.max_r/(self.max_r-1)
+        original_h = 1
         h = original_h
         r = 0
         coordinates = []
@@ -96,7 +99,10 @@ class ModuliSample():
         while r < self.max_r:
             x = self.get_single_x_coordinate(thetas,r)
 
+            #print(x)
+
             if not np.all([xi>0 for xi in x]):
+                
                 r_max = r-h
                 break
 
@@ -113,7 +119,7 @@ class ModuliSample():
             r+=h
 
         radii = np.linspace(0,r_max,self.n)
-
+        #print(radii)
         coordinates = np.array([self.get_single_x_coordinate(thetas,r) for r in radii])
 
         

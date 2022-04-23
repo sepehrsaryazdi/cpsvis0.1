@@ -40,6 +40,7 @@ class AbstractSurface:
 
     def add_triangle(self):
         self.triangles.append(AbstractTriangle(len(self.triangles)))
+        
 
     def glue_edges(self, edge, other_edge, initial_edge_vertex, initial_other_edge_vertex):
         
