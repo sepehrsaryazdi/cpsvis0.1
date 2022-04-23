@@ -2,7 +2,7 @@
 
 
 from os import EX_CANTCREAT
-
+import numpy as np
 
 class AbstractEdge:
     def __init__(self, v0, v1):
@@ -194,6 +194,35 @@ class AbstractSurface:
                             other_vertex = edge.edge_glued[2].v1
                     self.give_vertex_coordinates(other_vertex, coord)
                     #other_vertex.coord = coord
+    
+    def triangle_order_generator(self):
+        connection_indices = [0 for i in range(len(self.triangles))]
+        connection_indices[0] = 1
+        current_index = 1
+        while not np.all([x>0 for x in connection_indices]):
+            
+            connection_indices[current_index] = (connection_indices[current_index]+1)%(len(connection_indices)+1)
+            if connection_indices[current_index] == 0:
+                current_index-=1
+                continue
+
+            is_unique = False
+            while not is_unique:
+                is_unique = True
+                for previous_index in range(len(connection_indices[:current_index])):
+                    if connection_indices[previous_index] == connection_indices[current_index]:
+                        connection_indices[current_index] = (connection_indices[current_index]+1)%(len(connection_indices)+1)
+                        is_unique = False
+            
+            current_triangle = self.triangles[connection_indices[current_index]-1]
+            if connection_indices[current_index-1] in [edge.edge_glued[2].triangle.index+1 for edge in current_triangle.edges]:
+                current_index+=1
+                
+            elif current_index == len(connection_indices)-1:
+                connection_indices[current_index] = 0
+                current_index=-1
+                connection_indices[current_index] +=1
+        return [self.triangles[index-1] for index in connection_indices]
 
 
 
