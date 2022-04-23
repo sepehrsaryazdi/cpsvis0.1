@@ -17,7 +17,9 @@ class ModuliSample():
         theta_space = np.linspace(np.pi/theta_n,2*np.pi,theta_n)
         radiis = []
         thetas = np.pi*np.array([1,1,1,1,1,1,1,2])*np.random.random(8)
-        print(thetas/np.pi)
+        #thetas = [1.69829298, 0.82466798, 0.08447248, 1.60624205, 2.46164864, 2.54761914, 1.24878935, 0.06283185]
+        #thetas = [0.31001222, 0.4005024,  1.6318996,  1.58233146, 0.00833127, 1.71377308,3.13052548, 0.06283185]
+        #print(thetas/np.pi)
         for i in range(len(thetas)-1):
             if thetas[i] == 0:
                 thetas[i]+=0.05
@@ -32,7 +34,7 @@ class ModuliSample():
         for theta in theta_space:
             print(theta)
             thetas[7] = theta
-            [radii, coordinates] = self.get_x_coordinates(thetas)
+            [radii, coordinates] = self.get_all_x_coordinates(thetas)
             minimum_lengths = self.generate_minimum_length_distribution(coordinates)
             radiis.append(radii)
             minimum_lengths_r_theta.append(minimum_lengths)
@@ -72,30 +74,52 @@ class ModuliSample():
         if out_e >= 0 and out_a >=0 and out_b >= 0:
             return True
         else:
+            #print(out_e, out_a,out_b)
             return False
+    def get_single_x_coordinate(self,thetas,r):
+        x = [np.cos(thetas[0])]
+        for i in range(1,7):
+            x.append(
+                x[i-1]*np.tan(thetas[i-1])*np.cos(thetas[i])
+            )
+        x.append(x[-1]*np.sin(thetas[-1]))
+        x = r*np.array(x)+1
+        return x
         
-    def get_x_coordinates(self,thetas):
-        
-        r_space = list(np.linspace(0,self.max_r,self.n)[::-1])
+    def get_all_x_coordinates(self,thetas):
+        precision_halfs = 50
+        number_of_halfs = 0
+        original_h = self.max_r/(self.max_r-1)
+        h = original_h
         r = 0
         coordinates = []
         radii = []
         
-
+        r_max = self.max_r
         while r < self.max_r:
-            r = r_space.pop()
-            x = [np.cos(thetas[0])]
-            for i in range(1,7):
-                x.append(
-                    x[i-1]*np.tan(thetas[i-1])*np.cos(thetas[i])
-                )
-            x.append(x[-1]*np.sin(thetas[-1]))
-            x = r*np.array(x)+1
-            if not np.all([xi>0 for xi in x]) or not self.outitudes_positive(x):
+            x = self.get_single_x_coordinate(thetas,r)
+
+            if not np.all([xi>0 for xi in x]):
+                r_max = r-h
                 break
-            
-            coordinates.append(x)
-            radii.append(r)
+
+            if not self.outitudes_positive(x):
+                while not self.outitudes_positive(x):
+                    r -= h
+                    x = self.get_single_x_coordinate(thetas,r)
+                
+                h = h/2
+                number_of_halfs += 1
+                if precision_halfs-1 == number_of_halfs:
+                    r_max = r
+                    break
+            r+=h
+
+        radii = np.linspace(0,r_max,self.n)
+
+        coordinates = np.array([self.get_single_x_coordinate(thetas,r) for r in radii])
+
+        
         return [np.array(radii), np.array(coordinates)]
         
 
@@ -105,4 +129,4 @@ class ModuliSample():
 
 
 
-ModuliSample(100,100)
+ModuliSample(100,10)
