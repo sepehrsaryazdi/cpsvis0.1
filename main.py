@@ -427,20 +427,69 @@ class TranslationLength:
         self.error_message_string = tk.StringVar(value="")
         self.error_message = tk.Label(self.win,textvariable=self.error_message_string, fg="red")
         self.error_message.pack(side="left",padx=5,pady=25)
-        self.compute_translation_length_button.pack(side="right",anchor="ne",padx=25,pady=25)
+        self.compute_translation_length_button.pack(side="right",anchor="ne",padx=(5,25),pady=25)
         if len(self.boundary_edges) == 2:
             
             self.compute_length_heat_map_button = ttk.Button(self.win, text="Compute Length Heat Map")
-            self.compute_length_heat_map_button.pack(side="right",anchor="nw",padx=(25,0),pady=25)
+            self.compute_length_heat_map_button.pack(side="right",anchor="nw",padx=(0,0),pady=25)
             self.compute_length_heat_map_button.bind("<ButtonPress>", self.compute_length_heat_map)
             self.compute_length_surface_button = ttk.Button(self.win, text="Compute Length Surface")
-            self.compute_length_surface_button.pack(side="right", anchor="nw", padx=(25,0), pady=25)
+            self.compute_length_surface_button.pack(side="right", anchor="nw", padx=(5,5), pady=25)
             self.compute_length_surface_button.bind("<ButtonPress>", self.compute_length_surface)
+            self.compute_minimum_lengths_button = ttk.Button(self.win, text="Compute Minimum Lengths")
+            self.compute_minimum_lengths_button.pack(side="right", anchor="nw", padx=(5,5), pady=25)
+            self.compute_minimum_lengths_button.bind("<ButtonPress>", self.compute_minimum_lengths)
         self.compute_translation_matrices()
         self.add_string_button.bind("<ButtonPress>", self.add_string)
         self.clear_string_button.bind("<ButtonPress>", self.clear_string)
         self.compute_translation_length_button.bind("<ButtonPress>", self.compute_translation_length)
+    
+
+    def compute_minimum_lengths(self, event):
+        alpha1 = self.representations[0]
+        alpha2= self.representations[1]
+        try:
+            self.lengthheatmaptree
+        except:
+            self.lengthheatmaptree = LengthHeatMapTree(6, 1/2, alpha1,alpha2)
+        smallest_length = self.lengthheatmaptree.smallest_length
+        indices = [n.index for n in self.lengthheatmaptree.smallest_nodes]
+        indices = np.sort(indices)[::-1]
         
+        
+
+        smallest_length_window = self.tk.Toplevel()
+        smallest_length_window.wm_title("Minimum Length Products")
+
+        smallest_length_text= tk.Label(smallest_length_window, text=f'Smallest Length: {smallest_length}', font=("Arial",25), fg='blue')
+
+        text = tk.Label(smallest_length_window,text=f"The following list denotes all fundamental group products that hold the smallest translation length up to {self.lengthheatmaptree.depth} terms.")
+        text2 = tk.Label(smallest_length_window, text = "Key: A ↦ α₁, B ↦ α₂, a ↦ α₁⁻¹, b ↦ α₂⁻¹", font=("Courier", 25), fg='red')
+        smallest_length_text.pack(pady=25)
+        text.pack()
+        text2.pack(pady=(25,0))
+
+
+        list_frame = tk.Frame(smallest_length_window)
+
+        listbox = tk.Listbox(list_frame,selectmode = "multiple")
+        scrollbar = tk.Scrollbar(list_frame)
+        scrollbar.pack(side = 'right', fill = 'both')
+        listbox.pack(side = 'right', fill = 'both')
+        for i in range(len(indices)):
+            listbox.insert(-1,indices[i])
+        listbox.config(yscrollcommand = scrollbar.set)
+        scrollbar.config(command = listbox.yview)
+
+        list_frame.pack(padx=25,pady=25)
+    
+    
+        
+
+
+        pass
+
+
     def compute_length_surface(self, event):
         alpha1 = self.representations[0]
         alpha2= self.representations[1]

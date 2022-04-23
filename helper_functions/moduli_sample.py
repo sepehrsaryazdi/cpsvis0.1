@@ -4,8 +4,6 @@ from add_new_triangle_functions import outitude_edge_params
 from add_new_triangle_functions import compute_translation_matrix_torus
 from length_heat_map import LengthHeatMapTree
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-
 
 class ModuliSample():
     def __init__(self, max_r,n, tree_depth=2):
@@ -19,7 +17,7 @@ class ModuliSample():
         thetas = np.pi*np.array([1,1,1,1,1,1,1,2])*np.random.random(8)
         #thetas = [1.69829298, 0.82466798, 0.08447248, 1.60624205, 2.46164864, 2.54761914, 1.24878935, 0.06283185]
         #thetas = [0.31001222, 0.4005024,  1.6318996,  1.58233146, 0.00833127, 1.71377308,3.13052548, 0.06283185]
-        #print(thetas/np.pi)
+        print(thetas/np.pi)
         for i in range(len(thetas)-1):
             if thetas[i] == 0:
                 thetas[i]+=0.05
@@ -33,7 +31,7 @@ class ModuliSample():
         
         for theta in theta_space:
             print(theta)
-            thetas[7] = theta
+            thetas[3] = theta
             [radii, coordinates] = self.get_all_x_coordinates(thetas)
             minimum_lengths = self.generate_minimum_length_distribution(coordinates)
             radiis.append(radii)
@@ -94,7 +92,6 @@ class ModuliSample():
         r = 0
         coordinates = []
         radii = []
-        
         r_max = self.max_r
         while r < self.max_r:
             x = self.get_single_x_coordinate(thetas,r)
