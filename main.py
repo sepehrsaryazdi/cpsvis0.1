@@ -10,6 +10,7 @@ from sklearn import neighbors
 from sympy import poly
 import mpmath as mp
 from collections import deque
+from helper_functions.moduli_sample import ModuliSample
 mp.mp.dps = 100
 mp.mp.pretty = False
 
@@ -989,7 +990,7 @@ class TranslationLength:
 
     def generate_combinatorial_map(self):
         triangle_list = self.abstract_surface.triangle_order_generator()
-        print([t.index for t in triangle_list])
+        #print([t.index for t in triangle_list])
         triangle_indices = [triangle.index for triangle in self.abstract_surface.triangles]
         edge_list = self.abstract_surface.triangles
 
@@ -3029,6 +3030,10 @@ def restart_program():
     python = sys.executable
     os.execl(python, python, *sys.argv)
 
+def generate_moduli_sample():
+
+    moduli_sample = ModuliSample(100,10)
+
 
 def slr3r():
     try:
@@ -3044,18 +3049,18 @@ def slr3r():
         cancel.pack(side='right', padx=25, pady=5)
 
 def translatelength():
-    translatelength_window = TranslationLength()
-    # try:
-    #     assert app.abstract_surface != None
-    #     translatelength_window = TranslationLength()
-    # except:
-    #     win = tk.Toplevel()
-    #     win.wm_title("No Uploaded Surface")
-    #     l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
-    #     l.pack(padx=20, pady=10)
-    #     #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
-    #     cancel = ttk.Button(win, text="Close", command=win.destroy)
-    #     cancel.pack(side='right', padx=25, pady=5)
+    #translatelength_window = TranslationLength()
+    try:
+        assert app.abstract_surface != None
+        translatelength_window = TranslationLength()
+    except:
+        win = tk.Toplevel()
+        win.wm_title("No Uploaded Surface")
+        l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
+        l.pack(padx=20, pady=10)
+        #win.iconphoto(False, tk.PhotoImage(file='./misc/Calabi-Yau.png'))
+        cancel = ttk.Button(win, text="Close", command=win.destroy)
+        cancel.pack(side='right', padx=25, pady=5)
 
 
 def generate_gluing_table():
@@ -3126,6 +3131,7 @@ filemenu.add_command(label="Exit", command=exit_popup)
 transformmenu.add_command(label="Apply M From SL(3,ℝ)", command=slr3r)
 computemenu.add_command(label="𝒜-Coordinates of Centre in Canonical Cell Decomposition", command=app.compute_centre_cell_decomp)
 computemenu.add_command(label="Translation Length and Lengths Spectrum", command=translatelength)
+computemenu.add_command(label="Minimum Lengths Spectrum Over Moduli Space", command=generate_moduli_sample)
 menubar.add_cascade(label="File", menu=filemenu)
 menubar.add_cascade(label="Transform", menu=transformmenu)
 menubar.add_cascade(label="Compute", menu=computemenu)

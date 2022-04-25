@@ -1,24 +1,141 @@
 import numpy as np
 from sympy import linsolve, minimum
-from add_new_triangle_functions import outitude_edge_params
-from add_new_triangle_functions import compute_translation_matrix_torus
-from length_heat_map import LengthHeatMapTree
+from helper_functions.add_new_triangle_functions import outitude_edge_params
+from helper_functions.add_new_triangle_functions import compute_translation_matrix_torus
+from helper_functions.length_heat_map import LengthHeatMapTree
 import matplotlib.pyplot as plt
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 class ModuliSample():
     def __init__(self, max_r,n, tree_depth=2):
+        
+        self.win = tk.Toplevel()
+        self.win.wm_title("Minimum Length Spectrum Over Moduli Space")
+        self.l = tk.Label(self.win, text="Use the following configurations to produce the minimum length spectrum over a slice in the moduli space.")
+        self.triangle_figure = plt.Figure(figsize=(6, 5), dpi=100)
+        self.triangle_ax = self.triangle_figure.add_subplot(111)
+        self.visual_frame = tk.Frame(self.win)
+        self.triangle_chart_type = FigureCanvasTkAgg(self.triangle_figure, self.visual_frame)
+        self.triangle_ax.set_axis_off()
+        self.plot_triangle()
+        self.triangle_chart_type.get_tk_widget().pack(side='right')
+        self.equations_figure = plt.Figure(figsize=(5, 5), dpi=100)
+        self.equations_ax = self.equations_figure.add_subplot(111)
+        self.equations_chart_type = FigureCanvasTkAgg(self.equations_figure, self.visual_frame)
+        self.equations_ax.set_axis_off()
+        self.plot_equations()
+        self.equations_chart_type.get_tk_widget().pack(side='right')
+
+
+
+        self.visual_frame.pack()
+
+        
+
+        self.tree_depth = tree_depth
         self.n = n
         self.max_r = max_r
-        self.tree_depth = tree_depth
+    
+    def plot_equations(self):
+        equations = ["$A = 1+r\cos(\\theta_1)$\n",
+                    "$B = 1+r\sin(\\theta_1)\cos(\\theta_2)$\n",
+                    "$a^- = 1 + r\sin(\\theta_1)\sin(\\theta_2)\cos(\\theta_3)$\n",
+                    "$a^+ = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\cos(\\theta_4)$\n",
+                    "$b^- = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\cos(\\theta_5)$\n",
+                    "$b^+ = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\cos(\\theta_6)$\n",
+                    "$e^- = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\sin(\\theta_6)\cos(\\theta_7)$\n",
+                    "$e^+ = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\sin(\\theta_6)\sin(\\theta_7)$\n"]
+
+
+
+        self.equations_ax.text(0, 0.4, ''.join(equations))
+        self.equations_ax.text(0,0.2, '$0\leq \\theta_1,\\theta_2,\\theta_3,\\theta_4,\\theta_5,\\theta_6 \leq \pi$\n$0\leq \\theta_7\leq 2\pi$')
+        
+
+
+
+
+
+    def plot_triangle(self):
+        coordsy = np.array([0,-2,0,2,0])
+        coordsx=np.array([-2,0,2,0,-2])
+        arrow_colors=['red','blue','red','blue']
+        for i in range(len(coordsx)-1):
+            x0 = coordsx[i]
+            y0 = coordsy[i]
+            x1 = coordsx[i+1]
+            y1 = coordsy[i+1]
+            self.triangle_ax.plot([x0,x1],[y0,y1],color=arrow_colors[i])
+        #self.triangle_ax.plot(coordsx,coordsy,colors=arrow_colors)
+        letters = ['b⁺','b⁻','a⁺','a⁻','b⁻','b⁺','a⁻','a⁺']
+        
+        for i in range(len(coordsy)-1):
+            if i not in [3,0]:
+                x0 = 2/3*coordsx[i]+1/3*coordsx[i+1]
+                y0 = 2/3*coordsy[i]+1/3*coordsy[i+1]
+                dx = 1/2*coordsx[i+1]+1/2*coordsx[i]-x0
+                dy = 1/2*coordsy[i+1]+1/2*coordsy[i] - y0
+                self.triangle_ax.arrow(x0,y0,dx,dy,head_width=0.1,color=arrow_colors[i])
+            else:
+                x0 = 1/3*coordsx[i]+2/3*coordsx[i+1]
+                y0 = 1/3*coordsy[i]+2/3*coordsy[i+1]
+                dx = 1/2*coordsx[i+1]+1/2*coordsx[i]-x0
+                dy = 1/2*coordsy[i+1]+1/2*coordsy[i] - y0
+                self.triangle_ax.arrow(x0,y0,dx,dy,head_width=0.1,color=arrow_colors[i])
+            
+            x0 = 2/3*coordsx[i]+1/3*coordsx[i+1]
+            y0 = 2/3*coordsy[i]+1/3*coordsy[i+1]
+            x1 = 1/3*coordsx[i] + 2/3*coordsx[i+1]
+            y1 = 1/3*coordsy[i] + 2/3*coordsy[i+1]
+            tangent = [x1-x0,y1-y0]
+            normal = [tangent[1],-tangent[0]]
+            self.triangle_ax.plot([x0-1/15*normal[0],x0+1/15*normal[0]],[y0-1/15*normal[1],y0+1/15*normal[1]],color=arrow_colors[i])
+            self.triangle_ax.plot([x1-1/15*normal[0],x1+1/15*normal[0]],[y1-1/15*normal[1],y1+1/15*normal[1]],color=arrow_colors[i])
+            self.triangle_ax.annotate(letters[2*i],np.array([x0,y0])+1/4*np.array(normal))
+            self.triangle_ax.annotate(letters[2*i+1], np.array([x1,y1])+1/4*np.array(normal))
+        
+        middle_letters = ['e⁻','e⁺']
+        x0 = 2/3*np.array([0,2])+1/3*np.array([0,-2])
+        x1 = 1/3*np.array([0,2])+2/3*np.array([0,-2])
+        tangent = x1-x0
+        normal = np.array([tangent[1],-tangent[0]])
+        self.triangle_ax.plot([0,0],[2,-2],color='green')
+        x0left = x0 - 1/15*normal
+        x0right = x0 + 1/15*normal
+        x1left = x1- 1/15*normal
+        x1right = x1+1/15*normal
+        
+        self.triangle_ax.plot([x0left[0],x0right[0]],[x0left[1],x0right[1]], color='green')
+        self.triangle_ax.plot([x1left[0],x1right[0]],[x1left[1],x1right[1]], color='green')
+        self.triangle_ax.arrow(x0[0],x0[1],1/2.2*tangent[0],1/2.2*tangent[1], head_width=0.1, color='green')
+        self.triangle_ax.annotate(middle_letters[0],x0-1/8*np.array(normal))
+        self.triangle_ax.annotate(middle_letters[1],x1-1/8*np.array(normal))
+
+        self.triangle_ax.annotate('A',[1/2+0.2,0.1], color='purple',fontsize=30)
+        self.triangle_ax.scatter(1/2+0.2,0,color='purple')
+
+        self.triangle_ax.annotate('B',[-1/2-0.2,0.1], color='darkblue',fontsize=30)
+        self.triangle_ax.scatter(-1/2-0.2,0,color='darkblue')
+
+        
+        
+        self.triangle_ax.set_xlim(-2,2)
+        #self.triangle_ax.set_ylim(-2.5,2.5)
+        
+
+
+
+        
+    
+    def generate_minimum_lengths(self):
         minimum_lengths_r_theta = []
         theta_n = 50
         theta_space = np.linspace(np.pi/theta_n,2*np.pi,theta_n)
         radiis = []
         thetas = np.pi*np.array([1,1,1,1,1,1,1,2])*np.random.random(8)
-        #thetas = [1.69829298, 0.82466798, 0.08447248, 1.60624205, 2.46164864, 2.54761914, 1.24878935, 0.06283185]
-        #thetas = [0.31001222, 0.4005024,  1.6318996,  1.58233146, 0.00833127, 1.71377308,3.13052548, 0.06283185]
-        #thetas = np.pi*np.array([0.96261044, 0.39903471, 0.84415479, 0.27265972, 0.0644325,  0.31693688,0.1327247,  1.03426106])
-        print(thetas/np.pi)
+        #print(thetas/np.pi)
         for i in range(len(thetas)-1):
             if thetas[i] == 0:
                 thetas[i]+=0.05
@@ -30,24 +147,24 @@ class ModuliSample():
         elif thetas[7] == np.pi*2:
             thetas[7]-=0.05
         
-        thetas = np.pi*np.array([0.31247444, 0.75, 0.99257343, 1, 0, 0,0.5, 0])
         
         for theta in theta_space:
-            print(theta)
-            thetas[3] = theta
+            #print(theta)
+            thetas[2] = theta
             [radii, coordinates] = self.get_all_x_coordinates(thetas)
             minimum_lengths = self.generate_minimum_length_distribution(coordinates)
             radiis.append(radii)
             minimum_lengths_r_theta.append(minimum_lengths)
         
-        plt.figure()
-        ax = plt.axes(projection='3d')
+        self.figure = plt.figure()
+        
+        self.ax = self.figure.add_subplot(1,1,1,projection='3d')
         for theta_index in range(len(theta_space)):
             radii = radiis[theta_index]
             theta = theta_space[theta_index]
             minimum_lengths = minimum_lengths_r_theta[theta_index]
-            ax.plot3D(radii*np.cos(theta), radii*np.sin(theta), minimum_lengths)
-        plt.show()
+            self.ax.plot3D(radii*np.cos(theta), radii*np.sin(theta), minimum_lengths)
+        self.figure.show()
 
 
 
@@ -88,7 +205,7 @@ class ModuliSample():
         return x
         
     def get_all_x_coordinates(self,thetas):
-        precision_halfs = 50
+        precision_halfs = 10
         number_of_halfs = 0
         original_h = 1
         h = original_h
@@ -132,4 +249,4 @@ class ModuliSample():
 
 
 
-ModuliSample(100,10)
+#ModuliSample(100,10)
