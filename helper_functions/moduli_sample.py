@@ -1,3 +1,5 @@
+from re import I
+import string
 import numpy as np
 from sympy import linsolve, minimum
 from helper_functions.add_new_triangle_functions import outitude_edge_params, integer_to_script, string_fraction_to_float
@@ -57,9 +59,9 @@ class ModuliSample():
                 self.sliders.append(ttk.Scale(self.slider_frames[i], from_=0, to=2*np.pi,orient="horizontal", command=self.update_display,  length=300))
         
         for slider in self.sliders[:-1]:
-            slider.set(np.pi/2)
+            slider.set(np.pi/4)
         
-        self.sliders[-1].set(np.pi)
+        self.sliders[-1].set(np.pi/2)
 
         self.value_labels = [] 
         for i in range(7):
@@ -100,6 +102,7 @@ class ModuliSample():
         self.parameter_label = tk.Label(self.parameter_frame, text="Configure the parameters of plotting below.")
         self.parameter_label.pack(pady=5)
 
+        self.index_sweep = -1
         self.theta_n = theta_n
         self.tree_depth = tree_depth
         self.n = n
@@ -162,10 +165,28 @@ class ModuliSample():
             try:
                 assert string_fraction_to_float(parameter.get()) == int(string_fraction_to_float(parameter.get())) and string_fraction_to_float(parameter.get()) > 0
                 self.error_message_variable.set("")
-                print(parameter.get())
             except:
                 self.error_message_variable.set("One or more parameters are not well-defined.\nPlease ensure they are valid positive integers.")
                 return
+            
+        self.theta_n = int(string_fraction_to_float(self.angle_sweeps_variable.get()))
+        self.tree_depth = int(string_fraction_to_float(self.tree_depth_variable.get()))
+        self.n = int(string_fraction_to_float(self.radius_samples_variable.get()))
+
+    
+
+        index_sweep = -1
+        i = 0
+        for sweep_variable in self.sweep_states:
+            if sweep_variable.get() == 1:
+                index_sweep = i
+            i+=1
+        
+        self.index_sweep = index_sweep
+        
+
+
+        self.generate_minimum_lengths()
 
     
     def update_selections_function_generator(self,index_value):
@@ -196,14 +217,14 @@ class ModuliSample():
 
     
     def plot_equations(self):
-        equations = ["$A = 1+r\cos(\\theta_1)$\n",
-                    "$B = 1+r\sin(\\theta_1)\cos(\\theta_2)$\n",
-                    "$a^- = 1 + r\sin(\\theta_1)\sin(\\theta_2)\cos(\\theta_3)$\n",
-                    "$a^+ = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\cos(\\theta_4)$\n",
-                    "$b^- = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\cos(\\theta_5)$\n",
-                    "$b^+ = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\cos(\\theta_6)$\n",
-                    "$e^- = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\sin(\\theta_6)\cos(\\theta_7)$\n",
-                    "$e^+ = 1 + r\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\sin(\\theta_6)\sin(\\theta_7)$\n"]
+        equations = ["$A = 1+R\cos(\\theta_1)$\n",
+                    "$B = 1+R\sin(\\theta_1)\cos(\\theta_2)$\n",
+                    "$a^- = 1 + R\sin(\\theta_1)\sin(\\theta_2)\cos(\\theta_3)$\n",
+                    "$a^+ = 1 + R\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\cos(\\theta_4)$\n",
+                    "$b^- = 1 + R\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\cos(\\theta_5)$\n",
+                    "$b^+ = 1 + R\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\cos(\\theta_6)$\n",
+                    "$e^- = 1 + R\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\sin(\\theta_6)\cos(\\theta_7)$\n",
+                    "$e^+ = 1 + R\sin(\\theta_1)\sin(\\theta_2)\sin(\\theta_3)\sin(\\theta_4)\sin(\\theta_5)\sin(\\theta_6)\sin(\\theta_7)$\n"]
 
 
 
@@ -287,41 +308,59 @@ class ModuliSample():
         
     
     def generate_minimum_lengths(self):
-        minimum_lengths_r_theta = []
+        
         theta_n = self.theta_n
-        theta_space = np.linspace(np.pi/theta_n,2*np.pi,theta_n)
-        radiis = []
-        thetas = np.pi*np.array([1,1,1,1,1,1,1,2])*np.random.random(8)
-        #print(thetas/np.pi)
-        for i in range(len(thetas)-1):
-            if thetas[i] == 0:
-                thetas[i]+=0.05
-            elif thetas[i] == np.pi:
-                thetas[i]-=0.05
+        thetas = np.array([theta_value.get() for theta_value in self.sliders])
         
-        if thetas[7] == 0:
-            thetas[7] +=0.05
-        elif thetas[7] == np.pi*2:
-            thetas[7]-=0.05
-        
-        
-        for theta in theta_space:
-            #print(theta)
-            thetas[2] = theta
+        if self.index_sweep !=-1:
+            radiis = []
+            theta_space = np.linspace(np.pi/theta_n,2*np.pi,theta_n)
+            minimum_lengths_r_theta = []
+            for i in range(len(thetas)-1):
+                if thetas[i] == 0:
+                    thetas[i]+=0.0001
+                elif thetas[i] == np.pi:
+                    thetas[i]-=0.0001
+            
+            if thetas[7] == 0:
+                thetas[7] +=0.0001
+            elif thetas[7] == np.pi*2:
+                thetas[7]-=0.0001
+            
+            
+            for theta in theta_space:
+                thetas[self.index_sweep] = theta
+                [radii, coordinates] = self.get_all_x_coordinates(thetas)
+                minimum_lengths = self.generate_minimum_length_distribution(coordinates)
+                radiis.append(radii)
+                minimum_lengths_r_theta.append(minimum_lengths)
+            
+            self.figure = plt.figure()
+            
+            self.ax = self.figure.add_subplot(1,1,1,projection='3d')
+            for theta_index in range(len(theta_space)):
+                radii = radiis[theta_index]
+                theta = theta_space[theta_index]
+                minimum_lengths = minimum_lengths_r_theta[theta_index]
+                self.ax.plot3D(radii*np.cos(theta), radii*np.sin(theta), minimum_lengths)
+            self.figure.show()
+        else:
             [radii, coordinates] = self.get_all_x_coordinates(thetas)
             minimum_lengths = self.generate_minimum_length_distribution(coordinates)
-            radiis.append(radii)
-            minimum_lengths_r_theta.append(minimum_lengths)
-        
-        self.figure = plt.figure()
-        
-        self.ax = self.figure.add_subplot(1,1,1,projection='3d')
-        for theta_index in range(len(theta_space)):
-            radii = radiis[theta_index]
-            theta = theta_space[theta_index]
-            minimum_lengths = minimum_lengths_r_theta[theta_index]
-            self.ax.plot3D(radii*np.cos(theta), radii*np.sin(theta), minimum_lengths)
-        self.figure.show()
+            self.figure = plt.figure(figsize=(7,5))
+            self.ax = self.figure.add_subplot(1,1,1)
+            self.ax.plot(radii, minimum_lengths)
+            self.ax.set_xlabel("$R$ (Distance from 𝟙)")
+            self.ax.set_ylabel("Minimum Length")
+
+            theta_values = [f"\\theta_{i+1} = {self.display_coefficient(thetas[i])}" for i in range(len(thetas))]
+
+            theta_string = f"${', '.join(theta_values)}$"
+
+            self.ax.set_title(f"Minimum Lengths against $R$\n{theta_string}")
+            self.figure.canvas.manager.set_window_title('Minimum Lengths Spectrum Over Moduli Space Plot')
+            self.figure.show()
+
 
 
 
