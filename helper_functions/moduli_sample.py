@@ -61,12 +61,27 @@ class ModuliSample():
         for i in range(7):
             self.value_labels.append(tk.Label(self.slider_frames[i],textvariable=self.value_string_vars[i]))
 
+        self.sweep_states = []
+        for i in range(7):
+            self.sweep_states.append(tk.IntVar())
+
+
+        self.sweep_checkboxes = []
+
+        for i in range(7):
+            
+            self.sweep_checkboxes.append(ttk.Checkbutton(self.slider_frames[i], variable=self.sweep_states[i], command=self.update_selections_function_generator(i)))
+            
+        #self.lambda_functions[2]()
+
 
         i = 0
         for slider in self.sliders:
             self.angle_labels[i].pack(side='left')
             slider.pack(side='left')
             self.value_labels[i].pack(side='left')
+            self.sweep_checkboxes[i].pack(side='left',padx=5)
+            
             i+=1
         
         for slider_frame in self.slider_frames:
@@ -79,6 +94,16 @@ class ModuliSample():
         self.n = n
         self.max_r = max_r
     
+    def update_selections_function_generator(self,index_value):
+        
+        def update_selections():
+            for i in range(7):
+                if i != index_value:
+                    self.sweep_states[i].set(0)
+        
+        return update_selections
+        
+    
     def update_display(self,e):
         
         for i in range(7):
@@ -88,7 +113,9 @@ class ModuliSample():
     def display_coefficient(self,string):
         string_to_return = 'π'
         string_coefficient_value = round(string/np.pi,3)
-        if np.isclose(string_coefficient_value, int(string_coefficient_value)):
+        if np.isclose(string_coefficient_value, 1):
+            return f'{string_to_return}'
+        elif np.isclose(string_coefficient_value, int(string_coefficient_value)):
             return f'{int(string_coefficient_value)}{string_to_return}'
         else:
             return f'{string_coefficient_value}{string_to_return}'
