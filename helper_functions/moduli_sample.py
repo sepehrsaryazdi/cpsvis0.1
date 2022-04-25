@@ -8,6 +8,8 @@ from helper_functions.length_heat_map import LengthHeatMapTree
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk
+import matplotlib as mpl
+from matplotlib import cm
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
@@ -297,8 +299,6 @@ class ModuliSample():
         self.triangle_ax.annotate('B',[-1/2-0.2,0.1], color='darkblue',fontsize=30)
         self.triangle_ax.scatter(-1/2-0.2,0,color='darkblue')
 
-        
-        
         self.triangle_ax.set_xlim(-2,2)
         #self.triangle_ax.set_ylim(-2.5,2.5)
         
@@ -322,10 +322,10 @@ class ModuliSample():
                 elif thetas[i] == np.pi:
                     thetas[i]-=0.0001
             
-            if thetas[7] == 0:
-                thetas[7] +=0.0001
-            elif thetas[7] == np.pi*2:
-                thetas[7]-=0.0001
+            if thetas[-1] == 0:
+                thetas[-1] +=0.0001
+            elif thetas[-1] == np.pi*2:
+                thetas[-1]=0.0001
             
             
             for theta in theta_space:
@@ -335,15 +335,52 @@ class ModuliSample():
                 radiis.append(radii)
                 minimum_lengths_r_theta.append(minimum_lengths)
             
-            self.figure = plt.figure()
+            self.figure = plt.figure(figsize=(7,5))
             
             self.ax = self.figure.add_subplot(1,1,1,projection='3d')
+
+            all_lengths = []
+            for minimum_lengths in minimum_lengths_r_theta:
+                for length in minimum_lengths:
+                    all_lengths.append(length)
+            
+            max_height = max(all_lengths)
+            norm = mpl.colors.Normalize(vmin=0, vmax=max_height)
+            cmap = cm.jet
+            m = cm.ScalarMappable(norm=norm, cmap=cmap)
+
+            
+
+
             for theta_index in range(len(theta_space)):
                 radii = radiis[theta_index]
                 theta = theta_space[theta_index]
                 minimum_lengths = minimum_lengths_r_theta[theta_index]
-                self.ax.plot3D(radii*np.cos(theta), radii*np.sin(theta), minimum_lengths)
+                N = len(radii)
+                X = radii*np.cos(theta)
+                Y = radii*np.sin(theta)
+                Z = minimum_lengths
+                for i in range(N-1):
+                    self.ax.plot(X[i:i+2],Y[i:i+2],Z[i:i+2],color=plt.cm.jet(1/2*(Z[i]+Z[i+1])/max_height))
+                #self.ax.plot3D(radii*np.cos(theta), radii*np.sin(theta), minimum_lengths, c=minimum_lengths)
+            
+            self.ax.set_xlabel(f'$R\\cos(\\theta_{self.index_sweep+1})$')
+            self.ax.set_ylabel(f'$R\\sin(\\theta_{self.index_sweep+1})$')
+            self.ax.set_zlabel(f'Minimum Length')
+
+            theta_values = [f"\\theta_{i+1} = {self.display_coefficient(thetas[i])}" for i in range(len(thetas))]
+            theta_values[self.index_sweep] = f'\\theta_{self.index_sweep+1} ∈ [0,2π]'
+
+            theta_string = f"${', '.join(theta_values)}$"
+
+            self.ax.set_title(f"Minimum Lengths against $R$ for $\\theta_{self.index_sweep+1} \in [0,2\pi]$\n{theta_string}")
+            
+            m._A = []
+            clb = self.figure.colorbar(m)
+            clb.set_label('Minimum Length')
+            self.figure.canvas.manager.set_window_title('Minimum Lengths Spectrum Over Moduli Space Plot')
             self.figure.show()
+
         else:
             [radii, coordinates] = self.get_all_x_coordinates(thetas)
             minimum_lengths = self.generate_minimum_length_distribution(coordinates)
