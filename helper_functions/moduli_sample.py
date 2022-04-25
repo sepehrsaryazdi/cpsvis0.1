@@ -152,7 +152,8 @@ class ModuliSample():
         
         self.parameter_frames.append(tk.Frame(self.parameter_frame))
 
-        self.generate_plot_button = ttk.Button(self.parameter_frame, text="Generate Surface")
+
+        self.generate_plot_button = ttk.Button(self.parameter_frame, text="Generate Plot")
     
         self.generate_plot_button.bind("<ButtonPress>", self.generate_plot_command)
 
@@ -338,16 +339,16 @@ class ModuliSample():
             radiis = []
             theta_space = np.linspace(np.pi/theta_n,2*np.pi,theta_n)
             minimum_lengths_r_theta = []
-            for i in range(len(thetas)-1):
-                if thetas[i] == 0:
-                    thetas[i]+=0.0001
-                elif thetas[i] == np.pi:
-                    thetas[i]-=0.0001
+            # for i in range(len(thetas)-1):
+            #     if thetas[i] == 0:
+            #         thetas[i]+=0.0001
+            #     elif thetas[i] == np.pi:
+            #         thetas[i]-=0.0001
             
-            if thetas[-1] == 0:
-                thetas[-1] +=0.0001
-            elif thetas[-1] == np.pi*2:
-                thetas[-1]=0.0001
+            # if thetas[-1] == 0:
+            #     thetas[-1] +=0.0001
+            # elif thetas[-1] == np.pi*2:
+            #     thetas[-1]=0.0001
             
             
             for theta in theta_space:
@@ -369,7 +370,8 @@ class ModuliSample():
                     all_lengths.append(length)
             
             max_height = max(all_lengths)
-            norm = mpl.colors.Normalize(vmin=0, vmax=max_height)
+            min_height = min(all_lengths)
+            norm = mpl.colors.Normalize(vmin=min_height, vmax=max_height)
             cmap = cm.jet
             m = cm.ScalarMappable(norm=norm, cmap=cmap)
 
@@ -385,7 +387,7 @@ class ModuliSample():
                 Y = radii*np.sin(theta)
                 Z = minimum_lengths
                 for i in range(N-1):
-                    self.ax.plot(X[i:i+2],Y[i:i+2],Z[i:i+2],color=plt.cm.jet(1/2*(Z[i]+Z[i+1])/max_height))
+                    self.ax.plot(X[i:i+2],Y[i:i+2],Z[i:i+2],color=plt.cm.jet((1/2*(Z[i]+Z[i+1])-min_height)/(max_height-min_height)))
                 #self.ax.plot3D(radii*np.cos(theta), radii*np.sin(theta), minimum_lengths, c=minimum_lengths)
             
             self.ax.set_xlabel(f'$R\\cos(\\theta_{self.index_sweep+1})$')
