@@ -1,10 +1,11 @@
 import numpy as np
 from sympy import linsolve, minimum
-from helper_functions.add_new_triangle_functions import outitude_edge_params
+from helper_functions.add_new_triangle_functions import outitude_edge_params, integer_to_script
 from helper_functions.add_new_triangle_functions import compute_translation_matrix_torus
 from helper_functions.length_heat_map import LengthHeatMapTree
 import matplotlib.pyplot as plt
 import tkinter as tk
+from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
@@ -14,6 +15,7 @@ class ModuliSample():
         self.win = tk.Toplevel()
         self.win.wm_title("Minimum Length Spectrum Over Moduli Space")
         self.l = tk.Label(self.win, text="Use the following configurations to produce the minimum length spectrum over a slice in the moduli space.")
+        self.l.pack()
         self.triangle_figure = plt.Figure(figsize=(6, 5), dpi=100)
         self.triangle_ax = self.triangle_figure.add_subplot(111)
         self.visual_frame = tk.Frame(self.win)
@@ -27,16 +29,71 @@ class ModuliSample():
         self.equations_ax.set_axis_off()
         self.plot_equations()
         self.equations_chart_type.get_tk_widget().pack(side='right')
-
-
-
         self.visual_frame.pack()
+        self.controls_frame = tk.Frame(self.win)
+        self.slider_frames = []
+        
+        for i in range(7):
+            self.slider_frames.append(tk.Frame(self.controls_frame))
+        self.angle_labels = [] 
+
+        for i in range(1,8):
+            self.angle_labels.append(tk.Label(self.slider_frames[i-1],text=f'θ{integer_to_script(i,up=False)}'))
+
+        self.value_string_vars = []
+        for i in range(7):
+            new_text_variable = tk.StringVar()
+            self.value_string_vars.append(new_text_variable)
+
+        self.sliders = []
+        for i in range(7):
+            if i != 6:
+                self.sliders.append(ttk.Scale(self.slider_frames[i], from_=0, to=np.pi, orient="horizontal", command=self.update_display))
+            else:
+                self.sliders.append(ttk.Scale(self.slider_frames[i], from_=0, to=2*np.pi,orient="horizontal", command=self.update_display))
+        
+        for slider in self.sliders[:-1]:
+            slider.set(np.pi/2)
+        
+        self.sliders[-1].set(np.pi)
+
+        self.value_labels = [] 
+        for i in range(7):
+            self.value_labels.append(tk.Label(self.slider_frames[i],textvariable=self.value_string_vars[i]))
+
+
+        i = 0
+        for slider in self.sliders:
+            self.angle_labels[i].pack(side='left')
+            slider.pack(side='left')
+            self.value_labels[i].pack(side='left')
+            i+=1
+        
+        for slider_frame in self.slider_frames:
+            slider_frame.pack()
+        self.controls_frame.pack()
 
         
 
         self.tree_depth = tree_depth
         self.n = n
         self.max_r = max_r
+    
+    def update_display(self,e):
+        
+        for i in range(7):
+            self.value_string_vars[i].set(f'{self.display_coefficient(self.sliders[i].get())}')
+
+    
+    def display_coefficient(self,string):
+        string_to_return = 'π'
+        string_coefficient_value = round(string/np.pi,3)
+        if np.isclose(string_coefficient_value, int(string_coefficient_value)):
+            return f'{int(string_coefficient_value)}{string_to_return}'
+        else:
+            return f'{string_coefficient_value}{string_to_return}'
+
+
     
     def plot_equations(self):
         equations = ["$A = 1+r\cos(\\theta_1)$\n",
