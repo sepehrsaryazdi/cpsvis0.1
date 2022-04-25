@@ -11,6 +11,7 @@ from tkinter import ttk
 import matplotlib as mpl
 from matplotlib import cm
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import time
 
 
 class ModuliSample():
@@ -101,6 +102,11 @@ class ModuliSample():
 
         self.parameter_frame = tk.Frame(self.bottom_frame)
 
+        self.progress_var = tk.DoubleVar()
+
+        self.progress = ttk.Progressbar(self.parameter_frame, orient='horizontal', length=100,variable=self.progress_var,maximum=100)
+        
+
         self.parameter_label = tk.Label(self.parameter_frame, text="Configure the parameters of plotting below.")
         self.parameter_label.pack(pady=5)
 
@@ -156,10 +162,26 @@ class ModuliSample():
         
 
         self.parameter_frame.pack(side='left',pady=(0,2))
-
+        
+        
 
 
         self.bottom_frame.pack(pady=25)
+
+
+        
+    
+    def update_progress_bar(self,value):
+        self.progress_var.set(100*value)
+        
+        if value > 0:
+            self.progress.pack()
+        else:
+            self.progress.pack_forget()
+        
+        self.progress.update()
+        
+
         
     def generate_plot_command(self,e):
 
@@ -329,6 +351,8 @@ class ModuliSample():
             
             
             for theta in theta_space:
+                
+                self.update_progress_bar(theta/max(theta_space))
                 thetas[self.index_sweep] = theta
                 [radii, coordinates] = self.get_all_x_coordinates(thetas)
                 minimum_lengths = self.generate_minimum_length_distribution(coordinates)
@@ -379,6 +403,8 @@ class ModuliSample():
             clb = self.figure.colorbar(m)
             clb.set_label('Minimum Length')
             self.figure.canvas.manager.set_window_title('Minimum Lengths Spectrum Over Moduli Space Plot')
+            self.update_progress_bar(0)
+            
             self.figure.show()
 
         else:
