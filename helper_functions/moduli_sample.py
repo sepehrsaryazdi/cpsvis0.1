@@ -339,16 +339,16 @@ class ModuliSample():
             radiis = []
             theta_space = np.linspace(np.pi/theta_n,2*np.pi,theta_n)
             minimum_lengths_r_theta = []
-            # for i in range(len(thetas)-1):
-            #     if thetas[i] == 0:
-            #         thetas[i]+=0.0001
-            #     elif thetas[i] == np.pi:
-            #         thetas[i]-=0.0001
+            for i in range(len(thetas)-1):
+                if thetas[i] == 0:
+                    thetas[i]+=0.0001
+                elif thetas[i] == np.pi:
+                    thetas[i]-=0.0001
             
-            # if thetas[-1] == 0:
-            #     thetas[-1] +=0.0001
-            # elif thetas[-1] == np.pi*2:
-            #     thetas[-1]=0.0001
+            if thetas[-1] == 0:
+                thetas[-1] +=0.0001
+            elif thetas[-1] == np.pi*2:
+                thetas[-1]=0.0001
             
             
             for theta in theta_space:
