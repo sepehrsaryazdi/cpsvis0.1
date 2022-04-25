@@ -30,6 +30,11 @@ def triangle_matrix(t):
     matrix = mp.matrix([[0,0,1],[0,-1,-1],[t,t+1,1]])
     return matrix*coefficient
 
+def string_fraction_to_float(string):
+        if '/' in string:
+            string = string.rsplit('/')
+            return float(string[0])/float(string[1])
+        return float(string)
 
 def integer_to_script(value, up=True):
 

@@ -1,6 +1,6 @@
 import numpy as np
 from sympy import linsolve, minimum
-from helper_functions.add_new_triangle_functions import outitude_edge_params, integer_to_script
+from helper_functions.add_new_triangle_functions import outitude_edge_params, integer_to_script, string_fraction_to_float
 from helper_functions.add_new_triangle_functions import compute_translation_matrix_torus
 from helper_functions.length_heat_map import LengthHeatMapTree
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 class ModuliSample():
-    def __init__(self, max_r,n, tree_depth=2):
+    def __init__(self, max_r=100,n=10, theta_n=50, tree_depth=2):
         
         self.win = tk.Toplevel()
         self.win.wm_title("Minimum Length Spectrum Over Moduli Space")
@@ -30,7 +30,11 @@ class ModuliSample():
         self.plot_equations()
         self.equations_chart_type.get_tk_widget().pack(side='right')
         self.visual_frame.pack()
-        self.controls_frame = tk.Frame(self.win)
+        self.bottom_frame = tk.Frame(self.win)
+        self.controls_frame = tk.Frame(self.bottom_frame)
+        self.controls_label = tk.Label(self.controls_frame, text="Use the sliders to control the value of θᵢ for i ∈ {1,2,3,4,5,6,7}.\nTick the corresponding box if you would like to sweep this angle for θ ∈ [0,2π] during plot generation.")
+        self.controls_label.pack()
+        
         self.slider_frames = []
         
         for i in range(7):
@@ -48,9 +52,9 @@ class ModuliSample():
         self.sliders = []
         for i in range(7):
             if i != 6:
-                self.sliders.append(ttk.Scale(self.slider_frames[i], from_=0, to=np.pi, orient="horizontal", command=self.update_display))
+                self.sliders.append(ttk.Scale(self.slider_frames[i], from_=0, to=np.pi, orient="horizontal", command=self.update_display, length=300))
             else:
-                self.sliders.append(ttk.Scale(self.slider_frames[i], from_=0, to=2*np.pi,orient="horizontal", command=self.update_display))
+                self.sliders.append(ttk.Scale(self.slider_frames[i], from_=0, to=2*np.pi,orient="horizontal", command=self.update_display,  length=300))
         
         for slider in self.sliders[:-1]:
             slider.set(np.pi/2)
@@ -86,13 +90,83 @@ class ModuliSample():
         
         for slider_frame in self.slider_frames:
             slider_frame.pack()
-        self.controls_frame.pack()
+        self.controls_frame.pack(side='left')
 
-        
+        self.sep = ttk.Separator(self.bottom_frame,orient='vertical')
+        self.sep.pack(fill='y',side='left',padx=25)
 
+        self.parameter_frame = tk.Frame(self.bottom_frame)
+
+        self.parameter_label = tk.Label(self.parameter_frame, text="Configure the parameters of plotting below.")
+        self.parameter_label.pack(pady=5)
+
+        self.theta_n = theta_n
         self.tree_depth = tree_depth
         self.n = n
         self.max_r = max_r
+
+        self.tree_depth_variable = tk.StringVar(value=self.tree_depth)
+        self.angle_sweeps_variable = tk.StringVar(value=self.theta_n)
+        self.radius_samples_variable = tk.StringVar(value=self.n)
+
+        self.parameters = [self.tree_depth_variable, self.angle_sweeps_variable, self.radius_samples_variable]
+        texts = ["Length Tree Depth", "Number of Angle Sweep Samples", "Number of Radius Samples"]
+        
+        self.parameter_frames = []
+        for i in range(len(texts)):
+            self.parameter_frames.append(tk.Frame(self.parameter_frame))
+
+        self.parameter_texts = []
+        self.parameter_entries = []
+        i=0
+        for parameter in self.parameters:
+            self.parameter_texts.append(tk.Label(self.parameter_frames[i],text=texts[i]))
+            self.parameter_entries.append(ttk.Entry(self.parameter_frames[i], textvariable=parameter, width=5))
+            self.parameter_texts[-1].pack(side='left')
+            self.parameter_entries[-1].pack(side='right')
+            i+=1
+        
+        
+
+        
+
+
+        for parameter_frame in self.parameter_frames:
+            parameter_frame.pack(anchor='w')
+
+
+        self.error_message_variable = tk.StringVar(value="")
+        self.error_message_label = tk.Label(self.parameter_frame, textvariable=self.error_message_variable, fg='red')
+        self.error_message_label.pack()
+        
+        self.parameter_frames.append(tk.Frame(self.parameter_frame))
+
+        self.generate_plot_button = ttk.Button(self.parameter_frame, text="Generate Surface")
+    
+        self.generate_plot_button.bind("<ButtonPress>", self.generate_plot_command)
+
+
+        self.generate_plot_button.pack()
+        
+        
+
+        self.parameter_frame.pack(side='left',pady=(0,2))
+
+
+
+        self.bottom_frame.pack(pady=25)
+        
+    def generate_plot_command(self,e):
+
+        for parameter in self.parameters:
+            try:
+                assert string_fraction_to_float(parameter.get()) == int(string_fraction_to_float(parameter.get())) and string_fraction_to_float(parameter.get()) > 0
+                self.error_message_variable.set("")
+                print(parameter.get())
+            except:
+                self.error_message_variable.set("One or more parameters are not well-defined.\nPlease ensure they are valid positive integers.")
+                return
+
     
     def update_selections_function_generator(self,index_value):
         
@@ -100,7 +174,6 @@ class ModuliSample():
             for i in range(7):
                 if i != index_value:
                     self.sweep_states[i].set(0)
-        
         return update_selections
         
     
@@ -153,7 +226,7 @@ class ModuliSample():
             y1 = coordsy[i+1]
             self.triangle_ax.plot([x0,x1],[y0,y1],color=arrow_colors[i])
         #self.triangle_ax.plot(coordsx,coordsy,colors=arrow_colors)
-        letters = ['b⁺','b⁻','a⁺','a⁻','b⁻','b⁺','a⁻','a⁺']
+        letters = ['b⁺','b⁻','a⁻','a⁺','b⁻','b⁺','a⁺','a⁻']
         
         for i in range(len(coordsy)-1):
             if i not in [3,0]:
@@ -215,7 +288,7 @@ class ModuliSample():
     
     def generate_minimum_lengths(self):
         minimum_lengths_r_theta = []
-        theta_n = 50
+        theta_n = self.theta_n
         theta_space = np.linspace(np.pi/theta_n,2*np.pi,theta_n)
         radiis = []
         thetas = np.pi*np.array([1,1,1,1,1,1,1,2])*np.random.random(8)

@@ -736,7 +736,7 @@ class TranslationLength:
     def add_string(self,event):
         boundary_list = [i+1 for i in range(len(self.boundary_edges))]
         try:
-            assert int(self.enter_string_power_string.get()) == app.string_fraction_to_float(self.enter_string_power_string.get())
+            assert int(self.enter_string_power_string.get()) == string_fraction_to_float(self.enter_string_power_string.get())
             self.error_message_string.set("")
         except:
             self.error_message_string.set("Please ensure that the power is an integer before adding string.")
@@ -1185,7 +1185,7 @@ class MSL3R:
 
     def create_matrix(self):
         M = []
-        matrix_data = [app.string_fraction_to_float(string.get()) for string in self.matrix_variables]
+        matrix_data = [string_fraction_to_float(string.get()) for string in self.matrix_variables]
         matrix_data = matrix_data[::-1]
         for i in range(3):
             row = []
@@ -1211,7 +1211,7 @@ class MSL3R:
             determinant = np.linalg.det(self.create_matrix())
             cube_root_determinant = np.sign(determinant)*np.power(abs(determinant),(1/3))
             for var in self.matrix_variables:
-                var.set(f'{app.string_fraction_to_float(var.get())/cube_root_determinant}')
+                var.set(f'{string_fraction_to_float(var.get())/cube_root_determinant}')
             self.error_variable.set("")
         except:
             self.error_variable.set("This matrix is singular and has determinant zero. Please enter a non-singular matrix.")
@@ -1880,11 +1880,7 @@ class App(tk.Frame):
         except:
             self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface (projected S³).")
 
-    def string_fraction_to_float(self, string):
-        if '/' in string:
-            string = string.rsplit('/')
-            return float(string[0])/float(string[1])
-        return float(string)
+    
 
     def onclick(self,event):
         coord = np.array([event.xdata,event.ydata])
@@ -2161,11 +2157,11 @@ class CombinatorialImport:
                 edge.eb.set(round(abs(np.random.random()*100),1))
                 triangle.triangle_parameter.set(round(abs(np.random.random()*100),1))
 
-                while not app.string_fraction_to_float(edge.ea.get()) > 0:
+                while not string_fraction_to_float(edge.ea.get()) > 0:
                     edge.ea.set(round(abs(np.random.random()*100),1))
-                while not app.string_fraction_to_float(edge.eb.get()) > 0:
+                while not string_fraction_to_float(edge.eb.get()) > 0:
                     edge.eb.set(round(abs(np.random.random()*100),1))
-                while not app.string_fraction_to_float(triangle.triangle_parameter.get()) > 0:
+                while not string_fraction_to_float(triangle.triangle_parameter.get()) > 0:
                     triangle.triangle_parameter.set(round(abs(np.random.random()*100),1))
         
 
@@ -2177,7 +2173,7 @@ class CombinatorialImport:
         columns = columns[0].rsplit(',')
         if 'Triangle Parameter' in columns:
             gluing_table_array = np.array(gluing_table)
-            gluing_table_array = np.array([[app.string_fraction_to_float(x) for x in row[0].rsplit(',')[4:]] for row in gluing_table_array])
+            gluing_table_array = np.array([[string_fraction_to_float(x) for x in row[0].rsplit(',')[4:]] for row in gluing_table_array])
             for row in gluing_table_array:
                 for param in row:
                     assert param > 0
@@ -2246,18 +2242,18 @@ class CombinatorialImport:
 
         for plotting_triangle in self.abstract_plotting_surface.triangles:
             abstract_triangle = self.abstract_surface.triangles[plotting_triangle.index]
-            abstract_triangle.triangle_parameter = app.string_fraction_to_float(plotting_triangle.triangle_parameter.get())
+            abstract_triangle.triangle_parameter = string_fraction_to_float(plotting_triangle.triangle_parameter.get())
             edge_index = 0
             for edge in plotting_triangle.edges:
                 flipped = (edge.edge_glued[1] != edge.edge_glued[2].v0)
-                abstract_triangle.edges[edge_index].ea = app.string_fraction_to_float(edge.ea.get())
-                abstract_triangle.edges[edge_index].eb = app.string_fraction_to_float(edge.eb.get())
+                abstract_triangle.edges[edge_index].ea = string_fraction_to_float(edge.ea.get())
+                abstract_triangle.edges[edge_index].eb = string_fraction_to_float(edge.eb.get())
                 if not flipped:
-                    abstract_triangle.edges[edge_index].edge_glued[2].ea = app.string_fraction_to_float(edge.ea.get())
-                    abstract_triangle.edges[edge_index].edge_glued[2].eb = app.string_fraction_to_float(edge.eb.get())
+                    abstract_triangle.edges[edge_index].edge_glued[2].ea = string_fraction_to_float(edge.ea.get())
+                    abstract_triangle.edges[edge_index].edge_glued[2].eb = string_fraction_to_float(edge.eb.get())
                 else:
-                    abstract_triangle.edges[edge_index].edge_glued[2].ea = app.string_fraction_to_float(edge.eb.get())
-                    abstract_triangle.edges[edge_index].edge_glued[2].eb = app.string_fraction_to_float(edge.ea.get())
+                    abstract_triangle.edges[edge_index].edge_glued[2].ea = string_fraction_to_float(edge.eb.get())
+                    abstract_triangle.edges[edge_index].edge_glued[2].eb = string_fraction_to_float(edge.ea.get())
                 edge_index+=1
 
         self.generate_real_surface_map()
@@ -2690,10 +2686,10 @@ class CombinatorialImport:
     def submit_triangle_params(self, selected_triangle):
 
         try:
-            assert app.string_fraction_to_float(selected_triangle.triangle_parameter.get()) > 0
+            assert string_fraction_to_float(selected_triangle.triangle_parameter.get()) > 0
             for edge in selected_triangle.edges:
-                assert app.string_fraction_to_float(edge.ea.get()) > 0
-                assert app.string_fraction_to_float(edge.eb.get()) > 0
+                assert string_fraction_to_float(edge.ea.get()) > 0
+                assert string_fraction_to_float(edge.eb.get()) > 0
         except:
             self.error_text.set("One or more variables are not well-defined.")
             return
@@ -3092,8 +3088,8 @@ def generate_gluing_table():
     def generate_gluing_table_submit():
         
         try:
-            assert int(g_variable.get()) == app.string_fraction_to_float(g_variable.get()) and int(g_variable.get()) > 0
-            assert int(n_variable.get()) == app.string_fraction_to_float(n_variable.get()) and int(n_variable.get()) > 0
+            assert int(g_variable.get()) == string_fraction_to_float(g_variable.get()) and int(g_variable.get()) > 0
+            assert int(n_variable.get()) == string_fraction_to_float(n_variable.get()) and int(n_variable.get()) > 0
             
         except:
             error_variable.set("Please ensure that both values \nare positive integers.")
