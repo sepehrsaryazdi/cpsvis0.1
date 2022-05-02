@@ -9,6 +9,19 @@ def compute_translation_matrix_torus(x):
     alpha2 = triangle_matrix(B)*edge_matrix(a_plus,a_minus)*mp.inverse(triangle_matrix(A))*edge_matrix(e_minus,e_plus)
     return [alpha1,alpha2]
 
+def a_to_x_coordinate_torus(x):
+    [A,B,a_minus,a_plus,b_minus,b_plus,e_minus,e_plus] = x
+    qe_plus = compute_q_plus(A,b_minus, B, a_minus)
+    qe_minus = compute_q_plus(B,b_plus, A, a_plus)
+    A_t = compute_t(a_minus, b_minus, e_minus, a_plus, b_plus, e_plus)
+    B_t = compute_t(e_plus, a_plus, b_plus, e_minus, a_minus, b_minus)
+    qb_plus = compute_q_plus(A, a_minus, B, e_minus)
+    qb_minus = compute_q_plus(B, a_plus, A, e_plus)
+    qa_plus = compute_q_plus(A,e_minus, B, b_minus)
+    qa_minus = compute_q_plus(B,e_plus, A, b_plus)
+    y = np.array([A_t,B_t,qa_minus, qa_plus, qb_minus, qb_plus, qe_minus, qe_plus])
+    return y
+
 def get_length(matrix):
     #eigenvalues = np.linalg.eigvals(matrix)
     eigenvalues = mp.eig(mp.matrix(matrix))[0]

@@ -2,7 +2,7 @@ from re import I
 import string
 import numpy as np
 from sympy import linsolve, minimum
-from helper_functions.add_new_triangle_functions import outitude_edge_params, integer_to_script, string_fraction_to_float
+from helper_functions.add_new_triangle_functions import a_to_x_coordinate_torus, outitude_edge_params, integer_to_script, string_fraction_to_float
 from helper_functions.add_new_triangle_functions import compute_translation_matrix_torus
 from helper_functions.length_heat_map import LengthHeatMapTree
 import matplotlib.pyplot as plt
@@ -33,6 +33,7 @@ class ModuliSample():
         self.equations_chart_type = FigureCanvasTkAgg(self.equations_figure, self.visual_frame)
         self.equations_ax.set_axis_off()
         self.plot_equations()
+        
         self.equations_chart_type.get_tk_widget().pack(side='right')
         self.visual_frame.pack()
         self.bottom_frame = tk.Frame(self.win)
@@ -142,6 +143,17 @@ class ModuliSample():
         
 
 
+        
+        
+        self.parameter_frames.append(tk.Frame(self.parameter_frame))
+        
+        self.coordinate_variable = tk.StringVar()
+        self.coordinate_variable.set("𝒜-coordinates")
+        self.coordinate_text=  tk.Label(self.parameter_frames[-1], text="Coordinates: ")
+        self.coordinate_text.pack(side='left')
+        self.toggle_coordinates = ttk.OptionMenu(self.parameter_frames[-1], self.coordinate_variable, "𝒜-coordinates", "𝒜-coordinates", "𝒳-coordinates")
+        self.toggle_coordinates.pack(side="left")
+
         for parameter_frame in self.parameter_frames:
             parameter_frame.pack(anchor='w')
 
@@ -152,6 +164,8 @@ class ModuliSample():
         
         self.parameter_frames.append(tk.Frame(self.parameter_frame))
 
+        
+        
 
         self.generate_plot_button = ttk.Button(self.parameter_frame, text="Generate Plot")
     
@@ -167,7 +181,7 @@ class ModuliSample():
         
 
 
-        self.bottom_frame.pack(pady=25)
+        self.bottom_frame.pack(pady=5)
 
 
         
@@ -439,7 +453,10 @@ class ModuliSample():
         return np.array(minimum_lengths)
 
     def get_min_length_from_x(self,x):
+        if "𝒜" in self.coordinate_variable.get():
+            x = a_to_x_coordinate_torus(x)
         alpha1,alpha2 = compute_translation_matrix_torus(x)
+        
         lengthheatmaptree = LengthHeatMapTree(self.tree_depth, 1/2, alpha1,alpha2)
         min_length = lengthheatmaptree.smallest_length
         return min_length
@@ -463,6 +480,7 @@ class ModuliSample():
             )
         x.append(x[-1]*np.sin(thetas[-1]))
         x = r*np.array(x)+1
+        
         return x
         
     def get_all_x_coordinates(self,thetas):

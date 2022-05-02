@@ -450,6 +450,7 @@ class TranslationLength:
     def compute_minimum_lengths(self, event):
         alpha1 = self.representations[0]
         alpha2= self.representations[1]
+        
         try:
             self.lengthheatmaptree
         except:
