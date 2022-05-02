@@ -424,6 +424,7 @@ class ModuliSample():
             self.figure.show()
 
         else:
+            self.theta_n = 1
             [radii, coordinates] = self.get_all_x_coordinates(thetas)
             minimum_lengths = self.generate_minimum_length_distribution(coordinates)
             self.figure = plt.figure(figsize=(7,5))
@@ -438,6 +439,7 @@ class ModuliSample():
 
             self.ax.set_title(f"Minimum Lengths against $R$\n{theta_string}")
             self.figure.canvas.manager.set_window_title('Minimum Lengths Spectrum Over Moduli Space Plot')
+            self.update_progress_bar(0)
             self.figure.show()
 
 
@@ -447,9 +449,13 @@ class ModuliSample():
     
     def generate_minimum_length_distribution(self,coordinates):
         minimum_lengths = []
+        i=0
         for coordinate in coordinates:
+            #if self.theta_n == 1:
+            #self.update_progress_bar(self.progress_var.get()/100 + i/(self.theta_n*len(coordinates)))
             min_length = self.get_min_length_from_x(coordinate)
             minimum_lengths.append(min_length)
+            i+=1
         return np.array(minimum_lengths)
 
     def get_min_length_from_x(self,x):
@@ -494,7 +500,9 @@ class ModuliSample():
         r_max = self.max_r
         while r < self.max_r:
             x = self.get_single_x_coordinate(thetas,r)
-
+            
+            
+            
             #print(x)
 
             if not np.all([xi>0 for xi in x]):
