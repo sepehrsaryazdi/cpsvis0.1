@@ -417,7 +417,9 @@ class ModuliSphericalSample():
 
             theta_string = f"${', '.join(theta_values)}$"
 
-            self.ax.set_title(f"Minimum Lengths against $R$ for $\\theta_{self.index_sweep+1} \in [0,2\pi]$\n{theta_string}")
+            coordinate_latex = r"$\mathcal{A}$-coordinates" if "𝒜" in self.coordinate_variable.get() else r"$\mathcal{X}$-coordinates"
+
+            self.ax.set_title(f"Minimum Lengths against $R$ for $\\theta_{self.index_sweep+1} \in [0,2\pi]$ ({coordinate_latex})\n{theta_string}")
             
             m._A = []
             clb = self.figure.colorbar(m)
@@ -441,7 +443,11 @@ class ModuliSphericalSample():
 
             theta_string = f"${', '.join(theta_values)}$"
 
-            self.ax.set_title(f"Minimum Lengths against $R$\n{theta_string}")
+
+            coordinate_latex = r"$\mathcal{A}$-coordinates" if "𝒜" in self.coordinate_variable.get() else r"$\mathcal{X}$-coordinates"
+
+
+            self.ax.set_title(f"Minimum Lengths against $R$ ({coordinate_latex})\n{theta_string}")
             self.figure.canvas.manager.set_window_title('Minimum Lengths Spectrum Over Moduli Space Plot')
             self.update_progress_bar(0)
             self.figure.show()

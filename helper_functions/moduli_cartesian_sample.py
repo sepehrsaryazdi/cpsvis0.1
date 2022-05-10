@@ -343,7 +343,9 @@ class ModuliCartesianSample():
 
         v_string = f"${', '.join(v_values)}$"
 
-        self.ax.set_title(f"Minimum Lengths against $R$\n{v_string}")
+        coordinate_latex = r"$\mathcal{A}$-coordinates" if "𝒜" in self.coordinate_variable.get() else r"$\mathcal{X}$-coordinates"
+
+        self.ax.set_title(f"Minimum Lengths against $R$ ({coordinate_latex})\n{v_string}")
         self.figure.canvas.manager.set_window_title('Minimum Lengths Spectrum Over Moduli Space Plot')
         self.update_progress_bar(0)
         self.figure.show()
