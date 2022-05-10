@@ -14,13 +14,15 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
 
 
-class ModuliSample():
+class ModuliSphericalSample():
     def __init__(self, max_r=100,n=10, theta_n=50, tree_depth=2):
         
         self.win = tk.Toplevel()
-        self.win.wm_title("Minimum Length Spectrum Over Moduli Space")
+        self.win.wm_title("Minimum Length Spectrum Over Moduli Space (Spherical)")
         self.l = tk.Label(self.win, text="Use the following configurations to produce the minimum length spectrum over a slice in the moduli space.")
         self.l.pack()
+
+        
         self.triangle_figure = plt.Figure(figsize=(6, 5), dpi=100)
         self.triangle_ax = self.triangle_figure.add_subplot(111)
         self.visual_frame = tk.Frame(self.win)

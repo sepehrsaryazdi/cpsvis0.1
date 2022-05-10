@@ -10,7 +10,8 @@ from sklearn import neighbors
 from sympy import poly
 import mpmath as mp
 from collections import deque
-from helper_functions.moduli_sample import ModuliSample
+from helper_functions.moduli_spherical_sample import ModuliSphericalSample
+from helper_functions.moduli_cartesian_sample import ModuliCartesianSample
 mp.mp.dps = 100
 mp.mp.pretty = False
 
@@ -3029,7 +3030,37 @@ def restart_program():
 
 def generate_moduli_sample():
 
-    moduli_sample = ModuliSample(100,10)
+    
+
+    moduli_param_win = tk.Toplevel()
+    moduli_param_win.wm_title("Choose Moduli Space Parameterisation")
+    moduli_l = tk.Label(moduli_param_win, text="Please select the desired parameterisation of the moduli space from the dropdown below.")
+    moduli_l.pack(padx=25,pady=10)
+    parameterisation_frame = tk.Frame(moduli_param_win)
+    parameterisation_variable = tk.StringVar()
+    parameterisation_variable.set("Cartesian")
+    parameterisation_text=  tk.Label(parameterisation_frame, text="Parameterisation: ")
+    parameterisation_text.pack(side="left")
+    toggle_parameterisation = ttk.OptionMenu(parameterisation_frame, parameterisation_variable, "Cartesian", "Cartesian", "Spherical")
+    toggle_parameterisation.pack(side="left")
+    parameterisation_frame.pack()
+
+    def select_param(e):
+
+        if parameterisation_variable.get() == 'Spherical':
+            moduli_param_win.destroy()
+            moduli_sample = ModuliSphericalSample(100,10)
+        else:
+            moduli_param_win.destroy()
+            moduli_sample = ModuliCartesianSample(100,10)
+
+    select_button = ttk.Button(moduli_param_win, text="Select Parameterisation")
+    select_button.pack(side="right", anchor='e',padx=25,pady=10)
+    
+
+    select_button.bind("<ButtonPress>",select_param)
+
+
 
 
 def slr3r():
