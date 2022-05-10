@@ -111,9 +111,10 @@ class ModuliCartesianSample():
 
         self.tree_depth_variable = tk.StringVar(value=self.tree_depth)
         self.radius_samples_variable = tk.StringVar(value=self.n)
+        self.max_r_variable = tk.StringVar(value=max_r)
 
-        self.parameters = [self.tree_depth_variable, self.radius_samples_variable]
-        texts = ["Length Tree Depth", "Number of Radius Samples"]
+        self.parameters = [self.tree_depth_variable, self.max_r_variable ,self.radius_samples_variable]
+        texts = ["Length Tree Depth", "Maximum R Value", "Number of Radius Samples"]
         
         self.parameter_frames = []
         for i in range(len(texts)):
@@ -201,7 +202,8 @@ class ModuliCartesianSample():
             
         self.theta_n = 1
         self.tree_depth = int(string_fraction_to_float(self.tree_depth_variable.get()))
-        self.n = int(string_fraction_to_float(self.radius_samples_variable.get()))        
+        self.n = int(string_fraction_to_float(self.radius_samples_variable.get()))
+        self.max_r = int(string_fraction_to_float(self.max_r_variable.get()))
 
 
         self.generate_minimum_lengths()
