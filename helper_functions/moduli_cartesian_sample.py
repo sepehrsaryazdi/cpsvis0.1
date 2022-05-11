@@ -359,11 +359,13 @@ class ModuliCartesianSample():
         minimum_lengths = []
         i=0
         for coordinate in coordinates:
+            
             #if self.theta_n == 1:
             self.update_progress_bar(i/len(coordinates))
             #self.update_progress_bar(self.progress_var.get()/100 + i/(self.theta_n*len(coordinates)))
             min_length = self.get_min_length_from_x(coordinate)
             minimum_lengths.append(min_length)
+            #print(np.linalg.norm(coordinate-1),min_length)
             i+=1
         return np.array(minimum_lengths)
 

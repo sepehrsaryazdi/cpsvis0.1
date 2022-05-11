@@ -6,7 +6,7 @@ from matplotlib.ticker import MaxNLocator
 import matplotlib.cm as cm
 from helper_functions.add_new_triangle_functions import *
 import mpmath as mp
-mp.mp.dps = 100
+mp.mp.dps = 300
 mp.mp.pretty = False
 
 
@@ -55,10 +55,10 @@ class LengthHeatMapTree:
                 next_node.matrix = starting_node.matrix*self.move_to_matrix(allowed_moves[move_index])
                 next_node.length, _ =get_length(next_node.matrix)
                 next_node.length =  np.float16(next_node.length)
-                if round(next_node.length,3) > 0 and self.smallest_length > next_node.length + self.difference_precision:
+                if round(next_node.length,1) > 0 and self.smallest_length > next_node.length + self.difference_precision:
                     self.smallest_length = min(next_node.length,self.smallest_length)
                     self.smallest_nodes = [next_node]
-                elif round(next_node.length,3) > 0 and abs(self.smallest_length - next_node.length) < self.difference_precision:
+                elif round(next_node.length,1) > 0 and abs(self.smallest_length - next_node.length) < self.difference_precision:
                     self.smallest_length = min(self.smallest_length, next_node.length)
                     self.smallest_nodes.append(next_node)
                 self.nodes.append(next_node)

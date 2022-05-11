@@ -12,7 +12,7 @@ import mpmath as mp
 from collections import deque
 from helper_functions.moduli_spherical_sample import ModuliSphericalSample
 from helper_functions.moduli_cartesian_sample import ModuliCartesianSample
-mp.mp.dps = 100
+mp.mp.dps = 300
 mp.mp.pretty = False
 
 
@@ -723,6 +723,8 @@ class TranslationLength:
                 
                 product = product*(representation**power)
         
+        #print(len(str(product[0,0])))
+
         length, eigenvalues = get_length(product)
         self.error_message_string.set(f"Length: {np.float16(length)}\nEigenvalues: {[np.abs(np.complex64(x)) for x in eigenvalues]}.")
 

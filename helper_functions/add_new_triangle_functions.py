@@ -1,6 +1,6 @@
 import numpy as np
 import mpmath as mp
-mp.dps = 100
+mp.mp.dps = 300
 mp.mp.pretty = False
 
 def compute_translation_matrix_torus(x):
@@ -30,6 +30,7 @@ def get_length(matrix):
     smallest_eigenvalue = absolute_eigenvalues[0]
     largest_eigenvalue = absolute_eigenvalues[-1]
     length = mp.log(largest_eigenvalue/smallest_eigenvalue)
+    
     return length, eigenvalues
 
 
