@@ -16,11 +16,12 @@ class Node:
 
 
 class LengthHeatMapTree:
-    def __init__(self,depth, ratio=1/2, alpha1= mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), alpha2=mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), difference_precision = 0.0001):
+    def __init__(self,depth, ratio=1/2, alpha1= mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), alpha2=mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), difference_precision = 0.0001, k =2):
         self.alpha1 = alpha1
         self.alpha2 = alpha2
         self.depth = depth
         self.ratio = ratio
+        self.k = k
         initial_node = Node()
         initial_node.index = ''
         initial_node.coord = np.array([0,0])
@@ -29,6 +30,7 @@ class LengthHeatMapTree:
         self.difference_precision = difference_precision
         self.smallest_nodes = []
         self.smallest_length = np.inf
+        self.k_smallest_lengths = np.zeros(k) + np.inf
         self.nodes = [initial_node]
         if depth:
             self.create_nodes(initial_node)
@@ -60,7 +62,11 @@ class LengthHeatMapTree:
                     self.smallest_nodes = [next_node]
                 elif round(next_node.length,1) > 0 and abs(self.smallest_length - next_node.length) < self.difference_precision:
                     self.smallest_length = min(self.smallest_length, next_node.length)
-                    self.smallest_nodes.append(next_node)
+                    self.smallest_nodes.append(next_node)        
+
+                self.k_smallest_lengths = k_smallest_lengths_add(self.k_smallest_lengths,next_node.length, self.difference_precision)
+
+
                 self.nodes.append(next_node)
                 self.create_nodes(next_node)
 

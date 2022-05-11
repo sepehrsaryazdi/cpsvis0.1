@@ -1,7 +1,36 @@
 import numpy as np
 import mpmath as mp
+from scipy.fftpack import diff
 mp.mp.dps = 300
 mp.mp.pretty = False
+
+
+def k_smallest_lengths_add(k_smallest_lengths, new_length, difference_precision=0.1):
+
+    k = len(k_smallest_lengths)
+
+    smallest_index_larger_than = 0
+    while smallest_index_larger_than < k and k_smallest_lengths[smallest_index_larger_than] < new_length + difference_precision:
+        smallest_index_larger_than+=1
+    if smallest_index_larger_than < k and not abs(k_smallest_lengths[smallest_index_larger_than-1] - new_length) < difference_precision:
+        k_lengths_temp = list(k_smallest_lengths)
+        k_lengths_temp.pop()
+        k_lengths_temp.insert(smallest_index_larger_than,new_length)
+        k_smallest_lengths = np.array(k_lengths_temp)
+    
+    if smallest_index_larger_than == k-1:
+        if k_smallest_lengths[smallest_index_larger_than-1] > new_length + difference_precision:
+            k_smallest_lengths[-1] = new_length
+        
+
+    #print(k_smallest_lengths)
+    return k_smallest_lengths
+
+# k_smallest_lengths = [np.inf,np.inf]
+
+# k_smallest_lengths = k_smallest_lengths_add(k_smallest_lengths, 0)
+# k_smallest_lengths = k_smallest_lengths_add(k_smallest_lengths, 3.85)
+
 
 def compute_translation_matrix_torus(x):
     [A,B,a_minus,a_plus,b_minus,b_plus,e_minus,e_plus] = x

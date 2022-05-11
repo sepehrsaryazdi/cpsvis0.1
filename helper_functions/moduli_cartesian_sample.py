@@ -15,7 +15,7 @@ import time
 
 
 class ModuliCartesianSample():
-    def __init__(self, max_r=100,n=10, theta_n=50, tree_depth=2):
+    def __init__(self, max_r=100,n=10, theta_n=50, tree_depth=4):
         
         self.win = tk.Toplevel()
         self.win.wm_title("Minimum Length Spectrum Over Moduli Space (Cartesian)")
@@ -38,7 +38,7 @@ class ModuliCartesianSample():
         self.visual_frame.pack()
         self.bottom_frame = tk.Frame(self.win)
         self.controls_frame = tk.Frame(self.bottom_frame)
-        self.controls_label = tk.Label(self.controls_frame, text="Use the sliders to control the value of vᵢ for i ∈ {1,2,3,4,5,6,7,8}.\n Tick the corresponding box on the left to give -1 or the box on the right for +1.")
+        self.controls_label = tk.Label(self.controls_frame, text="Use the buttons to control the value of vᵢ for i ∈ {1,2,3,4,5,6,7,8}.\n Tick the corresponding box on the left to give -1 or the box on the right for +1.")
         self.controls_label.pack()
         
         self.slider_frames = []
@@ -108,13 +108,15 @@ class ModuliCartesianSample():
         self.tree_depth = tree_depth
         self.n = n
         self.max_r = max_r
+        self.k = 2
 
         self.tree_depth_variable = tk.StringVar(value=self.tree_depth)
         self.radius_samples_variable = tk.StringVar(value=self.n)
         self.max_r_variable = tk.StringVar(value=max_r)
+        self.k_variable = tk.StringVar(value=self.k)
 
-        self.parameters = [self.tree_depth_variable, self.max_r_variable ,self.radius_samples_variable]
-        texts = ["Length Tree Depth", "Maximum R Value", "Number of Radius Samples"]
+        self.parameters = [self.tree_depth_variable, self.max_r_variable ,self.radius_samples_variable, self.k_variable]
+        texts = ["Length Tree Depth", "Maximum R Value", "Number of Radius Samples", "Max Order of Minima"]
         
         self.parameter_frames = []
         for i in range(len(texts)):
@@ -204,6 +206,7 @@ class ModuliCartesianSample():
         self.tree_depth = int(string_fraction_to_float(self.tree_depth_variable.get()))
         self.n = int(string_fraction_to_float(self.radius_samples_variable.get()))
         self.max_r = int(string_fraction_to_float(self.max_r_variable.get()))
+        self.k = int(string_fraction_to_float(self.k_variable.get()))
 
 
         self.generate_minimum_lengths()
@@ -333,11 +336,14 @@ class ModuliCartesianSample():
         v = np.array([-float(self.neg_states[i].get())+float(self.plus_states[i].get()) for i in range(8)])
         [radii, coordinates] = self.get_all_x_coordinates(v)
         minimum_lengths = self.generate_minimum_length_distribution(coordinates)
+        #print(minimum_lengths)
         self.figure = plt.figure(figsize=(7,5))
         self.ax = self.figure.add_subplot(1,1,1)
-        self.ax.plot(radii, minimum_lengths)
+        for i in range(len(minimum_lengths[0,:])):
+            self.ax.plot(radii, minimum_lengths[:,i], label=f'{i+1}')
         self.ax.set_xlabel("$R$ (Distance from 𝟙)")
         self.ax.set_ylabel("Minimum Length")
+        self.ax.legend(loc='best',title='Minima Order')
 
         v_values = [f"v_{i+1} = {-int(self.neg_states[i].get())+int(self.plus_states[i].get())}" for i in range(8)]
 
@@ -363,9 +369,10 @@ class ModuliCartesianSample():
             #if self.theta_n == 1:
             self.update_progress_bar(i/len(coordinates))
             #self.update_progress_bar(self.progress_var.get()/100 + i/(self.theta_n*len(coordinates)))
-            min_length = self.get_min_length_from_x(coordinate)
-            minimum_lengths.append(min_length)
-            #print(np.linalg.norm(coordinate-1),min_length)
+            min_lengths = self.get_min_length_from_x(coordinate)
+            print(min_lengths)
+            minimum_lengths.append(min_lengths)
+            
             i+=1
         return np.array(minimum_lengths)
 
@@ -374,9 +381,10 @@ class ModuliCartesianSample():
             x = a_to_x_coordinate_torus(x)
         alpha1,alpha2 = compute_translation_matrix_torus(x)
         
-        lengthheatmaptree = LengthHeatMapTree(self.tree_depth, 1/2, alpha1,alpha2)
-        min_length = lengthheatmaptree.smallest_length
-        return min_length
+        lengthheatmaptree = LengthHeatMapTree(self.tree_depth, 1/2, alpha1,alpha2,k=self.k)
+        min_lengths = lengthheatmaptree.k_smallest_lengths
+        #print(np.linalg.norm(x-1),)
+        return min_lengths
     
 
     def outitudes_positive(self,x):
