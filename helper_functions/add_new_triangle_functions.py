@@ -5,6 +5,60 @@ mp.mp.dps = 300
 mp.mp.pretty = False
 
 
+def reduce_conjugacy_class(string):
+
+    inverse_hash = {"A": "a", "a": "A", "B": "b", "b":"B"}
+
+
+    
+
+    current_length = len(string)
+    next_length = 0
+    while next_length < current_length:
+        current_length = len(string)
+        reduced_string = []
+        i = 0
+        while i < len(string)-1:
+            if string[i] == inverse_hash[string[i+1]]:
+                i+=2
+            else:
+                reduced_string.append(string[i])
+                i+=1
+        
+        if len(string)>=2 and string[-1] != inverse_hash[string[-2]]:
+            reduced_string.append(string[-1])
+        next_length = len(reduced_string)
+        string = ''.join(reduced_string)
+        if len(string) == 1:
+            break
+        next_length = len(reduced_string)
+    did_reduce = True
+    conjugacy_left = ["A","a","B","b"]
+    while did_reduce:
+        did_reduce=False
+        if len(string)>=2:
+            for element in conjugacy_left:
+                new_string = [x for x in string]
+                
+                if new_string[0] == inverse_hash[element]:
+                    
+                    new_string.remove(new_string[0])
+                    
+                else:
+                    new_string.insert(0,element)
+                if new_string[-1] == element:
+                    new_string.remove(new_string[-1])
+                else:
+                    new_string.append(inverse_hash[element])
+                if len(string)> len(new_string):
+                    did_reduce = True
+                    string = ''.join(new_string)
+                    break
+    string = ''.join(np.sort([x for x in string]))
+    
+    return string
+
+
 def k_smallest_lengths_add(k_smallest_lengths, new_length, difference_precision=0.1):
 
     k = len(k_smallest_lengths)
