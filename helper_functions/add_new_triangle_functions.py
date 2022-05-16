@@ -54,7 +54,7 @@ def reduce_conjugacy_class(string):
                     did_reduce = True
                     string = ''.join(new_string)
                     break
-    string = ''.join(np.sort([x for x in string]))
+    string = ''.join(string)
     if not string:
         string = "𝟙"
     return string

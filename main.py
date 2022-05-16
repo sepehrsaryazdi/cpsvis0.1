@@ -463,6 +463,7 @@ class TranslationLength:
         unique_indices_conjugacy = []
         for index in indices:
             result = reduce_conjugacy_class(reduce_conjugacy_class(index))
+            result = ''.join(np.sort([x for x in result]))
             if result not in unique_indices_conjugacy:
                 unique_indices_conjugacy.append(result)
         indices = unique_indices_conjugacy
