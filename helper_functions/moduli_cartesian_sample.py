@@ -335,15 +335,15 @@ class ModuliCartesianSample():
         self.theta_n = 1
         v = np.array([-float(self.neg_states[i].get())+float(self.plus_states[i].get()) for i in range(8)])
         [radii, coordinates] = self.get_all_x_coordinates(v)
-        minimum_lengths = self.generate_minimum_length_distribution(coordinates)
+        minimum_lengths, conjugacy_classes = self.generate_minimum_length_distribution(coordinates)
         #print(minimum_lengths)
         self.figure = plt.figure(figsize=(7,5))
         self.ax = self.figure.add_subplot(1,1,1)
         for i in range(len(minimum_lengths[0,:])):
-            self.ax.plot(radii, minimum_lengths[:,i], label=f'{i+1}')
+            self.ax.plot(radii, minimum_lengths[:,i], label=f'{conjugacy_classes[0,i]}')
         self.ax.set_xlabel("$R$ (Distance from 𝟙)")
-        self.ax.set_ylabel("Minimum Length")
-        self.ax.legend(loc='best',title='Minima Order')
+        self.ax.set_ylabel("Conjugacy Length")
+        self.ax.legend(loc='best',title='Conjugacy Class')
 
         v_values = [f"v_{i+1} = {-int(self.neg_states[i].get())+int(self.plus_states[i].get())}" for i in range(8)]
 
@@ -363,18 +363,20 @@ class ModuliCartesianSample():
     
     def generate_minimum_length_distribution(self,coordinates):
         minimum_lengths = []
+        conjugacy_classes = []
         i=0
         for coordinate in coordinates:
             
             #if self.theta_n == 1:
             self.update_progress_bar(i/len(coordinates))
             #self.update_progress_bar(self.progress_var.get()/100 + i/(self.theta_n*len(coordinates)))
-            min_lengths = self.get_min_length_from_x(coordinate)
-            print(min_lengths)
+            min_lengths, conjugacy_class = self.get_min_length_from_x(coordinate)
+            #print(min_lengths)
             minimum_lengths.append(min_lengths)
+            conjugacy_classes.append(conjugacy_class)
             
             i+=1
-        return np.array(minimum_lengths)
+        return np.array(minimum_lengths), np.array(conjugacy_classes)
 
     def get_min_length_from_x(self,x):
         if "𝒜" in self.coordinate_variable.get():
@@ -383,8 +385,9 @@ class ModuliCartesianSample():
         
         lengthheatmaptree = LengthHeatMapTree(self.tree_depth, 1/2, alpha1,alpha2,k=self.k)
         min_lengths = lengthheatmaptree.k_smallest_lengths
+        conjugacy_classes = lengthheatmaptree.unique_conjugacies
         #print(np.linalg.norm(x-1),)
-        return min_lengths
+        return min_lengths, conjugacy_classes
     
 
     def outitudes_positive(self,x):

@@ -31,9 +31,16 @@ class LengthHeatMapTree:
         self.smallest_nodes = []
         self.smallest_length = np.inf
         self.k_smallest_lengths = np.zeros(k) + np.inf
+        self.unique_reduced_class_nodes = []
+        self.unique_conjugacies = []
         self.nodes = [initial_node]
         if depth:
             self.create_nodes(initial_node)
+        
+        self.k_smallest_lengths = []
+        for node in self.unique_reduced_class_nodes:
+            self.k_smallest_lengths.append(node.length)
+        self.k_smallest_lengths = np.array(self.k_smallest_lengths)
         
         #print('smallest length:',self.smallest_length)
         #print('smallest length points:',[n.index for n in self.smallest_nodes])
@@ -53,6 +60,10 @@ class LengthHeatMapTree:
             if not len(starting_node.index) or starting_node.index[-1] != allowed_moves[(move_index+2)%4]:
                 next_node = Node(starting_node)
                 next_node.index = f'{starting_node.index}{allowed_moves[move_index]}'
+                reduced_class = reduce_conjugacy_class(next_node.index)
+                if reduced_class not in self.unique_conjugacies:
+                    self.unique_conjugacies.append(reduced_class)
+                    self.unique_reduced_class_nodes.append(next_node)
                 next_node.coord = self.ratio**len(starting_node.index)*self.move_to_vector(allowed_moves[move_index]) + starting_node.coord
                 next_node.matrix = starting_node.matrix*self.move_to_matrix(allowed_moves[move_index])
                 next_node.length, _ =get_length(next_node.matrix)
@@ -64,11 +75,10 @@ class LengthHeatMapTree:
                     self.smallest_length = min(self.smallest_length, next_node.length)
                     self.smallest_nodes.append(next_node)        
 
-                self.k_smallest_lengths = k_smallest_lengths_add(self.k_smallest_lengths,next_node.length, self.difference_precision)
-
-
                 self.nodes.append(next_node)
                 self.create_nodes(next_node)
+        
+        
 
 
 # #generate_sequence_layers(5)
