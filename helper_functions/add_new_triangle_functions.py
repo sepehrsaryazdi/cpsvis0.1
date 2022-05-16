@@ -55,9 +55,11 @@ def reduce_conjugacy_class(string):
                     string = ''.join(new_string)
                     break
     string = ''.join(np.sort([x for x in string]))
-    
+    if not string:
+        string = "𝟙"
     return string
 
+#print(reduce_conjugacy_class("Bab"))
 
 def k_smallest_lengths_add(k_smallest_lengths, new_length, difference_precision=0.1):
 

@@ -19,7 +19,6 @@ import numpy as np
 
 class Vertex:
     def __init__(self,c,r, c_clover, r_clover):
-        print(np.array(c)/2)
         self.c = c
         self.r = r
         self.c_clover = c_clover

@@ -459,6 +459,13 @@ class TranslationLength:
         smallest_length = self.lengthheatmaptree.smallest_length
         indices = [n.index for n in self.lengthheatmaptree.smallest_nodes]
         indices = np.sort(indices)[::-1]
+
+        unique_indices_conjugacy = []
+        for index in indices:
+            result = reduce_conjugacy_class(reduce_conjugacy_class(index))
+            if result not in unique_indices_conjugacy:
+                unique_indices_conjugacy.append(result)
+        indices = unique_indices_conjugacy
         
         
 
