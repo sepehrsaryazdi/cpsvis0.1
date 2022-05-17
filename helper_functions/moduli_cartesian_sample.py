@@ -337,9 +337,17 @@ class ModuliCartesianSample():
         [radii, coordinates] = self.get_all_x_coordinates(v)
         minimum_lengths, conjugacy_classes = self.generate_minimum_length_distribution(coordinates)
         #print(minimum_lengths)
+                
+        sort = np.argsort(minimum_lengths[0,:])
+
+        for row in range(len(minimum_lengths)):
+            minimum_lengths[row,:] = minimum_lengths[row,sort]
+
+        conjugacy_classes[0,:] = conjugacy_classes[0,sort]
+
         self.figure = plt.figure(figsize=(7,5))
         self.ax = self.figure.add_subplot(1,1,1)
-        for i in range(len(minimum_lengths[0,:])):
+        for i in range(min(len(minimum_lengths[0,:]),self.k)):
             self.ax.plot(radii, minimum_lengths[:,i], label=f'{conjugacy_classes[0,i]}')
         self.ax.set_xlabel("$R$ (Distance from 𝟙)")
         self.ax.set_ylabel("Conjugacy Length")
