@@ -16,7 +16,7 @@ class Node:
 
 
 class LengthHeatMapTree:
-    def __init__(self,depth, ratio=1/2, alpha1= mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), alpha2=mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), difference_precision = 0.0001, k =2):
+    def __init__(self,depth, ratio=1/2, alpha1= mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), alpha2=mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), difference_precision = 0.0001, k =2, enumerations = None):
         self.alpha1 = alpha1
         self.alpha2 = alpha2
         self.depth = depth
@@ -32,8 +32,15 @@ class LengthHeatMapTree:
         self.smallest_length = np.inf
         self.k_smallest_lengths = np.zeros(k) + np.inf
         self.nodes = [initial_node]
+
+        self.enumerations=enumerations
+        self.enumeration_lengths = []
+        self.enumeration_results = []
+
         if depth:
             self.create_nodes(initial_node)
+
+        
         
         #print('smallest length:',self.smallest_length)
         #print('smallest length points:',[n.index for n in self.smallest_nodes])
@@ -53,10 +60,14 @@ class LengthHeatMapTree:
             if not len(starting_node.index) or starting_node.index[-1] != allowed_moves[(move_index+2)%4]:
                 next_node = Node(starting_node)
                 next_node.index = f'{starting_node.index}{allowed_moves[move_index]}'
+                
                 next_node.coord = self.ratio**len(starting_node.index)*self.move_to_vector(allowed_moves[move_index]) + starting_node.coord
                 next_node.matrix = starting_node.matrix*self.move_to_matrix(allowed_moves[move_index])
                 next_node.length, _ =get_length(next_node.matrix)
                 next_node.length =  np.float16(next_node.length)
+                if next_node.index in self.enumerations:
+                    self.enumeration_results.append(next_node.index)
+                    self.enumeration_lengths.append(next_node.length)
                 if round(next_node.length,1) > 0 and self.smallest_length > next_node.length + self.difference_precision:
                     self.smallest_length = min(next_node.length,self.smallest_length)
                     self.smallest_nodes = [next_node]

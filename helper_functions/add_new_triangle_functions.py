@@ -26,7 +26,9 @@ def enumerate_classes(inverse_hash,limit):
         return new_string
 
     def check_powers(string):
-        for power in range(2,int(len(string)/len(enumerations[-1])+1)):
+        
+        for power in range(2,int(len(string)/len(enumerations[-1])+8)):
+            
             for letter in enumerations:
                 if string == letter*power:
                     return letter
@@ -42,11 +44,16 @@ def enumerate_classes(inverse_hash,limit):
 
     def recursive_add(string):
         current_enumeration = []
+        all_current_enumerations = []
+
         for letter in letters:
-            
+            all_current_enumerations.append(string+letter)
+
+        for letter in letters:
             if letter == inverse_hash[string[-1]] or letter == inverse_hash[string[0]]:
                 continue
             result = ''.join(f'{string}{letter}')
+            
             skip = False
             for check in checklist:
                 if check(result) in enumerations:
@@ -58,10 +65,10 @@ def enumerate_classes(inverse_hash,limit):
         for result in current_enumeration:
             enumerations.append(result)
 
-        if len(enumerations) > int(limit/2+1):
+        if current_enumeration and len(current_enumeration[-1])>limit:
             return
 
-        for result in current_enumeration:
+        for result in all_current_enumerations:
             recursive_add(result)
     
     for letter in enumerations[1:]:

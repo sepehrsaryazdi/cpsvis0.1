@@ -3,7 +3,7 @@ import string
 import numpy as np
 from sympy import linsolve, minimum
 from helper_functions.add_new_triangle_functions import a_to_x_coordinate_torus, outitude_edge_params, integer_to_script, string_fraction_to_float
-from helper_functions.add_new_triangle_functions import compute_translation_matrix_torus
+from helper_functions.add_new_triangle_functions import compute_translation_matrix_torus,enumerate_classes, convert_string_to_index
 from helper_functions.length_heat_map import LengthHeatMapTree
 import matplotlib.pyplot as plt
 import tkinter as tk
@@ -34,6 +34,8 @@ class ModuliCartesianSample():
         self.equations_ax.set_axis_off()
         self.plot_equations()
         
+
+
         self.equations_chart_type.get_tk_widget().pack(side='right')
         self.visual_frame.pack()
         self.bottom_frame = tk.Frame(self.win)
@@ -109,6 +111,8 @@ class ModuliCartesianSample():
         self.n = n
         self.max_r = max_r
         self.k = 2
+
+
 
         self.tree_depth_variable = tk.StringVar(value=self.tree_depth)
         self.radius_samples_variable = tk.StringVar(value=self.n)
@@ -208,6 +212,8 @@ class ModuliCartesianSample():
         self.max_r = int(string_fraction_to_float(self.max_r_variable.get()))
         self.k = int(string_fraction_to_float(self.k_variable.get()))
 
+
+        self.enumerations = enumerate_classes({"A": "a", "a": "A", "B": "b", "b":"B"}, self.tree_depth)
 
         self.generate_minimum_lengths()
 
@@ -335,15 +341,31 @@ class ModuliCartesianSample():
         self.theta_n = 1
         v = np.array([-float(self.neg_states[i].get())+float(self.plus_states[i].get()) for i in range(8)])
         [radii, coordinates] = self.get_all_x_coordinates(v)
-        minimum_lengths = self.generate_minimum_length_distribution(coordinates)
+        enumeration_length, enumeration_results = self.generate_minimum_length_distribution(coordinates)
         #print(minimum_lengths)
+
+        sort = np.argsort(enumeration_length[0,:])
+        enumeration_length = enumeration_length[:,sort]
+        enumeration_results = np.array(enumeration_results)[sort]
+        
+        enumeration_results_formatted = []
+        for string in enumeration_results:
+            result = convert_string_to_index(string)
+            formatted_string = ''
+            for index in result:
+                power = integer_to_script(index[1])
+                formatted_string+= (index[0]+(power if index[1] != 1 else ""))
+            enumeration_results_formatted.append(formatted_string)
+        
+
+
         self.figure = plt.figure(figsize=(7,5))
         self.ax = self.figure.add_subplot(1,1,1)
-        for i in range(len(minimum_lengths[0,:])):
-            self.ax.plot(radii, minimum_lengths[:,i], label=f'{i+1}')
+        for i in range(min(len(enumeration_length[0,:]),self.k)):
+            self.ax.plot(radii, enumeration_length[:,i], label=f'{enumeration_results_formatted[i]}')
         self.ax.set_xlabel("$R$ (Distance from 𝟙)")
-        self.ax.set_ylabel("Minimum Length")
-        self.ax.legend(loc='best',title='Minima Order')
+        self.ax.set_ylabel("Class Length")
+        self.ax.legend(loc='best',title='Conjugacy Class')
 
         v_values = [f"v_{i+1} = {-int(self.neg_states[i].get())+int(self.plus_states[i].get())}" for i in range(8)]
 
@@ -351,7 +373,7 @@ class ModuliCartesianSample():
 
         coordinate_latex = r"$\mathcal{A}$-coordinates" if "𝒜" in self.coordinate_variable.get() else r"$\mathcal{X}$-coordinates"
 
-        self.ax.set_title(f"Minimum Lengths against $R$ ({coordinate_latex})\n{v_string}")
+        self.ax.set_title(f"Conjugacy Class Lengths against $R$ ({coordinate_latex})\n{v_string}")
         self.figure.canvas.manager.set_window_title('Minimum Lengths Spectrum Over Moduli Space Plot')
         self.update_progress_bar(0)
         self.figure.show()
@@ -369,22 +391,25 @@ class ModuliCartesianSample():
             #if self.theta_n == 1:
             self.update_progress_bar(i/len(coordinates))
             #self.update_progress_bar(self.progress_var.get()/100 + i/(self.theta_n*len(coordinates)))
-            min_lengths = self.get_min_length_from_x(coordinate)
-            print(min_lengths)
-            minimum_lengths.append(min_lengths)
-            
+            enumeration_lengths, enumeration_results = self.get_min_length_from_x(coordinate)
+            #print(min_lengths)
+            minimum_lengths.append(enumeration_lengths)
+
             i+=1
-        return np.array(minimum_lengths)
+        return np.array(minimum_lengths), enumeration_results
 
     def get_min_length_from_x(self,x):
         if "𝒜" in self.coordinate_variable.get():
             x = a_to_x_coordinate_torus(x)
         alpha1,alpha2 = compute_translation_matrix_torus(x)
         
-        lengthheatmaptree = LengthHeatMapTree(self.tree_depth, 1/2, alpha1,alpha2,k=self.k)
-        min_lengths = lengthheatmaptree.k_smallest_lengths
+        lengthheatmaptree = LengthHeatMapTree(self.tree_depth, 1/2, alpha1,alpha2,k=self.k, enumerations=self.enumerations)
+
+        enumeration_lengths = lengthheatmaptree.enumeration_lengths
+        enumeration_results = lengthheatmaptree.enumeration_results
+        #min_lengths = lengthheatmaptree.k_smallest_lengths
         #print(np.linalg.norm(x-1),)
-        return min_lengths
+        return enumeration_lengths, enumeration_results
     
 
     def outitudes_positive(self,x):
