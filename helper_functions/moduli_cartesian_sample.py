@@ -3,16 +3,13 @@ import string
 import numpy as np
 from sympy import linsolve, minimum
 from helper_functions.add_new_triangle_functions import a_to_x_coordinate_torus, outitude_edge_params, integer_to_script, string_fraction_to_float
-from helper_functions.add_new_triangle_functions import compute_translation_matrix_torus, enumerate_classes, convert_string_to_index, get_length
+from helper_functions.add_new_triangle_functions import compute_translation_matrix_torus
 from helper_functions.length_heat_map import LengthHeatMapTree
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk
 import matplotlib as mpl
 from matplotlib import cm
-import mpmath as mp
-mp.mp.dps = 300
-mp.mp.pretty = False
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
 
@@ -338,23 +335,15 @@ class ModuliCartesianSample():
         self.theta_n = 1
         v = np.array([-float(self.neg_states[i].get())+float(self.plus_states[i].get()) for i in range(8)])
         [radii, coordinates] = self.get_all_x_coordinates(v)
-        minimum_lengths, conjugacy_classes = self.generate_minimum_length_distribution(coordinates)
+        minimum_lengths = self.generate_minimum_length_distribution(coordinates)
         #print(minimum_lengths)
-                
-        sort = np.argsort(minimum_lengths[0,:])
-
-        for row in range(len(minimum_lengths)):
-            minimum_lengths[row,:] = minimum_lengths[row,sort]
-
-        conjugacy_classes[0,:] = conjugacy_classes[0,sort]
-
         self.figure = plt.figure(figsize=(7,5))
         self.ax = self.figure.add_subplot(1,1,1)
-        for i in range(min(len(minimum_lengths[0,:]),self.k)):
-            self.ax.plot(radii, minimum_lengths[:,i], label=f'{conjugacy_classes[0,i]}')
+        for i in range(len(minimum_lengths[0,:])):
+            self.ax.plot(radii, minimum_lengths[:,i], label=f'{i+1}')
         self.ax.set_xlabel("$R$ (Distance from 𝟙)")
-        self.ax.set_ylabel("Conjugacy Length")
-        self.ax.legend(loc='best',title='Conjugacy Class')
+        self.ax.set_ylabel("Minimum Length")
+        self.ax.legend(loc='best',title='Minima Order')
 
         v_values = [f"v_{i+1} = {-int(self.neg_states[i].get())+int(self.plus_states[i].get())}" for i in range(8)]
 
@@ -374,61 +363,28 @@ class ModuliCartesianSample():
     
     def generate_minimum_length_distribution(self,coordinates):
         minimum_lengths = []
-        conjugacy_classes = []
         i=0
         for coordinate in coordinates:
             
             #if self.theta_n == 1:
             self.update_progress_bar(i/len(coordinates))
             #self.update_progress_bar(self.progress_var.get()/100 + i/(self.theta_n*len(coordinates)))
-            min_lengths, conjugacy_class = self.get_min_length_from_x(coordinate)
-            #print(min_lengths)
+            min_lengths = self.get_min_length_from_x(coordinate)
+            print(min_lengths)
             minimum_lengths.append(min_lengths)
-            conjugacy_classes.append(conjugacy_class)
             
             i+=1
-        return np.array(minimum_lengths), np.array(conjugacy_classes)
+        return np.array(minimum_lengths)
 
     def get_min_length_from_x(self,x):
         if "𝒜" in self.coordinate_variable.get():
             x = a_to_x_coordinate_torus(x)
         alpha1,alpha2 = compute_translation_matrix_torus(x)
-
         
-        #lengthheatmaptree = LengthHeatMapTree(self.tree_depth, 1/2, alpha1,alpha2,k=self.k)
-        #min_lengths = lengthheatmaptree.k_smallest_lengths
-        #conjugacy_classes = lengthheatmaptree.unique_conjugacies
-
-        string_to_matrix_hash = {"A": alpha1, "a": mp.inverse(alpha1), "B": alpha2, "b": mp.inverse(alpha2)}
-
-        classes = enumerate_classes({"A": "a", "a": "A", "B": "b", "b":"B"},20)
-        indexed_classes = []
-        for result in classes[1:]:
-            result = convert_string_to_index(result)
-            indexed_classes.append(result)
-        
-        lengths = []
-
-        formatted_indexed_classes = []
-
-        for string_indices in indexed_classes:
-            product = mp.matrix([[1,0,0],[0,1,0],[0,0,1]])
-            for index in string_indices:
-                letter = index[0]
-                power = index[1]
-                product=product*(string_to_matrix_hash[letter]**power)
-            lengths.append(np.float16(get_length(product)[0]))
-
-            formatted_string = ''
-            for index in string_indices:
-                formatted_string+= f'{index[0]}{(integer_to_script(index[1]) if index[1]!= 1 else "")}'
-            formatted_indexed_classes.append(formatted_string)
-
-        lengths = np.array(lengths)
-        
-
-        return lengths, formatted_indexed_classes
-
+        lengthheatmaptree = LengthHeatMapTree(self.tree_depth, 1/2, alpha1,alpha2,k=self.k)
+        min_lengths = lengthheatmaptree.k_smallest_lengths
+        #print(np.linalg.norm(x-1),)
+        return min_lengths
     
 
     def outitudes_positive(self,x):
