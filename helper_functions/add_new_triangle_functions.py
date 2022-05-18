@@ -1,37 +1,131 @@
+from enum import unique
+from lib2to3.pytree import convert
 import numpy as np
 import mpmath as mp
 from scipy.fftpack import diff
 mp.mp.dps = 300
 mp.mp.pretty = False
 
+def enumerate_classes(inverse_hash,limit):
+    letters = list(inverse_hash.keys())
+    
+    
+    unique_letters = []
+    for letter in letters:
+        if inverse_hash[letter] not in unique_letters:
+            unique_letters.append(letter)
+
+    enumerations = ["𝟙"]+unique_letters
+
+    
+
+    def inverse(string):
+        new_string = []
+        for x in string[::-1]:
+            new_string.append(inverse_hash[x])
+        return new_string
+
+    def check_powers(string):
+        for power in range(2,int(len(string)/len(enumerations[-1])+1)):
+            for letter in enumerations:
+                if string == letter*power:
+                    return letter
+        
+        return string
+    
+    def reverse(string):
+        return string[::-1]
+
+    
+
+    checklist = [lambda x: x,inverse, check_powers]
+
+    def recursive_add(string):
+        current_enumeration = []
+        for letter in letters:
+            if ''.join(f'{string}{letter}') == "ABab":
+                print(''.join(f'{string}{letter}'))
+            if letter == inverse_hash[string[-1]] or letter == inverse_hash[string[0]]:
+                continue
+            result = ''.join(f'{string}{letter}')
+            skip = False
+            for check in checklist:
+                if check(result) in enumerations:
+                    skip=True
+                    break
+            if not skip: 
+                current_enumeration.append(result)
+
+        for result in current_enumeration:
+            enumerations.append(result)
+
+        if len(enumerations) > int(limit/2+1):
+            return
+
+        for result in current_enumeration:
+            recursive_add(result)
+    
+    for letter in enumerations[1:]:
+        recursive_add(letter)
+    
+    return enumerations
+
+def convert_string_to_index(string):
+    letters = [x for x in string]
+    indices = []
+    i=0
+    while i <= len(letters)-1:
+        power = 1
+        letter = letters[i]
+        index = [letter]
+        j=i+1
+        while j <= len(letters)-1:
+            if letters[i] == letters[j]:
+                power+=1
+            else:
+                break
+            j+=1
+        index.append(power)
+        i=j
+        indices.append(index)
+    return indices
+
+            
+#convert_string_to_index("AAAbABBbbb")
+
+
+
+#enumerate_classes({"A": "a", "a": "A", "B": "b", "b":"B"})
 
 def reduce_conjugacy_class(string):
+
+   
 
     inverse_hash = {"A": "a", "a": "A", "B": "b", "b":"B"}
 
 
     
-
-    current_length = len(string)
-    next_length = 0
-    while next_length < current_length:
+    if len(string)>=2:
         current_length = len(string)
-        reduced_string = []
-        i = 0
-        while i < len(string)-1:
-            if string[i] == inverse_hash[string[i+1]]:
-                i+=2
-            else:
-                reduced_string.append(string[i])
-                i+=1
-        
-        if len(string)>=2 and string[-1] != inverse_hash[string[-2]]:
-            reduced_string.append(string[-1])
-        next_length = len(reduced_string)
-        string = ''.join(reduced_string)
-        if len(string) == 1:
-            break
-        next_length = len(reduced_string)
+        next_length = 0
+        while next_length < current_length:
+            current_length = len(string)
+            reduced_string = []
+            i = 0
+            while i < len(string)-1:
+                if string[i] == inverse_hash[string[i+1]]:
+                    i+=2
+                else:
+                    reduced_string.append(string[i])
+                    i+=1
+            
+            if len(string)>=2 and string[-1] != inverse_hash[string[-2]]:
+                reduced_string.append(string[-1])
+            next_length = len(reduced_string)
+            string = ''.join(reduced_string)
+            if len(string) == 1:
+                break
+            next_length = len(reduced_string)
     did_reduce = True
     conjugacy_left = ["A","a","B","b"]
     while did_reduce:
@@ -40,26 +134,20 @@ def reduce_conjugacy_class(string):
             for element in conjugacy_left:
                 new_string = [x for x in string]
                 
-                if new_string[0] == inverse_hash[element]:
-                    
+                if new_string[0] == inverse_hash[element] and new_string[-1] == element:
                     new_string.remove(new_string[0])
-                    
-                else:
-                    new_string.insert(0,element)
-                if new_string[-1] == element:
                     new_string.remove(new_string[-1])
-                else:
-                    new_string.append(inverse_hash[element])
+
                 if len(string)> len(new_string):
                     did_reduce = True
                     string = ''.join(new_string)
                     break
-    string = ''.join(np.sort([x for x in string]))
+    string = ''.join(string)
     if not string:
         string = "𝟙"
     return string
 
-#print(reduce_conjugacy_class("Bab"))
+#print(reduce_conjugacy_class("ABab"))
 
 def k_smallest_lengths_add(k_smallest_lengths, new_length, difference_precision=0.1):
 
