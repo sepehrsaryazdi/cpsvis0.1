@@ -110,7 +110,7 @@ class ModuliCartesianSample():
         self.tree_depth = tree_depth
         self.n = n
         self.max_r = max_r
-        self.k = 2
+        self.k = 8
 
 
 
@@ -348,24 +348,26 @@ class ModuliCartesianSample():
         enumeration_length = enumeration_length[:,sort]
         enumeration_results = np.array(enumeration_results)[sort]
         
+        string_to_symbol = {"A": "α", "a": "α⁻", "B": "β", "b": "β⁻"}
+
         enumeration_results_formatted = []
         for string in enumeration_results:
             result = convert_string_to_index(string)
             formatted_string = ''
             for index in result:
                 power = integer_to_script(index[1])
-                formatted_string+= (index[0]+(power if index[1] != 1 else ""))
+                formatted_string+= (string_to_symbol[index[0]]+(power if (index[0].lower() == index[0] or index[1] != 1) else ""))
             enumeration_results_formatted.append(formatted_string)
         
 
 
         self.figure = plt.figure(figsize=(7,5))
         self.ax = self.figure.add_subplot(1,1,1)
-        for i in range(min(len(enumeration_length[0,:]),self.k)):
+        for i in range(2,min(len(enumeration_length[0,:]),self.k)):
             self.ax.plot(radii, enumeration_length[:,i], label=f'{enumeration_results_formatted[i]}')
         self.ax.set_xlabel("$R$ (Distance from 𝟙)")
         self.ax.set_ylabel("Class Length")
-        self.ax.legend(loc='best',title='Conjugacy Class')
+        self.ax.legend(loc='upper right',title='Equivalence Class')
 
         v_values = [f"v_{i+1} = {-int(self.neg_states[i].get())+int(self.plus_states[i].get())}" for i in range(8)]
 
@@ -373,7 +375,7 @@ class ModuliCartesianSample():
 
         coordinate_latex = r"$\mathcal{A}$-coordinates" if "𝒜" in self.coordinate_variable.get() else r"$\mathcal{X}$-coordinates"
 
-        self.ax.set_title(f"Conjugacy Class Lengths against $R$ ({coordinate_latex})\n{v_string}")
+        self.ax.set_title(f"Equivalence Class Lengths against $R$ ({coordinate_latex})\n{v_string}")
         self.figure.canvas.manager.set_window_title('Minimum Lengths Spectrum Over Moduli Space Plot')
         self.update_progress_bar(0)
         self.figure.show()

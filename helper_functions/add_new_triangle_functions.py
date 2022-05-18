@@ -20,10 +20,11 @@ def enumerate_classes(inverse_hash,limit):
     
 
     def inverse(string):
+        
         new_string = []
         for x in string[::-1]:
             new_string.append(inverse_hash[x])
-        return new_string
+        return ''.join(new_string)
 
     def check_powers(string):
         
@@ -37,10 +38,28 @@ def enumerate_classes(inverse_hash,limit):
     
     def reverse(string):
         return string[::-1]
-
+    
+    def cyclic(string):
+        n = len(string)
+        new_string = string
+        for i in range(n):
+            new_temp_string = [x for x in new_string]
+            new_temp_string.insert(0,new_string[-1])
+            new_temp_string.pop()
+            new_string = ''.join(new_temp_string)
+            
+                
+            for other_string in enumerations:
+                if other_string == new_string or inverse(new_string) == other_string:
+                    # if string == "AbaB":
+                    #     print(enumerations)
+                    #     print(inverse(new_string))
+                    #     print('did return')
+                    return new_string
+        return new_string
     
 
-    checklist = [lambda x: x, reverse,inverse, check_powers]
+    checklist = [lambda x: x, cyclic,inverse, check_powers]
 
     def recursive_add(string):
         current_enumeration = []
@@ -57,8 +76,12 @@ def enumerate_classes(inverse_hash,limit):
             skip = False
             for check in checklist:
                 if check(result) in enumerations:
+                    
                     skip=True
                     break
+            
+            
+
             if not skip: 
                 current_enumeration.append(result)
 
@@ -71,8 +94,7 @@ def enumerate_classes(inverse_hash,limit):
         for result in all_current_enumerations:
             recursive_add(result)
     
-    for letter in enumerations[1:]:
-        recursive_add(letter)
+    recursive_add("A")
     
     return enumerations
 
@@ -101,7 +123,7 @@ def convert_string_to_index(string):
 
 
 
-#enumerate_classes({"A": "a", "a": "A", "B": "b", "b":"B"})
+#print(enumerate_classes({"A": "a", "a": "A", "B": "b", "b":"B"},4))
 
 def reduce_conjugacy_class(string):
 
