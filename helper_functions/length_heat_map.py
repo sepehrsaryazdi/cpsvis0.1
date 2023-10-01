@@ -16,7 +16,7 @@ class Node:
 
 
 class LengthHeatMapTree:
-    def __init__(self,depth, ratio=1/2, alpha1= mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), alpha2=mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), difference_precision = 0.0001, k =2, enumerations = None):
+    def __init__(self,depth, ratio=1/2, alpha1= mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), alpha2=mp.matrix([[1,0,0],[0,1,0],[0,0,1]]), difference_precision = 0.0001, k =2, enumerations = []):
         self.alpha1 = alpha1
         self.alpha2 = alpha2
         self.depth = depth
