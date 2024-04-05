@@ -348,7 +348,8 @@ class GenerateGluingTable:
                                 [x2, y2] = edge.v0.coord
                             self.ax.arrow(x1, y1, (i + 4) * (x2 - x1) / (edge.arrow_strokes + 7),
                                      (i + 4) * (y2 - y1) / (edge.arrow_strokes + 7), head_width=0.3, color=edge.color)
-                    except:
+                    except Exception as e:
+                        print(e)
                         pass
 
         for triangle in self.abstract_plotting_surface.triangles:
@@ -454,7 +455,8 @@ class TranslationLength:
         
         try:
             self.lengthheatmaptree
-        except:
+        except Exception as e:
+            print(e)
             self.lengthheatmaptree = LengthHeatMapTree(8, 1/2, alpha1,alpha2)
         smallest_length = self.lengthheatmaptree.smallest_length
         indices = [n.index for n in self.lengthheatmaptree.smallest_nodes]
@@ -508,7 +510,8 @@ class TranslationLength:
         self.surface_ax = self.surface_figure.add_subplot(1,1,1,projection='3d')
         try:
             self.lengthheatmaptree
-        except:
+        except Exception as e:
+            print(e)
             self.lengthheatmaptree = LengthHeatMapTree(6, 1/2, alpha1,alpha2)
         
         lengths = [node.length for node in self.lengthheatmaptree.nodes]
@@ -552,7 +555,8 @@ class TranslationLength:
         ratio = 1/2
         try:
             self.lengthheatmaptree
-        except:
+        except Exception as e:
+            print(e)
             self.lengthheatmaptree = LengthHeatMapTree(6, ratio, alpha1,alpha2)
         lengths = [node.length for node in self.lengthheatmaptree.nodes]
         # for node in lengthheatmaptree.nodes:
@@ -699,6 +703,7 @@ class TranslationLength:
 
             product = first_matrix*final_edge_matrix*second_matrix 
             self.representations.append(product)
+            
             #print(product)
 
             #print(np.linalg.det(product))
@@ -715,7 +720,7 @@ class TranslationLength:
             
             #product = np.matmul(final_edge_matrix,np.matmul(first_matrix,second_matrix))
             #rint(np.sort(np.absolute(np.linalg.eigvals(self.representations[-1]))), np.sort(np.absolute(np.linalg.eigvals(product))))
-
+        print(self.representations)
      
 
     
@@ -749,14 +754,15 @@ class TranslationLength:
         try:
             assert int(self.enter_string_power_string.get()) == string_fraction_to_float(self.enter_string_power_string.get())
             self.error_message_string.set("")
-        except:
+        except Exception as e:
+            print(e)
             self.error_message_string.set("Please ensure that the power is an integer before adding string.")
             return
         try:
             assert int(self.enter_string_index_string.get()) and int(self.enter_string_index_string.get()) in boundary_list
             self.error_message_string.set("")
-        except:
-            
+        except Exception as e:
+            print(e)
             boundary_string = f"{boundary_list}"[1:-1]
             self.error_message_string.set(f"Please ensure that the index is valid before adding string.\n The valid indices are: {boundary_string}.")
             return
@@ -835,7 +841,8 @@ class TranslationLength:
                     else:
                         self.abstract_plotting_surface.glue_edges(edge_to_glue, other_edge_to_glue, edge_to_glue.v0,
                                                              other_edge_to_glue.v1)
-                except:
+                except Exception as e:
+                    print(e)
                     pass
 
         for triangle in self.abstract_plotting_surface.triangles:
@@ -955,7 +962,8 @@ class TranslationLength:
                                 [x2, y2] = edge.v0.coord
                             self.ax.arrow(x1, y1, (i + 4) * (x2 - x1) / (edge.arrow_strokes + 7),
                                      (i + 4) * (y2 - y1) / (edge.arrow_strokes + 7), head_width=0.3, color=edge.color)
-                    except:
+                    except Exception as e:
+                        print(e)
                         pass
 
         for triangle in self.abstract_plotting_surface.triangles:
@@ -1166,7 +1174,8 @@ class MSL3R:
         try:
             M = self.create_matrix()
             self.error_variable.set("")
-        except:
+        except Exception as e:
+            print(e)
             self.error_variable.set("One or more entries are not well-defined.")
             return
 
@@ -1214,7 +1223,8 @@ class MSL3R:
         try:
             self.create_matrix()
             self.error_variable.set("")
-        except:
+        except Exception as e:
+            print(e)
             self.error_variable.set("One or more entries are not well-defined.")
             return
         try:
@@ -1224,7 +1234,8 @@ class MSL3R:
             for var in self.matrix_variables:
                 var.set(f'{string_fraction_to_float(var.get())/cube_root_determinant}')
             self.error_variable.set("")
-        except:
+        except Exception as e:
+            print(e)
             self.error_variable.set("This matrix is singular and has determinant zero. Please enter a non-singular matrix.")
 
 
@@ -1802,7 +1813,8 @@ class App(tk.Frame):
 
             self.generate_surface_error_text.set(
                 "")
-        except:
+        except Exception as e:
+            print(e)
             self.generate_surface_error_text.set(
                 "Please import a gluing table in 𝒜-coordinates before computing \ncentre coordinates of canonical cell decomposition.")
 
@@ -1841,7 +1853,8 @@ class App(tk.Frame):
             
             self.plot_fresh(self.t)
             self.generate_surface_error_text.set("")
-        except:
+        except Exception as e:
+            print(e)
             self.generate_surface_error_text.set("Please add an initial triangle before computing canonical cell decomposition.")
 
 
@@ -1866,6 +1879,7 @@ class App(tk.Frame):
             [x1, y1] = clover_position([[x1], [y1], [z1]], self.t)
             [x2, y2] = clover_position([[x2], [y2], [z2]], self.t)
             [x3, y3] = clover_position([[x3], [y3], [z3]], self.t)
+            print(x1, y1, x2, y2, x3, y3)
             x = [x1, x2, x3, x1]
             y = [y1, y2, y3, y1]
 
@@ -1888,7 +1902,8 @@ class App(tk.Frame):
             self.generate_surface_error_text.set("")
             surface_vis = SurfaceVisual(self.main_surface)
             surface_vis.show_vis_projected_3d()
-        except:
+        except Exception as e:
+            print(e)
             self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface (projected S³).")
 
     
@@ -1984,11 +1999,13 @@ class App(tk.Frame):
             self.plot_data.append(self.ax.plot([v0[0], v1[0]],
                                                [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
-        except:
+        except Exception as e:
+            print(e)
             try:
                 self.main_surface
                 self.add_triangle_error_text.set("One or more variables are not well-defined.")
-            except:
+            except Exception as e:
+                print(e)
                 self.add_triangle_error_text.set("Please add an initial triangle first.")
 
 
@@ -2065,7 +2082,8 @@ class App(tk.Frame):
                                                [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
 
-        except:
+        except Exception as e:
+            print(e)
             self.error_text.set("One or more variables are not well-defined.")
 
 
@@ -2081,7 +2099,8 @@ class App(tk.Frame):
             surface_vis = SurfaceVisual(self.main_surface)
             surface_vis.show_vis_3d()
 
-        except:
+        except Exception as e:
+            print(e)
             self.generate_surface_error_text.set("Please add an initial triangle before generating hypersurface.")
 
 class CombinatorialImport:
@@ -2227,7 +2246,8 @@ class CombinatorialImport:
         try:
             assert int(self.depth_string.get()) >=0
             self.error_text.set("")
-        except:
+        except Exception as e:
+            print(e)
             self.error_text.set("Please enter a valid non-negative integer value for depth.")
             return
 
@@ -2576,7 +2596,7 @@ class CombinatorialImport:
                 edge.edge_glued[2].color = new_color
                 edge.edge_glued[2].arrow_strokes = arrow_strokes
                 arrow_strokes += 1
-            except:
+            except Exception as e:
                 edge.color = colors.pop()
                 edge.arrow_strokes = 0
         min_stroke = len(edges)+1
@@ -2666,7 +2686,8 @@ class CombinatorialImport:
                     self.parameter_entries[selected_triangle].append([ea_parameter_entry, eb_parameter_entry])
                     ea_parameter_entry.place(x=ea_x, y=ea_y)
                     eb_parameter_entry.place(x=eb_x, y=eb_y)
-        except:
+        except Exception as e:
+            print(e)
             self.parameter_entries[selected_triangle] = []
             self.parameter_strings[selected_triangle] = []
             [x1, y1] = selected_triangle.vertices[0].coord
@@ -2701,8 +2722,9 @@ class CombinatorialImport:
             for edge in selected_triangle.edges:
                 assert string_fraction_to_float(edge.ea.get()) > 0
                 assert string_fraction_to_float(edge.eb.get()) > 0
-        except:
+        except Exception as e:
             self.error_text.set("One or more variables are not well-defined.")
+            print(e)
             return
 
 
@@ -2786,7 +2808,8 @@ class CombinatorialImport:
                                 [x2, y2] = edge.v0.coord
                             self.ax.arrow(x1, y1, (i + 4) * (x2 - x1) / (edge.arrow_strokes + 7),
                                      (i + 4) * (y2 - y1) / (edge.arrow_strokes + 7), head_width=0.3, color=edge.color)
-                    except:
+                    except Exception as e:
+                        print(e)
                         pass
 
         for triangle in self.abstract_plotting_surface.triangles:
@@ -2950,7 +2973,8 @@ def convert_surface_to_gluing_table(self):
 def export_file():
     try:
         assert app.abstract_surface
-    except:
+    except Exception as e:
+        print(e)
         win = tk.Toplevel()
         win.wm_title("No Uploaded Surface")
         l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before exporting.")
@@ -3076,7 +3100,8 @@ def slr3r():
     try:
         assert app.main_surface
         slr3_window = MSL3R()
-    except:
+    except Exception as e:
+        print(e)
         win = tk.Toplevel()
         win.wm_title("Surface Invalid")
         l = tk.Label(win, text="Please ensure you have a valid surface before applying a matrix from SL(3,ℝ).")
@@ -3090,7 +3115,8 @@ def translatelength():
     try:
         assert app.abstract_surface != None
         translatelength_window = TranslationLength()
-    except:
+    except Exception as e:
+        print(e)
         win = tk.Toplevel()
         win.wm_title("No Uploaded Surface")
         l = tk.Label(win, text="Please ensure you have uploaded and submitted the parameters of a gluing table before computing translation lengths.")
@@ -3132,7 +3158,8 @@ def generate_gluing_table():
             assert int(g_variable.get()) == string_fraction_to_float(g_variable.get()) and int(g_variable.get()) > 0
             assert int(n_variable.get()) == string_fraction_to_float(n_variable.get()) and int(n_variable.get()) > 0
             
-        except:
+        except Exception as e:
+            print(e)
             error_variable.set("Please ensure that both values \nare positive integers.")
             return
         

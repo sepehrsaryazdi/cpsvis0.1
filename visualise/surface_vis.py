@@ -17,6 +17,21 @@ class SurfaceVisual:
             [x1,y1,z1] = triangle.vertices[0].c
             [x2,y2,z2] = triangle.vertices[1].c
             [x3, y3, z3] = triangle.vertices[2].c
+
+            action_matrix = np.array([[4.0, 4.0, 1.0],
+            [2.0, 3.0, 1.0],
+            [1.0, 2.0, 1.0]])
+            
+            # [x1,y1,z1] = (action_matrix @ np.array([[x1], [y1], [z1]])).reshape(3,)
+            # [x2,y2,z2] = (action_matrix @ np.array([[x2], [y2], [z2]])).reshape(3,)
+            # [x3,y3,z3] = (action_matrix @ np.array([[x3], [y3], [z3]])).reshape(3,)
+            
+
+
+            [x1, y1, z1] = np.array([x1, y1, z1])/np.sum(np.array([x1, y1, z1]))
+            [x2, y2, z2] = np.array([x2, y2, z2])/np.sum(np.array([x2, y2, z2]))
+            [x3, y3, z3] = np.array([x3, y3, z3])/np.sum(np.array([x3, y3, z3]))
+
             x = [x1, x2, x3]
             y = [y1, y2, y3]
             z = [z1, z2, z3]
@@ -34,6 +49,9 @@ class SurfaceVisual:
         self.ax.set_xlabel('x')
         self.ax.set_ylabel('y')
         self.ax.set_zlabel('z')
+
+        self.ax.set_box_aspect((1, 1, 1), zoom=0.5)
+
         plt.show()
     def show_vis_projected_3d(self):
         self.fig = plt.figure()
@@ -58,6 +76,7 @@ class SurfaceVisual:
             [x1, y1, z1] = triangle.vertices[0].c
             [x2, y2, z2] = triangle.vertices[1].c
             [x3, y3, z3] = triangle.vertices[2].c
+
             x = [x1, x2, x3]
             y = [y1, y2, y3]
             z = [z1, z2, z3]
