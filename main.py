@@ -6,8 +6,8 @@ import tkinter as tk
 from tkinter import ttk
 from venv import create
 from numpy import arctan2, number
-from sklearn import neighbors
-from sympy import poly
+# from sklearn import neighbors
+# from sympy import poly
 import mpmath as mp
 from collections import deque
 from helper_functions.moduli_spherical_sample import ModuliSphericalSample
@@ -455,7 +455,7 @@ class TranslationLength:
         try:
             self.lengthheatmaptree
         except:
-            self.lengthheatmaptree = LengthHeatMapTree(6, 1/2, alpha1,alpha2)
+            self.lengthheatmaptree = LengthHeatMapTree(8, 1/2, alpha1,alpha2)
         smallest_length = self.lengthheatmaptree.smallest_length
         indices = [n.index for n in self.lengthheatmaptree.smallest_nodes]
         indices = np.sort(indices)[::-1]
@@ -472,9 +472,9 @@ class TranslationLength:
         smallest_length_window = self.tk.Toplevel()
         smallest_length_window.wm_title("Minimum Length Products")
 
-        smallest_length_text= tk.Label(smallest_length_window, text=f'Smallest Length: {smallest_length}', font=("Arial",25), fg='blue')
+        smallest_length_text= tk.Label(smallest_length_window, text=f'Smallest Length/Word Norm: {smallest_length}', font=("Arial",25), fg='blue')
 
-        text = tk.Label(smallest_length_window,text=f"The following list denotes all fundamental group products that hold the smallest translation length up to {self.lengthheatmaptree.depth} terms.")
+        text = tk.Label(smallest_length_window,text=f"The following list denotes all fundamental group products that hold the smallest translation length/word norm up to {self.lengthheatmaptree.depth} terms.")
         text2 = tk.Label(smallest_length_window, text = "Key: A ↦ α₁, B ↦ α₂, a ↦ α₁⁻¹, b ↦ α₂⁻¹", font=("Courier", 25), fg='red')
         smallest_length_text.pack(pady=25)
         text.pack()

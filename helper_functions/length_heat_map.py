@@ -27,6 +27,7 @@ class LengthHeatMapTree:
         initial_node.coord = np.array([0,0])
         initial_node.matrix = mp.matrix([[1,0,0],[0,1,0],[0,0,1]])
         initial_node.length = 0
+        initial_node.depth = 1
         self.difference_precision = difference_precision
         self.smallest_nodes = []
         self.smallest_length = np.inf
@@ -52,6 +53,8 @@ class LengthHeatMapTree:
         return {'A': self.alpha1,'B': self.alpha2, 'a': mp.inverse(self.alpha1), 'b': mp.inverse(self.alpha2)}[move]
 
     def create_nodes(self, starting_node):
+
+        starting_node.depth = len(starting_node.index)
         
         if len(starting_node.index) == self.depth:
             return
@@ -63,7 +66,12 @@ class LengthHeatMapTree:
                 
                 next_node.coord = self.ratio**len(starting_node.index)*self.move_to_vector(allowed_moves[move_index]) + starting_node.coord
                 next_node.matrix = starting_node.matrix*self.move_to_matrix(allowed_moves[move_index])
-                next_node.length, _ =get_length(next_node.matrix)
+                next_node.length, _ = get_length(next_node.matrix)
+                vector = np.array([0,0])
+                for letter in next_node.index:
+                    vector += self.move_to_vector(letter)
+                norm = sum(np.abs(vector))
+
                 next_node.length =  np.float16(next_node.length)
                 if next_node.index in self.enumerations:
                     self.enumeration_results.append(next_node.index)
