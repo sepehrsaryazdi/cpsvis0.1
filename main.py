@@ -37,21 +37,35 @@ def clover_position(x, t):
     x = np.array(x)
     x = x/sum(sum(x))
 
-    T_R2e = [[-1/np.sqrt(2), 1/np.sqrt(2), 0],[-1/np.sqrt(6), -1/np.sqrt(6), np.sqrt(2/3)],[1,1,1]]
+    [x,y,z] = x
 
-    cube_root1 = np.array([1,0])
-    cube_root2 = np.array([np.cos(2*np.pi/3), np.sin(2*np.pi/3)])
-    cube_root3 = np.array([np.cos(-2*np.pi/3), np.sin(-2*np.pi/3)])
+    alpha_x = [(x+y)*np.cos(2*np.pi/3)+z, (x-y)*np.sin(2*np.pi/3)]
 
-    alpha_10 = np.sqrt(2)*(cube_root2-cube_root1)/2
-    alpha_01 = -np.sqrt(6)/2*(cube_root1 + cube_root2)
+    def alpha_inverse(x):
+        [x,y] = x
+        x_output = (x-1)/(2*(np.cos(2*np.pi/3)-1)) + y/(2*np.sin(2*np.pi/3))
+        y_output = (x-1)/(2*(np.cos(2*np.pi/3)-1)) - y/(2*np.sin(2*np.pi/3))
+        z_output = (np.cos(2*np.pi/3) - x)/(np.cos(2*np.pi/3) - 1)
+        return [x_output, y_output, z_output]
 
-    [x,y,z] = np.matmul(T_R2e,x)
+    print([x,y,z], alpha_inverse(alpha_x))
 
-    [x,y] = [x[0],y[0]]
-    [x, y] = [x / z, y / z]
+    return alpha_x
+    # T_R2e = [[-1/np.sqrt(2), 1/np.sqrt(2), 0],[-1/np.sqrt(6), -1/np.sqrt(6), np.sqrt(2/3)],[1,1,1]]
 
-    [x,y] = x*alpha_10 + y*alpha_01
+    # cube_root1 = np.array([1,0])
+    # cube_root2 = np.array([np.cos(2*np.pi/3), np.sin(2*np.pi/3)])
+    # cube_root3 = np.array([np.cos(-2*np.pi/3), np.sin(-2*np.pi/3)])
+
+    # alpha_10 = np.sqrt(2)*(cube_root2-cube_root1)/2
+    # alpha_01 = -np.sqrt(6)/2*(cube_root1 + cube_root2)
+
+    # [x,y,z] = np.matmul(T_R2e,x)
+
+    # [x,y] = [x[0],y[0]]
+    # [x, y] = [x / z, y / z]
+
+    # [x,y] = x*alpha_10 + y*alpha_01
 
     return [x,y]
 
@@ -1198,9 +1212,12 @@ class MSL3R:
                 vertex.c = np.matmul(M,vertex.c)
                 vertex.r_clover = np.matmul(vertex.r_clover, M_inverse)
                 vertex.c_clover = np.matmul(M, vertex.c_clover)
+                # vertex.c_clover = clover_position(vertex.c, 1)
+                # vertex.c_clover = clover_position([[vertex.c[0]], [vertex.c[1]], [vertex.c[2]]], 1)
             self.error_variable.set("")
             app.plot_fresh(app.t)
-        except:
+        except Exception as e:
+            print(e)
             self.error_variable.set("The matrix does not have determinant 1. Please normalise the matrix first.")
 
     def create_matrix(self):
@@ -1884,6 +1901,16 @@ class App(tk.Frame):
             y = [y1, y2, y3, y1]
 
             self.plot_data.append(self.ax.plot(x, y, c='blue'))
+
+        # x = []
+        # y = []
+        # for theta in np.linspace(0, 2*np.pi, 100):
+        #     circle_x = np.cos(theta)
+        #     circle_y = np.sin(theta)
+        #     x.append(circle_x)
+        #     y.append(circle_y)
+        # self.plot_data.append(self.ax.plot(x,y, c='red'))
+
         v0 = self.edge_selected.v0.c_clover
         v0 = clover_position([[v0[0]], [v0[1]], [v0[2]]], self.t)
         v1 = self.edge_selected.v1.c_clover
@@ -1952,11 +1979,11 @@ class App(tk.Frame):
     def add_triangle(self, event):
         try:
             assert self.edge_selected
-            e03 = self.string_fraction_to_float(self.add_triangle_params[0].get())
-            e30 = self.string_fraction_to_float(self.add_triangle_params[1].get())
-            e23 = self.string_fraction_to_float(self.add_triangle_params[2].get())
-            e32 = self.string_fraction_to_float(self.add_triangle_params[3].get())
-            A023 = self.string_fraction_to_float(self.add_triangle_params[4].get())
+            e03 = string_fraction_to_float(self.add_triangle_params[0].get())
+            e30 = string_fraction_to_float(self.add_triangle_params[1].get())
+            e23 = string_fraction_to_float(self.add_triangle_params[2].get())
+            e32 = string_fraction_to_float(self.add_triangle_params[3].get())
+            A023 = string_fraction_to_float(self.add_triangle_params[4].get())
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
             v0, v1, flipped = self.correct_edge_orientation(self.edge_selected)
@@ -2031,14 +2058,14 @@ class App(tk.Frame):
         self.ax.set_axis_off()
         self.figure.canvas.mpl_connect('button_press_event', self.onclick)
         try:
-            t = self.string_fraction_to_float(self.triangle_parameter.get())
+            t = string_fraction_to_float(self.triangle_parameter.get())
             self.t = t
-            e01 = self.string_fraction_to_float(self.half_edge_params[0].get())
-            e10 = self.string_fraction_to_float(self.half_edge_params[1].get())
-            e02 = self.string_fraction_to_float(self.half_edge_params[2].get())
-            e20 = self.string_fraction_to_float(self.half_edge_params[3].get())
-            e12 = self.string_fraction_to_float(self.half_edge_params[4].get())
-            e21 = self.string_fraction_to_float(self.half_edge_params[5].get())
+            e01 = string_fraction_to_float(self.half_edge_params[0].get())
+            e10 = string_fraction_to_float(self.half_edge_params[1].get())
+            e02 = string_fraction_to_float(self.half_edge_params[2].get())
+            e20 = string_fraction_to_float(self.half_edge_params[3].get())
+            e12 = string_fraction_to_float(self.half_edge_params[4].get())
+            e21 = string_fraction_to_float(self.half_edge_params[5].get())
             assert t > 0 and e01 > 0 and e10 > 0 and e02 > 0 and e20 > 0 and e12 > 0 and e21 > 0
 
             c0 = [1,0,0]
