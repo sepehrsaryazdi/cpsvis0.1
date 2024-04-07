@@ -65,7 +65,7 @@ def get_matrix_representation(A,B,C,A_prime,B_prime,C_prime):
     right_matrix = np.concatenate([right_matrix_first_row, right_matrix_second_row, right_matrix_third_row], axis=0)
 
     components_matrix = np.linalg.inv(left_matrix) @ right_matrix @ np.array([e1,e2,e3]).reshape(9,1)
-    return components_matrix.reshape(3,3)
+    return components_matrix.reshape(3,3).T
 
 def get_fixed_points_on_affine_chart(matrix):
     v1, v2, v3 = np.linalg.eig(matrix).eigenvectors
@@ -86,6 +86,9 @@ ax.plot(triangle3[:,0], triangle3[:,1], triangle3[:,2], c='green')
 
 alpha = get_matrix_representation(c0, c1, c2, c3, c2, c4)
 v1,v2,v3 = get_fixed_points_on_affine_chart(alpha)
+
+# print(alpha @ np.array(c2).reshape(3,1) - np.array(c4).reshape(3,1))
+
 
 fixed_points = np.array([v1,v2,v3])
 
