@@ -1166,8 +1166,8 @@ class MSL3R:
         try:
             M = self.create_matrix()
             self.error_variable.set("")
-        except:
-            self.error_variable.set("One or more entries are not well-defined.")
+        except Exception as e:
+            self.error_variable.set("One or more entries are not well-defined. " + e)
             return
 
 
@@ -1191,8 +1191,8 @@ class MSL3R:
                 vertex.c_clover = np.matmul(M, vertex.c_clover)
             self.error_variable.set("")
             app.plot_fresh(app.t)
-        except:
-            self.error_variable.set("The matrix does not have determinant 1. Please normalise the matrix first.")
+        except Exception as e:
+            self.error_variable.set("The matrix does not have determinant 1. Please normalise the matrix first." + e)
 
     def create_matrix(self):
         M = []
@@ -1214,8 +1214,8 @@ class MSL3R:
         try:
             self.create_matrix()
             self.error_variable.set("")
-        except:
-            self.error_variable.set("One or more entries are not well-defined.")
+        except Exception as e:
+            self.error_variable.set("One or more entries are not well-defined." + e)
             return
         try:
             assert not np.isclose(np.linalg.det(self.create_matrix()), 0)
@@ -1224,8 +1224,8 @@ class MSL3R:
             for var in self.matrix_variables:
                 var.set(f'{string_fraction_to_float(var.get())/cube_root_determinant}')
             self.error_variable.set("")
-        except:
-            self.error_variable.set("This matrix is singular and has determinant zero. Please enter a non-singular matrix.")
+        except Exception as e:
+            self.error_variable.set("This matrix is singular and has determinant zero. Please enter a non-singular matrix." + e)
 
 
 class App(tk.Frame):
@@ -1937,11 +1937,11 @@ class App(tk.Frame):
     def add_triangle(self, event):
         try:
             assert self.edge_selected
-            e03 = self.string_fraction_to_float(self.add_triangle_params[0].get())
-            e30 = self.string_fraction_to_float(self.add_triangle_params[1].get())
-            e23 = self.string_fraction_to_float(self.add_triangle_params[2].get())
-            e32 = self.string_fraction_to_float(self.add_triangle_params[3].get())
-            A023 = self.string_fraction_to_float(self.add_triangle_params[4].get())
+            e03 = string_fraction_to_float(self.add_triangle_params[0].get())
+            e30 = string_fraction_to_float(self.add_triangle_params[1].get())
+            e23 = string_fraction_to_float(self.add_triangle_params[2].get())
+            e32 = string_fraction_to_float(self.add_triangle_params[3].get())
+            A023 = string_fraction_to_float(self.add_triangle_params[4].get())
             assert e03 > 0 and e30 > 0 and e23 > 0 and e32 > 0 and A023 > 0
 
             v0, v1, flipped = self.correct_edge_orientation(self.edge_selected)
@@ -1988,8 +1988,8 @@ class App(tk.Frame):
             try:
                 self.main_surface
                 self.add_triangle_error_text.set("One or more variables are not well-defined.")
-            except:
-                self.add_triangle_error_text.set("Please add an initial triangle first.")
+            except Exception as e:
+                self.add_triangle_error_text.set("Please add an initial triangle first." + e)
 
 
     def randomise_numbers_initial(self,event):
@@ -2014,14 +2014,14 @@ class App(tk.Frame):
         self.ax.set_axis_off()
         self.figure.canvas.mpl_connect('button_press_event', self.onclick)
         try:
-            t = self.string_fraction_to_float(self.triangle_parameter.get())
+            t = string_fraction_to_float(self.triangle_parameter.get())
             self.t = t
-            e01 = self.string_fraction_to_float(self.half_edge_params[0].get())
-            e10 = self.string_fraction_to_float(self.half_edge_params[1].get())
-            e02 = self.string_fraction_to_float(self.half_edge_params[2].get())
-            e20 = self.string_fraction_to_float(self.half_edge_params[3].get())
-            e12 = self.string_fraction_to_float(self.half_edge_params[4].get())
-            e21 = self.string_fraction_to_float(self.half_edge_params[5].get())
+            e01 = string_fraction_to_float(self.half_edge_params[0].get())
+            e10 = string_fraction_to_float(self.half_edge_params[1].get())
+            e02 = string_fraction_to_float(self.half_edge_params[2].get())
+            e20 = string_fraction_to_float(self.half_edge_params[3].get())
+            e12 = string_fraction_to_float(self.half_edge_params[4].get())
+            e21 = string_fraction_to_float(self.half_edge_params[5].get())
             assert t > 0 and e01 > 0 and e10 > 0 and e02 > 0 and e20 > 0 and e12 > 0 and e21 > 0
 
             c0 = [1,0,0]
@@ -2065,8 +2065,8 @@ class App(tk.Frame):
                                                [v0[1], v1[1]], c='red'))
             self.chart_type.draw()
 
-        except:
-            self.error_text.set("One or more variables are not well-defined.")
+        except Exception as e:
+            self.error_text.set("One or more variables are not well-defined." + e)
 
 
 
@@ -2701,8 +2701,8 @@ class CombinatorialImport:
             for edge in selected_triangle.edges:
                 assert string_fraction_to_float(edge.ea.get()) > 0
                 assert string_fraction_to_float(edge.eb.get()) > 0
-        except:
-            self.error_text.set("One or more variables are not well-defined.")
+        except Exception as e:
+            self.error_text.set("One or more variables are not well-defined." + e)
             return
 
 

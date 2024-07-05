@@ -207,8 +207,8 @@ class ModuliSphericalSample():
             try:
                 assert string_fraction_to_float(parameter.get()) == int(string_fraction_to_float(parameter.get())) and string_fraction_to_float(parameter.get()) > 0
                 self.error_message_variable.set("")
-            except:
-                self.error_message_variable.set("One or more parameters are not well-defined.\nPlease ensure they are valid positive integers.")
+            except Exception as e:
+                self.error_message_variable.set("One or more parameters are not well-defined.\nPlease ensure they are valid positive integers." + e)
                 return
             
         self.theta_n = int(string_fraction_to_float(self.angle_sweeps_variable.get()))
